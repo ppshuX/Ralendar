@@ -1,39 +1,52 @@
-# 开发日志
+# Development Log
 
-10 天开发记录，记录每天做了什么、遇到了什么坑。
-
----
-
-## 📅 进度总览
-
-| 天数 | 主要任务 | 状态 |
-|------|---------|------|
-| Day 1 | 把日历显示出来 | ⏳ |
-| Day 2 | 能添加和显示日程 | ⏳ |
-| Day 3 | 数据库保存 | ⏳ |
-| Day 4 | 列表显示优化 | ⏳ |
-| Day 5 | 编辑和删除 | ⏳ |
-| Day 6 | 时间选择器 | ⏳ |
-| Day 7 | 多视图切换 | ⏳ |
-| Day 8 | 提醒功能 | ⏳ |
-| Day 9 | 扩展功能 + 优化 | ⏳ |
-| Day 10 | 文档和提交 | ⏳ |
-
-**状态**：⏳ 未开始 | 🚀 进行中 | ✅ 完成
+10-day development record - tracking progress and issues.
 
 ---
 
-## 使用说明
+## 📅 Progress Overview
 
-每天完成后简单记录：
-- 做了什么
-- 写了哪些关键代码
-- 遇到了什么坑
+| Day | Main Task | Status |
+|-----|-----------|--------|
+| Day 1 | Calendar UI | ✅ |
+| Day 2 | Add & Display Events | ✅ |
+| Day 3 | Database Storage | ⏳ |
+| Day 4 | Event List | ⏳ |
+| Day 5 | Edit & Delete | ⏳ |
+| Day 6 | Time Picker | ⏳ |
+| Day 7 | Multiple Views | ⏳ |
+| Day 8 | Reminder | ⏳ |
+| Day 9 | Optimization | ⏳ |
+| Day 10 | Documentation | ⏳ |
 
-**不用写太多，记个流水账就行**，方便以后回顾。
+**Status**: ⏳ Todo | 🚀 In Progress | ✅ Done
 
 ---
 
-**开始时间**：____  
-**完成时间**：____
+## 📁 Daily Logs
+
+- [Day01_Calendar_UI.md](Day01_Calendar_UI.md) - Setup calendar interface
+- [Day02_Add_Events.md](Day02_Add_Events.md) - Add and display events
+- [Day03_Database.md](Day03_Database.md) - Room database integration
+- [Day04_Event_List.md](Day04_Event_List.md) - RecyclerView implementation
+- [Day05_Edit_Delete.md](Day05_Edit_Delete.md) - Edit and delete features
+- [Day06_Time_Picker.md](Day06_Time_Picker.md) - Date & time picker
+- [Day07_Multiple_Views.md](Day07_Multiple_Views.md) - Month/Week/Day views
+- [Day08_Reminder.md](Day08_Reminder.md) - Notification & alarm
+- [Day09_Optimization.md](Day09_Optimization.md) - Features & optimization
+- [Day10_Documentation.md](Day10_Documentation.md) - Final documentation
+
+---
+
+## 📝 Usage
+
+Keep it simple:
+- What did you do?
+- Key code snippets
+- Issues encountered
+
+---
+
+**Start Date**: 2025-11-04  
+**End Date**: ____
 
