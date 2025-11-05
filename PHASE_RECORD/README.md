@@ -10,7 +10,7 @@
 |-----|-----------|--------|
 | Day 1 | Calendar UI | ✅ |
 | Day 2 | Add & Display Events | ✅ |
-| Day 3 | Database Storage | ⏳ |
+| Day 3 | Database Storage | ✅ |
 | Day 4 | Event List | ⏳ |
 | Day 5 | Edit & Delete | ⏳ |
 | Day 6 | Time Picker | ⏳ |
