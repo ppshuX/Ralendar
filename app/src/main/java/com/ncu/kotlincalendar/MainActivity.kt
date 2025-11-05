@@ -8,6 +8,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -19,7 +21,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var calendarView: CalendarView
     private lateinit var tvSelectedDate: TextView
     private lateinit var btnAddEvent: Button
-    private lateinit var tvEvents: TextView
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: EventAdapter
     
     // 数据库
     private lateinit var database: AppDatabase
@@ -39,7 +42,22 @@ class MainActivity : AppCompatActivity() {
         calendarView = findViewById(R.id.calendarView)
         tvSelectedDate = findViewById(R.id.tvSelectedDate)
         btnAddEvent = findViewById(R.id.btnAddEvent)
-        tvEvents = findViewById(R.id.tvEvents)
+        recyclerView = findViewById(R.id.recyclerView)
+        
+        // 设置 RecyclerView
+        adapter = EventAdapter(
+            events = emptyList(),
+            onItemClick = { event ->
+                // 点击日程 - 显示详情
+                showEventDetails(event)
+            },
+            onItemLongClick = { event ->
+                // 长按日程 - 删除
+                showDeleteConfirmDialog(event)
+            }
+        )
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = adapter
         
         // 默认显示今天的日期
         showDate(System.currentTimeMillis())
@@ -144,81 +162,63 @@ class MainActivity : AppCompatActivity() {
     
     // 更新日程列表显示
     private fun updateEventsList() {
-        if (eventsList.isEmpty()) {
-            tvEvents.text = """
-                
-                📋 暂无日程
-                
-                点击上方按钮开始添加日程吧！
-                
-            """.trimIndent()
-            tvEvents.setTextColor(0xFF999999.toInt())
-        } else {
-            // 格式化显示所有日程
-            val eventsText = eventsList.map { event ->
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val dateStr = dateFormat.format(Date(event.dateTime))
-                
-                buildString {
-                    append("┌────────────────────────\n")
-                    append("│ 📅 $dateStr\n")
-                    append("│ 📝 ${event.title}\n")
-                    if (event.description.isNotEmpty()) {
-                        append("│ 💬 ${event.description}\n")
-                    }
-                    append("└────────────────────────")
-                }
-            }
-            
-            val header = "📋 所有日程（共 ${eventsList.size} 条）\n💡 长按可删除\n\n"
-            tvEvents.text = header + eventsText.joinToString("\n\n")
-            tvEvents.setTextColor(0xFF333333.toInt())
-        }
-        
-        // 设置长按删除
-        tvEvents.setOnLongClickListener {
-            if (eventsList.isNotEmpty()) {
-                showDeleteDialog()
-                true
-            } else {
-                false
-            }
-        }
+        adapter.updateEvents(eventsList)
     }
     
-    // 显示删除对话框
-    private fun showDeleteDialog() {
-        // 提取标题用于显示
-        val items = eventsList.mapIndexed { index, event -> 
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val dateStr = dateFormat.format(Date(event.dateTime))
-            "🗑️ ${event.title} ($dateStr)"
-        }.toTypedArray()
+    // 显示日程详情
+    private fun showEventDetails(event: Event) {
+        val dateFormat = SimpleDateFormat("yyyy年MM月dd日 EEEE HH:mm", Locale.CHINESE)
+        val dateStr = dateFormat.format(Date(event.dateTime))
+        
+        val message = buildString {
+            append("📅 日期：$dateStr\n\n")
+            append("📝 标题：${event.title}\n\n")
+            if (event.description.isNotEmpty()) {
+                append("💬 描述：${event.description}")
+            }
+        }
         
         AlertDialog.Builder(this)
-            .setTitle("🗑️ 选择要删除的日程")
-            .setItems(items) { dialog, which ->
-                // 从数据库删除选中的日程
-                lifecycleScope.launch(Dispatchers.IO) {
-                    try {
-                        eventDao.delete(eventsList[which])
-                        
-                        // 重新加载
-                        val events = eventDao.getAllEvents()
-                        withContext(Dispatchers.Main) {
-                            eventsList.clear()
-                            eventsList.addAll(events)
-                            updateEventsList()
-                            Toast.makeText(this@MainActivity, "🗑️ 删除成功！", Toast.LENGTH_SHORT).show()
-                        }
-                    } catch (e: Exception) {
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@MainActivity, "删除失败: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
+            .setTitle("📋 日程详情")
+            .setMessage(message)
+            .setPositiveButton("确定", null)
+            .setNegativeButton("删除") { _, _ ->
+                deleteEvent(event)
+            }
+            .show()
+    }
+    
+    // 显示删除确认对话框
+    private fun showDeleteConfirmDialog(event: Event) {
+        AlertDialog.Builder(this)
+            .setTitle("🗑️ 删除日程")
+            .setMessage("确定要删除「${event.title}」吗？")
+            .setPositiveButton("删除") { _, _ ->
+                deleteEvent(event)
             }
             .setNegativeButton("取消", null)
             .show()
+    }
+    
+    // 删除日程
+    private fun deleteEvent(event: Event) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                eventDao.delete(event)
+                
+                // 重新加载
+                val events = eventDao.getAllEvents()
+                withContext(Dispatchers.Main) {
+                    eventsList.clear()
+                    eventsList.addAll(events)
+                    updateEventsList()
+                    Toast.makeText(this@MainActivity, "🗑️ 删除成功！", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "删除失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 }
