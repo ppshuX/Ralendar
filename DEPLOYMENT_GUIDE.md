@@ -33,9 +33,9 @@ KotlinCalendar/
 - ✅ 不包含敏感信息（db.sqlite3、logs、*.pid）
 
 ### **前端（Web）**
-- ✅ **源码**（`web/calendar_web/`）：Git 管理，仅本地开发
-- ✅ **Build 产物**（`web/js/css/images/`）：**不提交 Git**，直接 SCP 上传到服务器
-- ✅ 服务器只需要 build 后的静态文件，不需要 Vue3 源码
+- ✅ **源码**（`web_frontend/`）：Git 管理，仅本地开发
+- ✅ **Build 产物**（`web/`）：**提交到 Git**，服务器 `git pull` 部署
+- ✅ 本地 build 后提交，服务器不需要 Node.js
 
 ### **Android（acapp）**
 - ✅ Git 管理，仅本地开发
