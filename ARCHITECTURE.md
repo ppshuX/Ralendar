@@ -120,28 +120,33 @@ npm run build
 
 ### 基本信息
 - **目录**：`acapp/`（未来计划）
-- **技术栈**：Vue 3 + 自定义样式（scoped CSS）
+- **技术栈**：**纯 Vue3 CDN** + 可选 jQuery（无构建工具）
 - **运行环境**：AcWing 平台（沙箱环境）
-- **部署方式**：单文件上传到服务器
+- **部署方式**：直接上传 JS/CSS 文件
 - **访问方式**：通过 AcWing 平台加载
-- **后端调用**：通过 Axios 调用统一的 Django API
+- **后端调用**：通过 fetch/axios CDN 调用统一的 Django API
 
-### 核心特点
-- ⚠️ **不能使用 Bootstrap**（会污染全局样式）
-- ✅ **必须样式隔离**（scoped CSS）
-- ✅ **库模式构建**（export class Calendar）
-- ✅ **单文件输出**（app.js + app.css）
-- ✅ **DOM 隔离**（只操作容器内元素）
+### 核心特点（技术多样性 ⭐）
+- ❌ **无构建工具**（直接写HTML/JS/CSS）
+- ❌ **无 Bootstrap**（纯手写CSS，BEM命名）
+- ❌ **无 npm 依赖**（Vue3 CDN引入）
+- ✅ **极简轻量**（业务代码 <50KB）
+- ✅ **export class Calendar**（AcWing平台要求）
+- ✅ **样式隔离**（.kc-* 前缀）
 
-### 与 Web 端的区别
+### 与 Web 端的区别（技术对比）
 
 | 特性 | Web 端（独立） | AcWing 端（集成） |
 |------|--------------|------------------|
 | **页面环境** | 独占浏览器页面 | 共享 AcWing 平台页面 |
-| **Bootstrap** | ✅ 可用 | ❌ 不能用 |
-| **全局样式** | ✅ 可用 | ❌ 必须隔离 |
-| **构建目标** | SPA 应用 | Library（类） |
-| **入口** | `createApp()` | `export class Calendar` |
+| **Vue3** | npm + Vite 构建 | **CDN 引入** |
+| **Bootstrap** | ✅ 可用 | ❌ 不用 |
+| **UI库** | Element Plus + FullCalendar | **纯手写** |
+| **构建工具** | Vite | **无** |
+| **构建目标** | SPA应用（多文件） | **单JS+单CSS** |
+| **入口** | `createApp().mount('#app')` | `export class Calendar` |
+| **部署** | `npm run build` + git push | **直接 scp 上传** |
+| **体积** | ~1.35MB（含所有库） | **<50KB（纯业务）** |
 
 📖 **详细计划**：[acapp/PLAN.md](acapp/PLAN.md)
 
@@ -319,44 +324,48 @@ KotlinCalendar/
 
 ---
 
-## 🎯 三客户端对比
+## 🎯 三客户端技术对比（展示技术多样性）
 
 ### 已实现（2 个客户端 + 1 个后端）
 
 | 特性 | Android 客户端 | Web 客户端 | 后端 API |
 |------|--------------|-----------|---------|
-| **目录** | `adapp/` | `web/` | `backend/` |
+| **目录** | `adapp/` | `web/` + `web_frontend/` | `backend/` |
 | **语言** | Kotlin | JavaScript | Python |
-| **框架** | Android SDK | Vue 3 | Django |
+| **框架** | Android SDK | Vue 3 + Vite | Django |
+| **构建工具** | Gradle | **Vite** | - |
 | **运行位置** | 手机 | 浏览器 | 服务器 |
 | **部署方式** | APK 安装 | Nginx 静态托管 | uWSGI |
-| **本地存储** | Room (本地缓存) | 无 | PostgreSQL |
-| **网络通信** | Retrofit | Axios | - |
-| **UI 框架** | Material Design | Bootstrap + Element Plus | Django Admin |
-| **后端调用** | ✅ 调用统一 API | ✅ 调用统一 API | - |
-| **样式隔离** | 无需（原生） | 无需（独占页面） | - |
+| **本地存储** | Room | 无 | PostgreSQL |
+| **网络通信** | Retrofit | Axios (npm) | - |
+| **UI 框架** | Material Design | **Bootstrap + Element Plus** | Django Admin |
+| **构建产物** | APK | **多文件（代码分割）** | - |
+| **后端调用** | ✅ 统一 API | ✅ 统一 API | - |
+| **样式** | 原生 Android XML | **可用全局CSS** | - |
 
-### 未来计划（第 3 个客户端）
+### 未来计划（第 3 个客户端 - 技术差异化）
 
-| 特性 | AcWing 客户端（计划） | Web 客户端（已实现） |
-|------|---------------------|-------------------|
-| **目录** | `acapp/`（未创建） | `web/` |
-| **语言** | JavaScript | JavaScript |
-| **框架** | Vue 3 | Vue 3 |
-| **运行环境** | AcWing 平台（沙箱） | 独立浏览器页面 |
-| **样式框架** | ❌ **不能用** Bootstrap | ✅ 可以用 Bootstrap |
-| **样式隔离** | ✅ **必须** scoped CSS | ❌ 不需要 |
-| **构建目标** | Library（类导出） | SPA 应用 |
-| **主类** | `export class Calendar` | 无 |
-| **后端调用** | ✅ 调用统一 API | ✅ 调用统一 API |
-| **DOM 操作** | 只能在容器内 | 可操作 body |
-| **全局变量** | ❌ 不能污染 | ✅ 可以使用 |
+| 特性 | AcWing 客户端（计划） | Web 客户端（已实现） | 技术差异 |
+|------|---------------------|-------------------|---------|
+| **目录** | `acapp/` | `web/` | - |
+| **语言** | JavaScript | JavaScript | 相同 |
+| **框架** | Vue 3 **CDN** | Vue 3 **npm** | ⭐ **差异** |
+| **构建工具** | ❌ **无** | ✅ Vite | ⭐ **差异** |
+| **UI库** | ❌ **纯手写CSS** | ✅ Bootstrap + Element Plus | ⭐ **差异** |
+| **jQuery** | ✅ **可选CDN** | ❌ 不用 | ⭐ **差异** |
+| **运行环境** | AcWing 平台（沙箱） | 独立浏览器页面 | ⭐ **差异** |
+| **样式方案** | **BEM命名** (.kc-*) | Bootstrap classes | ⭐ **差异** |
+| **构建产物** | **单JS+单CSS** | 多文件（代码分割） | ⭐ **差异** |
+| **文件体积** | **<50KB**（纯业务） | ~1.35MB（含库） | ⭐ **差异** |
+| **部署** | **scp直接上传** | `npm build` + git | ⭐ **差异** |
+| **主类** | `export class Calendar` | 无 | ⭐ **差异** |
+| **后端调用** | ✅ 统一 API | ✅ 统一 API | 相同 |
 
 ---
 
 ## 💡 核心架构理念
 
-### 🎯 统一后端，多客户端
+### 🎯 统一后端，多客户端，多技术栈
 
 ```
                     统一的 Django REST API
@@ -366,16 +375,24 @@ KotlinCalendar/
     【客户端1】          【客户端2】          【客户端3】
     Android 手机         Web 浏览器        AcWing 平台
      (adapp)              (web)             (acapp)
+   Gradle构建          Vite构建          无构建工具
+   Material UI      Bootstrap UI        纯手写CSS
         │                   │                   │
         └───────── 同一套 API 接口 ────────────┘
 ```
 
-**优势**：
+**架构优势**：
 - ✅ 数据统一存储，自动同步
 - ✅ 业务逻辑集中在后端
 - ✅ 客户端只负责展示和交互
 - ✅ 新增客户端无需修改后端
 - ✅ 三个客户端可独立开发和部署
+
+**技术多样性** ⭐：
+- ✅ **3种构建工具**：Gradle / Vite / 无构建
+- ✅ **3种UI方案**：Material Design / Bootstrap / 纯手写
+- ✅ **3种语言**：Kotlin / JavaScript(npm) / JavaScript(CDN)
+- ✅ **展示全栈能力**：原生应用 / 现代化Web / 极简轻量
 
 ### 🔧 为什么 AcWing 端需要特殊处理？
 
