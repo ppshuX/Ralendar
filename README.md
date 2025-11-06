@@ -348,5 +348,4 @@ MIT License
 
 **Star ⭐ 本项目如果你觉得有帮助！**
 
-**Contact**: [your-email@example.com]
 
