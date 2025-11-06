@@ -15,6 +15,7 @@ class Event(models.Model):
     start_time = models.DateTimeField(verbose_name='开始时间')
     end_time = models.DateTimeField(null=True, blank=True, verbose_name='结束时间')
     location = models.CharField(max_length=200, blank=True, verbose_name='地点')
+    reminder_minutes = models.IntegerField(default=15, verbose_name='提前提醒分钟数')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
     
