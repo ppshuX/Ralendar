@@ -206,29 +206,21 @@ Django REST Framework 提供了可视化 API 浏览器！
 
 ## 📦 部署
 
-### 使用 Gunicorn
+详细的部署说明请参考：[DEPLOYMENT.md](./DEPLOYMENT.md)
+
+### 快速部署（uWSGI + Nginx）
 
 ```bash
-gunicorn calendar_backend.wsgi:application --bind 0.0.0.0:8000
-```
+# 1. 安装依赖
+pip3 install -r requirements.txt
 
-### 使用 Nginx
+# 2. 数据库迁移
+python3 manage.py migrate
 
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
+# 3. 启动服务
+./deploy.sh
 
-    location /api/ {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    location /static/ {
-        alias /path/to/static/;
-    }
-}
+# 4. 配置 Nginx（参考 DEPLOYMENT.md）
 ```
 
 ---
@@ -265,7 +257,15 @@ backend/
 
 ---
 
+---
+
+## 📚 更多文档
+
+- [部署指南](./DEPLOYMENT.md) - 详细的云服务器部署步骤
+- [API 测试](./README.md#-api-测试) - API 使用示例
+
+---
+
 **开发者**: KotlinCalendar Team  
-**技术栈**: Django 5.0 + Django REST Framework 3.15  
-**License**: MIT
+**技术栈**: Django 4.2 (LTS) + Django REST Framework 3.15
 
