@@ -174,3 +174,7 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
+
+# AcWing OAuth2 配置
+ACWING_APPID = os.environ.get('ACWING_APPID', '7626')
+ACWING_SECRET = os.environ.get('ACWING_SECRET', '')

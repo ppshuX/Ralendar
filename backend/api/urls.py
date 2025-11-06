@@ -17,6 +17,9 @@ urlpatterns = [
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/me/', views.get_current_user, name='current_user'),
     
+    # AcWing 登录
+    path('auth/acwing/login/', views.acwing_login, name='acwing_login'),
+    
     # 农历
     path('lunar/', views.get_lunar_date, name='lunar'),
 ]
