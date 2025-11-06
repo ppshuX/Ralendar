@@ -44,9 +44,8 @@ adapp/*
 !adapp/README.md
 
 # ==================== 文档（仅本地保留） ====================
-# 详细文档保留在本地查看，不上传
-AcWing_Platform_Config.md
-acapp/PLAN.md
+# 详细文档保留在docs文件夹，不上传到Git
+docs/
 
 # ==================== 通用 ====================
 .DS_Store
