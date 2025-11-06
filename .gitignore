@@ -2,6 +2,9 @@
 # Vue3 源码（只在本地开发，不提交 Git）
 web_frontend/
 
+# AcWing 构建项目（可选方案，本地保留）
+acapp_build/
+
 # Web 部署目录（构建产物提交 Git，服务器 git pull 获取）
 # web/  ← 不忽略，需要提交
 
@@ -43,6 +46,11 @@ acapp/.DS_Store
 acapp/captures/
 acapp/.externalNativeBuild/
 acapp/.cxx/
+
+# ==================== 文档（仅本地保留） ====================
+# 详细文档保留在本地查看，不上传
+AcWing_Platform_Config.md
+acapp/PLAN.md
 
 # ==================== 通用 ====================
 .DS_Store
