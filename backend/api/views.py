@@ -15,6 +15,7 @@ from lunarcalendar import Converter, Solar
 class EventViewSet(viewsets.ModelViewSet):
     """日程 CRUD API"""
     serializer_class = EventSerializer
+    permission_classes = [AllowAny]  # 允许所有人访问，未登录用户使用匿名账户
     
     def get_queryset(self):
         # 只返回当前用户的日程（如果已登录）
