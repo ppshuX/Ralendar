@@ -138,8 +138,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS 配置
 CORS_ALLOWED_ORIGINS = [
     'https://app7626.acapp.acwing.com.cn',  # 生产域名
+    'https://www.acwing.com',  # AcWing 平台（重要！）
     'http://localhost:5173',  # 本地开发（Vue3）
     'http://127.0.0.1:5173',
+    'http://localhost:8081',  # 本地开发（acapp）
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = ['*']
