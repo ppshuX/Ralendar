@@ -5,6 +5,7 @@ import android.app.TimePickerDialog
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CalendarView
@@ -18,6 +19,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.ncu.kotlincalendar.api.RetrofitClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -29,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var calendarView: CalendarView
     private lateinit var tvSelectedDate: TextView
     private lateinit var btnAddEvent: Button
+    private lateinit var btnSubscribe: Button
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: EventAdapter
     
@@ -52,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         calendarView = findViewById(R.id.calendarView)
         tvSelectedDate = findViewById(R.id.tvSelectedDate)
         btnAddEvent = findViewById(R.id.btnAddEvent)
+        btnSubscribe = findViewById(R.id.btnSubscribe)
         recyclerView = findViewById(R.id.recyclerView)
         
         // 设置 RecyclerView
@@ -89,6 +93,11 @@ class MainActivity : AppCompatActivity() {
         // 点击"添加日程"按钮
         btnAddEvent.setOnClickListener {
             showAddEventDialog()
+        }
+        
+        // 点击"订阅网络日历"按钮
+        btnSubscribe.setOnClickListener {
+            showSubscribeDialog()
         }
         
         Toast.makeText(this, "📅 日历已加载，数据会自动保存", Toast.LENGTH_SHORT).show()
@@ -327,26 +336,34 @@ class MainActivity : AppCompatActivity() {
         val dateFormat = SimpleDateFormat("yyyy年MM月dd日 EEEE HH:mm", Locale.CHINESE)
         val dateStr = dateFormat.format(Date(event.dateTime))
         
-        val message = buildString {
-            append("📅 日期：$dateStr\n\n")
-            append("📝 标题：${event.title}\n\n")
-            if (event.description.isNotEmpty()) {
-                append("💬 描述：${event.description}")
+        // 获取农历信息
+        var lunarText = ""
+        getLunarDate(event.dateTime) { lunar ->
+            lunarText = lunar
+            
+            val message = buildString {
+                append("📅 日期：$dateStr\n\n")
+                append("📝 标题：${event.title}\n\n")
+                if (event.description.isNotEmpty()) {
+                    append("💬 描述：${event.description}\n\n")
+                }
+                if (lunarText.isNotEmpty()) {
+                    append("🏮 农历：$lunarText")
+                }
             }
+            
+            AlertDialog.Builder(this)
+                .setTitle("📋 日程详情")
+                .setMessage(message)
+                .setPositiveButton("编辑") { _, _ ->
+                    showAddEventDialog(event)
+                }
+                .setNegativeButton("删除") { _, _ ->
+                    deleteEvent(event)
+                }
+                .setNeutralButton("关闭", null)
+                .show()
         }
-        
-        AlertDialog.Builder(this)
-            .setTitle("📋 日程详情")
-            .setMessage(message)
-            .setPositiveButton("编辑") { _, _ ->
-                // 编辑日程
-                showAddEventDialog(event)
-            }
-            .setNegativeButton("删除") { _, _ ->
-                deleteEvent(event)
-            }
-            .setNeutralButton("关闭", null)
-            .show()
     }
     
     // 显示删除确认对话框
@@ -384,6 +401,93 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "删除失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+    
+    // ==================== 网络功能 ====================
+    
+    /**
+     * 显示订阅对话框
+     */
+    private fun showSubscribeDialog() {
+        val calendars = arrayOf(
+            "中国法定节假日",
+            "农历节气",
+            "国际纪念日"
+        )
+        val slugs = arrayOf(
+            "china-holidays",
+            "lunar-festivals",
+            "world-days"
+        )
+        
+        AlertDialog.Builder(this)
+            .setTitle("📡 订阅网络日历")
+            .setItems(calendars) { _, which ->
+                subscribeCalendar(slugs[which], calendars[which])
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+    
+    /**
+     * 订阅网络日历
+     */
+    private fun subscribeCalendar(slug: String, name: String) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "⏳ 正在订阅 $name...", Toast.LENGTH_SHORT).show()
+                }
+                
+                // 调用后端 API
+                val response = RetrofitClient.api.getCalendarFeed(slug)
+                Log.d("Network", "订阅成功：${response.events_count} 个事件")
+                
+                // TODO: 解析 iCalendar 格式并保存到本地数据库
+                // 简化版：直接显示成功
+                
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "✅ 订阅成功！获取了 ${response.events_count} 个日程",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            } catch (e: Exception) {
+                Log.e("Network", "订阅失败", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "❌ 订阅失败：${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+    
+    /**
+     * 获取农历日期（在日程详情显示）
+     */
+    private fun getLunarDate(dateTime: Long, callback: (String) -> Unit) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val dateStr = dateFormat.format(Date(dateTime))
+                
+                // 调用后端 API
+                val lunar = RetrofitClient.api.getLunarDate(dateStr)
+                
+                withContext(Dispatchers.Main) {
+                    callback("${lunar.lunar_date} ${lunar.zodiac}年")
+                }
+            } catch (e: Exception) {
+                Log.e("Network", "获取农历失败", e)
+                withContext(Dispatchers.Main) {
+                    callback("")  // 失败就不显示
                 }
             }
         }

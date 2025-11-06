@@ -39,6 +39,20 @@
         app:icon="@android:drawable/ic_input_add"
         app:cornerRadius="12dp" />
 
+    <!-- 订阅网络日历按钮 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSubscribe"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="📡 订阅网络日历"
+        android:textSize="16sp"
+        app:icon="@android:drawable/stat_notify_sync"
+        app:cornerRadius="12dp"
+        app:backgroundTint="#FF6B6B" />
+
     <!-- 日程列表 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
