@@ -30,10 +30,18 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """用户信息序列化器"""
+    photo = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'date_joined']
-        read_only_fields = ['id', 'date_joined']
+        fields = ['id', 'username', 'email', 'date_joined', 'photo']
+        read_only_fields = ['id', 'date_joined', 'photo']
+    
+    def get_photo(self, obj):
+        """获取用户头像（AcWing）"""
+        if hasattr(obj, 'acwing_profile'):
+            return obj.acwing_profile.photo_url
+        return None
 
 
 # ==================== 事件相关 ====================
