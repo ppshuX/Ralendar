@@ -7,6 +7,7 @@ from .views import (
     register,
     get_current_user,
     acwing_login,
+    acwing_oauth_callback,
     get_lunar_date,
 )
 
@@ -26,6 +27,7 @@ urlpatterns = [
     
     # AcWing 登录
     path('auth/acwing/login/', acwing_login, name='acwing_login'),
+    path('oauth2/receive_code/', acwing_oauth_callback, name='acwing_oauth_callback'),
     
     # 农历
     path('lunar/', get_lunar_date, name='lunar'),
