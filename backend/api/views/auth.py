@@ -46,7 +46,7 @@ def acwing_login(request):
     import traceback
     
     code = request.data.get('code')
-    logger.error(f"[AcWing Login] 收到授权码: {code}")
+    logger.error(f"[AcWing Login] Received code: {code}")
     
     if not code:
         return Response({'error': '缺少授权码'}, status=status.HTTP_400_BAD_REQUEST)
@@ -59,13 +59,13 @@ def acwing_login(request):
     try:
         # 第二步：申请 access_token 和 openid
         token_url = f"https://www.acwing.com/third_party/api/oauth2/access_token/?appid={ACWING_APPID}&secret={ACWING_SECRET}&code={code}"
-        logger.error(f"[AcWing Login] 请求 token URL")
+        logger.error(f"[AcWing Login] Requesting token URL")
         token_response = requests.get(token_url, timeout=10)
         token_data = token_response.json()
-        logger.error(f"[AcWing Login] Token 响应: {token_data}")
+        logger.error(f"[AcWing Login] Token response: {token_data}")
         
         if 'errcode' in token_data:
-            error_msg = f"获取token失败: {token_data.get('errmsg', 'unknown error')}"
+            error_msg = f"Failed to get token: {token_data.get('errmsg', 'unknown error')}"
             logger.error(f"[AcWing Login Error] {error_msg}")
             return Response({
                 'error': error_msg
@@ -74,7 +74,7 @@ def acwing_login(request):
         access_token = token_data['access_token']
         openid = token_data['openid']
         refresh_token = token_data.get('refresh_token', '')
-        logger.error(f"[AcWing Login] 获取到 OpenID: {openid}")
+        logger.error(f"[AcWing Login] Got OpenID: {openid}")
         
         # 第三步：获取用户信息
         userinfo_url = f"https://www.acwing.com/third_party/api/meta/identity/getinfo/?access_token={access_token}&openid={openid}"
@@ -139,14 +139,14 @@ def acwing_login(request):
         }, status=status.HTTP_200_OK)
         
     except requests.RequestException as e:
-        error_msg = f'请求AcWing API失败: {str(e)}'
+        error_msg = f'Request AcWing API failed: {str(e)}'
         logger.error(f"[AcWing Login Error] {error_msg}")
         logger.error(traceback.format_exc())
         return Response({
             'error': error_msg
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
-        error_msg = f'登录失败: {str(e)}'
+        error_msg = f'Login failed: {str(e)}'
         logger.error(f"[AcWing Login Error] {error_msg}")
         logger.error(traceback.format_exc())
         return Response({
