@@ -19,6 +19,7 @@ from .oauth_callback import acwing_oauth_callback
 
 # Utility Views
 from .lunar import get_lunar_date
+from .holidays import get_holidays, check_holiday, get_today_holidays
 
 # 导出所有视图
 __all__ = [
@@ -38,5 +39,8 @@ __all__ = [
     'unbind_qq',
     'acwing_oauth_callback',
     'get_lunar_date',
+    'get_holidays',
+    'check_holiday',
+    'get_today_holidays',
 ]
 

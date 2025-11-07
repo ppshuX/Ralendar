@@ -18,6 +18,9 @@ from .views import (
     unbind_acwing,
     unbind_qq,
     get_lunar_date,
+    get_holidays,
+    check_holiday,
+    get_today_holidays,
 )
 
 router = DefaultRouter()
@@ -53,5 +56,10 @@ urlpatterns = [
     
     # 农历
     path('lunar/', get_lunar_date, name='lunar'),
+    
+    # 节假日
+    path('holidays/', get_holidays, name='get_holidays'),
+    path('holidays/check/', check_holiday, name='check_holiday'),
+    path('holidays/today/', get_today_holidays, name='get_today_holidays'),
 ]
 
