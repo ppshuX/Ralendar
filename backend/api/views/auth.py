@@ -46,7 +46,6 @@ def acwing_login(request):
     import traceback
     
     code = request.data.get('code')
-    logger.error(f"[AcWing Login] Received code: {code}")
     
     if not code:
         return Response({'error': '缺少授权码'}, status=status.HTTP_400_BAD_REQUEST)
@@ -54,19 +53,16 @@ def acwing_login(request):
     # AcWing 应用信息（从配置文件读取）
     ACWING_APPID = getattr(settings, 'ACWING_APPID', '7626')
     ACWING_SECRET = getattr(settings, 'ACWING_SECRET', '')
-    logger.error(f"[AcWing Login] AppID: {ACWING_APPID}, Secret: {'*' * len(ACWING_SECRET)}")
     
     try:
         # 第二步：申请 access_token 和 openid
         token_url = f"https://www.acwing.com/third_party/api/oauth2/access_token/?appid={ACWING_APPID}&secret={ACWING_SECRET}&code={code}"
-        logger.error(f"[AcWing Login] Requesting token URL")
         token_response = requests.get(token_url, timeout=10)
         token_data = token_response.json()
-        logger.error(f"[AcWing Login] Token response: {token_data}")
         
         if 'errcode' in token_data:
             error_msg = f"Failed to get token: {token_data.get('errmsg', 'unknown error')}"
-            logger.error(f"[AcWing Login Error] {error_msg}")
+            logger.error(f"[AcWing Login] {error_msg}")
             return Response({
                 'error': error_msg
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -74,7 +70,6 @@ def acwing_login(request):
         access_token = token_data['access_token']
         openid = token_data['openid']
         refresh_token = token_data.get('refresh_token', '')
-        logger.error(f"[AcWing Login] Got OpenID: {openid}")
         
         # 第三步：获取用户信息
         userinfo_url = f"https://www.acwing.com/third_party/api/meta/identity/getinfo/?access_token={access_token}&openid={openid}"
