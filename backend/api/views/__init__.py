@@ -9,7 +9,7 @@ from .events import EventViewSet
 from .calendars import PublicCalendarViewSet
 
 # Authentication Views
-from .auth import register, get_current_user, acwing_login
+from .auth import register, get_current_user, acwing_login, qq_login
 
 # OAuth Callback
 from .oauth_callback import acwing_oauth_callback
@@ -24,6 +24,7 @@ __all__ = [
     'register',
     'get_current_user',
     'acwing_login',
+    'qq_login',
     'acwing_oauth_callback',
     'get_lunar_date',
 ]

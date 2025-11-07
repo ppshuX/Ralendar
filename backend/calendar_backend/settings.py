@@ -183,3 +183,7 @@ SIMPLE_JWT = {
 # AcWing OAuth2 配置
 ACWING_APPID = os.environ.get('ACWING_APPID', '7626')
 ACWING_SECRET = os.environ.get('ACWING_SECRET', '')
+
+# QQ OAuth2 配置
+QQ_APPID = os.environ.get('QQ_APPID', '')
+QQ_APPKEY = os.environ.get('QQ_APPKEY', '')

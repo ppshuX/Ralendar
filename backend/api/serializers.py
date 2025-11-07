@@ -38,9 +38,11 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'date_joined', 'photo']
     
     def get_photo(self, obj):
-        """获取用户头像（AcWing）"""
+        """获取用户头像（优先 AcWing，其次 QQ）"""
         if hasattr(obj, 'acwing_profile'):
             return obj.acwing_profile.photo_url
+        elif hasattr(obj, 'qq_profile'):
+            return obj.qq_profile.photo_url
         return None
 
 
