@@ -12,60 +12,42 @@ def acwing_oauth_callback(request):
     """
     AcWing OAuth2 回调接收端点
     
-    这个端点主要用于满足 OAuth2 规范的 redirect_uri 要求
-    实际的 code 通过 AcWingOS.api.oauth2.authorize 的 callback 参数接收
+    在 AcWing acapp 环境中，这个端点会被 AcWingOS 调用
+    需要返回包含 code 和 state 的响应，供 JavaScript callback 使用
     """
-    # 返回一个简单的 HTML 页面，表示授权成功
-    html = """
+    # 获取 URL 参数中的 code 和 state
+    code = request.GET.get('code', '')
+    state = request.GET.get('state', '')
+    
+    # 返回一个包含 JavaScript 的 HTML 页面
+    # 这个页面会将 code 和 state 传递给父窗口（如果是弹窗）或返回给调用者
+    html = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>授权成功</title>
-        <style>
-            body {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-                font-family: Arial, sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-            }
-            .container {
-                text-align: center;
-                padding: 40px;
-                background: rgba(255, 255, 255, 0.1);
-                border-radius: 20px;
-                backdrop-filter: blur(10px);
-            }
-            .success-icon {
-                font-size: 64px;
-                margin-bottom: 20px;
-            }
-            h1 {
-                margin: 0 0 10px 0;
-                font-size: 32px;
-            }
-            p {
-                margin: 0;
-                opacity: 0.9;
-            }
-        </style>
+        <title>授权中...</title>
+        <script>
+            // 准备返回数据
+            var authData = {{
+                code: "{code}",
+                state: "{state}"
+            }};
+            
+            // 如果是在 iframe 或弹窗中，通知父窗口
+            if (window.opener) {{
+                window.opener.postMessage(authData, '*');
+                window.close();
+            }} else if (window.parent && window.parent !== window) {{
+                window.parent.postMessage(authData, '*');
+            }} else {{
+                // 否则直接返回（AcWingOS 会读取这个响应）
+                document.write(JSON.stringify(authData));
+            }}
+        </script>
     </head>
     <body>
-        <div class="container">
-            <div class="success-icon">✅</div>
-            <h1>授权成功</h1>
-            <p>正在跳转回应用...</p>
-        </div>
-        <script>
-            // 3秒后自动关闭窗口
-            setTimeout(() => {
-                window.close();
-            }, 3000);
-        </script>
+        <p>授权成功，正在返回...</p>
     </body>
     </html>
     """
