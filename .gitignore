@@ -60,3 +60,7 @@ docs/
 .vscode/
 .idea/
 
+# ==================== Nginx ====================
+backend/nginx.conf
+nginx.conf
+
