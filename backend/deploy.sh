@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# KotlinCalendar 后端部署脚本
+# Ralendar 后端部署脚本
 
-echo "🚀 开始部署 KotlinCalendar Backend..."
+echo "🚀 开始部署 Ralendar Backend..."
 
 # 1. 安装依赖（仅首次部署或依赖更新时需要）
 # echo "📦 安装 Python 依赖..."

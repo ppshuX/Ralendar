@@ -10,7 +10,7 @@
 ### 当前项目结构
 
 ```
-KotlinCalendar/
+Ralendar/
 ├── adapp/          # Android App（移动端开发版本）
 ├── backend/        # Django 后端 API
 ├── web/            # Vue3 Build 产物（单文件）

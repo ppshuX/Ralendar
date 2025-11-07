@@ -31,7 +31,7 @@ class PublicCalendarViewSet(viewsets.ReadOnlyModelViewSet):
         ics_lines = [
             "BEGIN:VCALENDAR",
             "VERSION:2.0",
-            f"PRODID:-//KotlinCalendar//{calendar.name}//CN",
+            f"PRODID:-//Ralendar//{calendar.name}//CN",
             f"X-WR-CALNAME:{calendar.name}",
         ]
         

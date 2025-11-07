@@ -1,12 +1,12 @@
 # Android 客户端 (adapp)
 
-**Android Development App** - 移动端日历应用
+**Android Development App** - Ralendar 移动端
 
 ---
 
 ## 📱 说明
 
-这是 KotlinCalendar 的 **Android 移动端客户端**。
+这是 **Ralendar** (Roamio 生态智能日历) 的 **Android 移动端客户端**。
 
 - **类型**：Android 原生应用（Kotlin）
 - **运行环境**：Android 手机/平板
