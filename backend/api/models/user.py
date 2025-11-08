@@ -37,6 +37,14 @@ class QQUser(models.Model):
         verbose_name='关联用户'
     )
     openid = models.CharField(max_length=100, unique=True, verbose_name='QQ OpenID')
+    unionid = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True, 
+        db_index=True,
+        verbose_name='QQ UnionID',
+        help_text='QQ 互联 UnionID，用于跨应用识别同一用户'
+    )
     access_token = models.CharField(max_length=200, blank=True, verbose_name='访问令牌')
     refresh_token = models.CharField(max_length=200, blank=True, verbose_name='刷新令牌')
     photo_url = models.URLField(blank=True, verbose_name='头像URL')
@@ -47,6 +55,9 @@ class QQUser(models.Model):
     class Meta:
         verbose_name = 'QQ用户'
         verbose_name_plural = 'QQ用户列表'
+        indexes = [
+            models.Index(fields=['unionid'], name='qquser_unionid_idx'),
+        ]
     
     def __str__(self):
         return f"{self.user.username} - {self.openid}"

@@ -168,14 +168,15 @@ def qq_login(request):
     QQ_REDIRECT_URI = 'https://app7626.acapp.acwing.com.cn/qq/callback'
     
     try:
-        # 第一步：通过 code 获取 access_token
+        # 第一步：通过 code 获取 access_token（添加 unionid=1）
         token_url = "https://graph.qq.com/oauth2.0/token"
         token_params = {
             'grant_type': 'authorization_code',
             'client_id': QQ_APPID,
             'client_secret': QQ_APPKEY,
             'code': code,
-            'redirect_uri': QQ_REDIRECT_URI
+            'redirect_uri': QQ_REDIRECT_URI,
+            'unionid': 1  # ← 添加 UnionID 参数
         }
         token_response = requests.get(token_url, params=token_params, timeout=10)
         
@@ -192,8 +193,8 @@ def qq_login(request):
         access_token = token_dict['access_token'][0]
         refresh_token = token_dict.get('refresh_token', [''])[0]
         
-        # 第二步：获取 OpenID
-        openid_url = f"https://graph.qq.com/oauth2.0/me?access_token={access_token}"
+        # 第二步：获取 OpenID（添加 unionid=1）
+        openid_url = f"https://graph.qq.com/oauth2.0/me?access_token={access_token}&unionid=1"
         openid_response = requests.get(openid_url, timeout=10)
         openid_text = openid_response.text
         
@@ -209,12 +210,13 @@ def qq_login(request):
         openid_data = json.loads(match.group(1))
         openid = openid_data['openid']
         
-        # 第三步：获取用户信息
+        # 第三步：获取用户信息（添加 unionid=1）
         userinfo_url = "https://graph.qq.com/user/get_user_info"
         userinfo_params = {
             'access_token': access_token,
             'oauth_consumer_key': QQ_APPID,
-            'openid': openid
+            'openid': openid,
+            'unionid': 1  # ← 添加 UnionID 参数
         }
         userinfo_response = requests.get(userinfo_url, params=userinfo_params, timeout=10)
         userinfo_data = userinfo_response.json()
@@ -226,6 +228,9 @@ def qq_login(request):
         
         nickname = userinfo_data.get('nickname', 'QQ用户')
         photo_url = userinfo_data.get('figureurl_qq_2') or userinfo_data.get('figureurl_qq_1', '')
+        unionid = userinfo_data.get('unionid', '')  # ← 获取 UnionID
+        
+        logger.info(f'[QQ Login] OpenID: {openid[:15]}..., UnionID: {unionid[:15] if unionid else "None"}...')
         
         # 尝试获取 QQ 邮箱（需要额外权限，可能失败）
         qq_email = None
@@ -251,24 +256,56 @@ def qq_login(request):
             # 获取邮箱失败，使用默认值
             qq_email = f"{openid[:10]}@qq.com"
         
-        # 查找或创建用户
-        qq_user = QQUser.objects.filter(openid=openid).first()
+        # 查找或创建用户（优先使用 UnionID）
+        qq_user = None
         
-        if qq_user:
-            # 已存在的用户，更新token和信息
-            qq_user.access_token = access_token
-            qq_user.refresh_token = refresh_token
-            qq_user.photo_url = photo_url
-            qq_user.nickname = nickname
-            qq_user.save()
-            user = qq_user.user
+        if unionid:
+            # 如果有 UnionID，优先通过 UnionID 查找（跨应用识别）
+            qq_user = QQUser.objects.filter(unionid=unionid).first()
             
-            # 如果用户邮箱为空，自动设置
-            if not user.email and qq_email:
-                user.email = qq_email
-                user.save()
+            if qq_user:
+                # 找到了通过 UnionID 匹配的用户
+                logger.info(f'[QQ Login] Found existing user by UnionID: {qq_user.user.username}')
+                
+                # 更新当前应用的 openid（因为不同应用的 openid 不同）
+                qq_user.openid = openid
+                qq_user.access_token = access_token
+                qq_user.refresh_token = refresh_token
+                qq_user.photo_url = photo_url
+                qq_user.nickname = nickname
+                qq_user.save()
+                user = qq_user.user
+            else:
+                # UnionID 没有匹配，尝试通过 openid 查找（同应用内）
+                qq_user = QQUser.objects.filter(openid=openid).first()
+                
+                if qq_user:
+                    # 找到了老用户，补充 unionid
+                    logger.info(f'[QQ Login] Found user by OpenID, updating UnionID: {qq_user.user.username}')
+                    qq_user.unionid = unionid
+                    qq_user.access_token = access_token
+                    qq_user.refresh_token = refresh_token
+                    qq_user.photo_url = photo_url
+                    qq_user.nickname = nickname
+                    qq_user.save()
+                    user = qq_user.user
         else:
+            # 没有 unionid，回退到 openid 查找
+            qq_user = QQUser.objects.filter(openid=openid).first()
+            
+            if qq_user:
+                # 已存在的用户，更新token和信息
+                qq_user.access_token = access_token
+                qq_user.refresh_token = refresh_token
+                qq_user.photo_url = photo_url
+                qq_user.nickname = nickname
+                qq_user.save()
+                user = qq_user.user
+        
+        if not qq_user:
             # 新用户，创建账号
+            logger.info(f'[QQ Login] Creating new user with UnionID: {unionid[:15] if unionid else "None"}...')
+            
             # 使用 QQ 昵称作为用户名，如果冲突则添加后缀
             username = nickname
             base_username = username
@@ -286,11 +323,17 @@ def qq_login(request):
             QQUser.objects.create(
                 user=user,
                 openid=openid,
+                unionid=unionid,  # ← 保存 UnionID
                 access_token=access_token,
                 refresh_token=refresh_token,
                 photo_url=photo_url,
                 nickname=nickname
             )
+        else:
+            # 更新用户邮箱（如果为空）
+            if not user.email and qq_email:
+                user.email = qq_email
+                user.save()
         
         # 生成JWT token
         refresh = RefreshToken.for_user(user)
@@ -346,12 +389,12 @@ def get_acwing_login_url(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_qq_login_url(request):
-    """获取 QQ 登录授权 URL"""
+    """获取 QQ 登录授权 URL（支持 UnionID）"""
     QQ_APPID = getattr(settings, 'QQ_APPID', '')
     REDIRECT_URI = 'https://app7626.acapp.acwing.com.cn/qq/callback'
     
-    # 构建授权 URL
-    apply_code_url = f"https://graph.qq.com/oauth2.0/authorize?response_type=code&client_id={QQ_APPID}&redirect_uri={REDIRECT_URI}&state=qq"
+    # 构建授权 URL（添加 unionid=1）
+    apply_code_url = f"https://graph.qq.com/oauth2.0/authorize?response_type=code&client_id={QQ_APPID}&redirect_uri={REDIRECT_URI}&state=qq&unionid=1"
     
     return Response({
         'apply_code_url': apply_code_url
