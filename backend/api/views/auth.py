@@ -227,6 +227,30 @@ def qq_login(request):
         nickname = userinfo_data.get('nickname', 'QQ用户')
         photo_url = userinfo_data.get('figureurl_qq_2') or userinfo_data.get('figureurl_qq_1', '')
         
+        # 尝试获取 QQ 邮箱（需要额外权限，可能失败）
+        qq_email = None
+        try:
+            email_url = "https://graph.qq.com/user/get_info"
+            email_params = {
+                'access_token': access_token,
+                'oauth_consumer_key': QQ_APPID,
+                'openid': openid,
+                'format': 'json'
+            }
+            email_response = requests.get(email_url, params=email_params, timeout=5)
+            email_data = email_response.json()
+            
+            # QQ 邮箱通常是 openid@qq.com 格式，但需要申请权限
+            # 如果没有权限，使用 openid 构造一个内部邮箱
+            if 'email' in email_data:
+                qq_email = email_data['email']
+            else:
+                # 没有权限获取邮箱，使用默认格式（用户可以后续在个人中心修改）
+                qq_email = f"{openid[:10]}@qq.com"
+        except:
+            # 获取邮箱失败，使用默认值
+            qq_email = f"{openid[:10]}@qq.com"
+        
         # 查找或创建用户
         qq_user = QQUser.objects.filter(openid=openid).first()
         
@@ -238,6 +262,11 @@ def qq_login(request):
             qq_user.nickname = nickname
             qq_user.save()
             user = qq_user.user
+            
+            # 如果用户邮箱为空，自动设置
+            if not user.email and qq_email:
+                user.email = qq_email
+                user.save()
         else:
             # 新用户，创建账号
             # 使用 QQ 昵称作为用户名，如果冲突则添加后缀
@@ -250,6 +279,7 @@ def qq_login(request):
             
             user = User.objects.create_user(
                 username=username,
+                email=qq_email,  # 设置QQ邮箱
                 password=None  # QQ登录不需要密码
             )
             
