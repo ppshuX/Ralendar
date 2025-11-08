@@ -21,6 +21,17 @@ from .oauth_callback import acwing_oauth_callback
 from .lunar import get_lunar_date
 from .holidays import get_holidays, check_holiday, get_today_holidays
 
+# Fusion Views (Roamio × Ralendar)
+from .fusion import (
+    batch_create_events, 
+    get_trip_events, 
+    delete_trip_events,
+    mark_notification_sent,
+    get_events_with_location,
+    get_roamio_events,
+    sync_from_roamio
+)
+
 # 导出所有视图
 __all__ = [
     'EventViewSet',
@@ -42,5 +53,13 @@ __all__ = [
     'get_holidays',
     'check_holiday',
     'get_today_holidays',
+    # Fusion APIs
+    'batch_create_events',
+    'get_trip_events',
+    'delete_trip_events',
+    'mark_notification_sent',
+    'get_events_with_location',
+    'get_roamio_events',
+    'sync_from_roamio',
 ]
 

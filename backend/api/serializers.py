@@ -48,14 +48,46 @@ class UserSerializer(serializers.ModelSerializer):
 
 # ==================== 事件相关 ====================
 class EventSerializer(serializers.ModelSerializer):
-    """事件序列化器"""
+    """事件序列化器（融合版）"""
     username = serializers.CharField(source='user.username', read_only=True)
+    map_url = serializers.CharField(read_only=True)
+    has_location = serializers.BooleanField(read_only=True)
+    is_from_roamio = serializers.BooleanField(read_only=True)
     
     class Meta:
         model = Event
-        fields = ['id', 'title', 'description', 'start_time', 'end_time', 'location', 
-                  'reminder_minutes', 'username', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'username', 'created_at', 'updated_at']
+        fields = [
+            'id', 'title', 'description', 'start_time', 'end_time', 'location',
+            'reminder_minutes', 'username', 'created_at', 'updated_at',
+            # 来源追踪字段
+            'source_app', 'source_id', 'related_trip_slug',
+            # 地图信息字段
+            'latitude', 'longitude', 'map_provider', 'map_url', 'has_location',
+            # 提醒配置字段
+            'email_reminder', 'notification_sent',
+            # 派生字段
+            'is_from_roamio'
+        ]
+        read_only_fields = ['id', 'username', 'created_at', 'updated_at', 
+                            'map_url', 'has_location', 'is_from_roamio']
+    
+    def validate(self, data):
+        """验证数据"""
+        # 如果有经纬度，两者必须同时存在
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        
+        if (latitude is not None and longitude is None) or (longitude is not None and latitude is None):
+            raise serializers.ValidationError("经纬度必须同时提供或同时为空")
+        
+        # 验证经纬度范围
+        if latitude is not None:
+            if not (-90 <= latitude <= 90):
+                raise serializers.ValidationError("纬度必须在 -90 到 90 之间")
+            if not (-180 <= longitude <= 180):
+                raise serializers.ValidationError("经度必须在 -180 到 180 之间")
+        
+        return data
 
 
 class PublicCalendarSerializer(serializers.ModelSerializer):
