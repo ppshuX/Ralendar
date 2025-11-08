@@ -19,8 +19,8 @@ APP Key: OddPvLYXHo69wTYO
 ### Ralendar QQ 应用
 ```
 APP ID:  102818448
-APP Key: [Ralendar 自己的]
-状态:    ✅ UnionID 需要添加
+APP Key: sZ0B7nDQP8Bzb1JP
+状态:    ✅ UnionID 已获取
 回调:    https://app7626.acapp.acwing.com.cn/api/v1/auth/qq/callback/
 ```
 
@@ -56,11 +56,7 @@ APP Key: [Ralendar 自己的]
 
 **Roamio**: ✅ 已完成（截图显示已获取）
 
-**Ralendar**: 
-1. 登录 QQ 互联: https://connect.qq.com/
-2. 进入应用管理 → Ralendar 应用（APP ID: 102818448）
-3. 应用接口 → 申请 `unionid` 接口
-4. 等待审核通过（通常 1-2 工作日）
+**Ralendar**: ✅ 已完成（截图显示已获取）
 
 ---
 
@@ -431,8 +427,8 @@ python manage.py shell
 
 ## ✅ 集成检查清单
 
-- [ ] Roamio 已获取 QQ UnionID 接口权限 ✅
-- [ ] Ralendar 申请并获取 QQ UnionID 接口权限
+- [x] Roamio 已获取 QQ UnionID 接口权限 ✅
+- [x] Ralendar 已获取 QQ UnionID 接口权限 ✅
 - [ ] Ralendar 数据库添加 `unionid` 字段
 - [ ] 两边 QQ OAuth URL 添加 `unionid=1` 参数
 - [ ] 两边登录逻辑保存 UnionID
