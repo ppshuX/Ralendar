@@ -67,10 +67,10 @@ def get_bindings(request):
     })
 
 
-@api_view(['PATCH'])
+@api_view(['PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def update_profile(request):
-    """更新用户个人信息"""
+    """更新用户个人信息（支持 PUT 和 PATCH）"""
     user = request.user
     username = request.data.get('username')
     email = request.data.get('email')
