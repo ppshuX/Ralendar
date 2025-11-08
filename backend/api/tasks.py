@@ -72,7 +72,9 @@ https://app7626.acapp.acwing.com.cn
     <meta charset="UTF-8">
     <style>
         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background: white; }}
+        .logo-section {{ text-align: center; padding: 20px 0; }}
+        .logo-section img {{ width: 100px; height: 100px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }}
         .header {{ background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
         .header h2 {{ margin: 0; font-size: 24px; }}
         .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }}
@@ -86,6 +88,9 @@ https://app7626.acapp.acwing.com.cn
 </head>
 <body>
     <div class="container">
+        <div class="logo-section">
+            <img src="https://app7626.acapp.acwing.com.cn/logo.png" alt="Ralendar Logo">
+        </div>
         <div class="header">
             <h2>📅 日程提醒</h2>
         </div>
