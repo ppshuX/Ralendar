@@ -91,17 +91,32 @@ def batch_create_events(request):
         )
     
     data = request.data
-    source_app = data.get('source_app', 'roamio')
-    source_id = data.get('source_id', '')
-    related_trip_slug = data.get('related_trip_slug', '')
-    events_data = data.get('events', [])
     
     # 调试日志
     import logging
     logger = logging.getLogger('django')
     logger.info(f"[Fusion API] 收到请求")
+    logger.info(f"[Fusion API] 原始数据: {data}")
     logger.info(f"[Fusion API] Roamio user_id: {roamio_user_id}")
     logger.info(f"[Fusion API] Ralendar user: {ralendar_user.username} (ID: {ralendar_user.id})")
+    
+    # 兼容两种格式
+    # 格式 1（正确）: {"events": [...]}
+    # 格式 2（Roamio 当前使用）: {"title": "...", "start_time": "..."}
+    if 'events' in data:
+        # 标准格式：批量创建
+        source_app = data.get('source_app', 'roamio')
+        source_id = data.get('source_id', '')
+        related_trip_slug = data.get('related_trip_slug', '')
+        events_data = data.get('events', [])
+    else:
+        # Roamio 格式：单个事件，包装成数组
+        source_app = 'roamio'
+        source_id = ''
+        related_trip_slug = data.get('trip_slug', '')
+        events_data = [data]  # 包装成数组
+        logger.info(f"[Fusion API] 自动包装为数组格式")
+    
     logger.info(f"[Fusion API] Events count: {len(events_data)}")
     logger.info(f"[Fusion API] Events data: {events_data[:2] if len(events_data) > 2 else events_data}")
     
