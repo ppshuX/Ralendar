@@ -209,14 +209,14 @@ def qq_login(request):
         
         openid_data = json.loads(match.group(1))
         openid = openid_data['openid']
+        unionid = openid_data.get('unionid', '')  # ← 关键！从 /me 接口获取 UnionID！
         
-        # 第三步：获取用户信息（添加 unionid=1）
+        # 第三步：获取用户信息
         userinfo_url = "https://graph.qq.com/user/get_user_info"
         userinfo_params = {
             'access_token': access_token,
             'oauth_consumer_key': QQ_APPID,
-            'openid': openid,
-            'unionid': 1  # ← 添加 UnionID 参数
+            'openid': openid
         }
         userinfo_response = requests.get(userinfo_url, params=userinfo_params, timeout=10)
         userinfo_data = userinfo_response.json()
@@ -228,7 +228,6 @@ def qq_login(request):
         
         nickname = userinfo_data.get('nickname', 'QQ用户')
         photo_url = userinfo_data.get('figureurl_qq_2') or userinfo_data.get('figureurl_qq_1', '')
-        unionid = userinfo_data.get('unionid', '')  # ← 获取 UnionID
         
         logger.info(f'[QQ Login] OpenID: {openid[:15]}..., UnionID: {unionid[:15] if unionid else "None"}...')
         
