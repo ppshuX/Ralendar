@@ -96,6 +96,15 @@ def batch_create_events(request):
     related_trip_slug = data.get('related_trip_slug', '')
     events_data = data.get('events', [])
     
+    # 调试日志
+    import logging
+    logger = logging.getLogger('django')
+    logger.info(f"[Fusion API] 收到请求")
+    logger.info(f"[Fusion API] Roamio user_id: {roamio_user_id}")
+    logger.info(f"[Fusion API] Ralendar user: {ralendar_user.username} (ID: {ralendar_user.id})")
+    logger.info(f"[Fusion API] Events count: {len(events_data)}")
+    logger.info(f"[Fusion API] Events data: {events_data[:2] if len(events_data) > 2 else events_data}")
+    
     if not events_data:
         return Response(
             {'error': '事件列表不能为空'},
