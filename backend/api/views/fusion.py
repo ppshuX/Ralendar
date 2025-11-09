@@ -14,8 +14,11 @@ from ..models import Event, QQUser
 from ..serializers import EventSerializer
 
 
+from rest_framework.decorators import authentication_classes
+
 @api_view(['POST'])
-@permission_classes([AllowAny])  # 改为 AllowAny，手动验证 Token
+@authentication_classes([])  # 禁用全局认证，完全手动处理
+@permission_classes([AllowAny])  # 允许任何人访问
 def batch_create_events(request):
     """
     批量创建事件（用于 Roamio 同步）
