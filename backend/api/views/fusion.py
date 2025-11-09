@@ -137,10 +137,10 @@ def batch_create_events(request):
             event_data['source_id'] = source_id
             event_data['related_trip_slug'] = related_trip_slug
             
-            # 序列化并保存
+            # 序列化并保存（在 save() 时传递 user）
             serializer = EventSerializer(data=event_data)
             if serializer.is_valid():
-                event = serializer.save()
+                event = serializer.save(user=ralendar_user)  # ← 关键！传递 user 对象
                 created_events.append(event)
                 
                 # 如果需要邮件提醒，标记（实际发送需要异步任务）
