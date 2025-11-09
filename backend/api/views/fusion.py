@@ -81,45 +81,58 @@ def batch_create_events(request):
             status=status.HTTP_401_UNAUTHORIZED
         )
     
-    # 2. 通过 UnionID 匹配用户
-    # 方案 A: 从请求中获取 unionid（推荐）
-    unionid = request.data.get('unionid', '')  # 修复：使用 request.data 而不是 data
+    # 2. 三层用户匹配逻辑（优先级递减）
+    # 方案 A: 从请求中获取 unionid 和 openid
+    unionid = request.data.get('unionid', '')
+    openid = request.data.get('openid', '')
     
-    # 方案 B: 从 Token payload 中获取（如果 Roamio 包含了的话）
+    # 方案 B: 从 Token payload 中获取
     if not unionid:
         unionid = token.payload.get('unionid', '')
+    if not openid:
+        openid = token.payload.get('openid', '')
     
     ralendar_user = None
     
+    # ============ 第1层：UnionID 匹配（最优先）============
     if unionid:
-        # 通过 UnionID 查找对应的 Ralendar 用户
-        logger.info(f"[Fusion API] 查找 UnionID: {unionid}")
+        logger.info(f"[Fusion API] 🔍 尝试 UnionID 匹配: {unionid[:20]}...")
         qq_user = QQUser.objects.filter(unionid=unionid).first()
         
         if qq_user:
             ralendar_user = qq_user.user
-            logger.info(f"[Fusion API] ✅ 通过 UnionID 匹配到用户: {ralendar_user.username} (ID: {ralendar_user.id})")
-        else:
-            logger.warning(f"[Fusion API] ⚠️ UnionID {unionid} 在 Ralendar 中不存在")
-    else:
-        logger.warning(f"[Fusion API] ⚠️ 请求中没有 UnionID")
+            logger.info(f"[Fusion API] ✅ 通过 UnionID 匹配成功: {ralendar_user.username} (ID: {ralendar_user.id})")
     
-    # 如果通过 UnionID 没找到用户，尝试通过 Roamio user_id 直接查找
+    # ============ 第2层：OpenID 匹配（回退方案）============
+    if not ralendar_user and openid:
+        logger.info(f"[Fusion API] 🔍 UnionID 失败，尝试 OpenID 匹配: {openid[:20]}...")
+        qq_user = QQUser.objects.filter(openid=openid).first()
+        
+        if qq_user:
+            ralendar_user = qq_user.user
+            logger.info(f"[Fusion API] ✅ 通过 OpenID 匹配成功: {ralendar_user.username} (ID: {ralendar_user.id})")
+    
+    # ============ 第3层：user_id 匹配（兼容方案）============
     if not ralendar_user:
+        logger.info(f"[Fusion API] 🔍 UnionID/OpenID 都失败，尝试 user_id 匹配: {roamio_user_id}")
         try:
             ralendar_user = User.objects.get(id=roamio_user_id)
-            logger.info(f"[Fusion API] ✅ 通过 user_id 匹配到用户: {ralendar_user.username}")
+            logger.info(f"[Fusion API] ✅ 通过 user_id 匹配成功: {ralendar_user.username}")
         except User.DoesNotExist:
-            logger.warning(f"[Fusion API] ⚠️ user_id {roamio_user_id} 在 Ralendar 中不存在")
+            logger.warning(f"[Fusion API] ⚠️ user_id {roamio_user_id} 不存在")
     
-    # 如果还是找不到，使用默认用户（兜底方案）
+    # ============ 最后：返回错误（不再使用 anonymous）============
     if not ralendar_user:
-        ralendar_user = User.objects.first()
-        logger.warning(f"[Fusion API] ⚠️ 使用默认用户: {ralendar_user.username if ralendar_user else 'None'}")
-        
-    if not ralendar_user:
+        logger.error(f"[Fusion API] ❌ 所有匹配方案都失败！")
+        logger.error(f"  - UnionID: {unionid if unionid else 'None'}")
+        logger.error(f"  - OpenID: {openid if openid else 'None'}")
+        logger.error(f"  - user_id: {roamio_user_id}")
         return Response(
-            {'error': 'Ralendar 中没有匹配的用户，请先用 QQ 登录 Ralendar'},
+            {
+                'error': '无法识别用户',
+                'detail': '请先用 QQ 登录 Ralendar，或在 Roamio 的请求中包含 openid 字段',
+                'required_fields': ['unionid (推荐)', 'openid (备选)']
+            },
             status=status.HTTP_400_BAD_REQUEST
         )
     
