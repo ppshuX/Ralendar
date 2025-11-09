@@ -132,15 +132,15 @@ def batch_create_events(request):
     for idx, event_data in enumerate(events_data):
         try:
             # 合并来源信息
-            event_data['user'] = ralendar_user.id  # 使用匹配到的 Ralendar 用户
             event_data['source_app'] = source_app
             event_data['source_id'] = source_id
             event_data['related_trip_slug'] = related_trip_slug
             
-            # 序列化并保存（在 save() 时传递 user）
+            # 序列化并保存（在 save() 时传递 user 对象）
             serializer = EventSerializer(data=event_data)
             if serializer.is_valid():
                 event = serializer.save(user=ralendar_user)  # ← 关键！传递 user 对象
+                logger.info(f"[Fusion API] ✅ 创建成功: {event.title} (ID: {event.id})")
                 created_events.append(event)
                 
                 # 如果需要邮件提醒，标记（实际发送需要异步任务）
