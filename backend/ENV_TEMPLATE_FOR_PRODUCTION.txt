@@ -19,26 +19,26 @@ QQ_APPID=102818448
 QQ_APPKEY=sZ0B7nDQP8Bzb1JP
 
 # ==================== Email Config ====================
-# Option 1: QQ Email (Current)
-EMAIL_HOST=smtp.qq.com
+# 当前使用：Gmail（推荐，支持自定义发件人名称和头像）
+EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
-EMAIL_HOST_USER=2064747320@qq.com
-EMAIL_HOST_PASSWORD=zwcqgzukwkfyeaja
-DEFAULT_FROM_EMAIL=Ralendar <2064747320@qq.com>
+EMAIL_HOST_USER=wenxiaolv8@gmail.com
+EMAIL_HOST_PASSWORD=bumjxbyjhymsbsrb
+DEFAULT_FROM_EMAIL=Ralendar <wenxiaolv8@gmail.com>
 
-# Option 2: Gmail (Recommended for custom sender name/avatar)
-# EMAIL_HOST=smtp.gmail.com
+# 备用：QQ 邮箱
+# EMAIL_HOST=smtp.qq.com
 # EMAIL_PORT=587
 # EMAIL_USE_TLS=True
-# EMAIL_HOST_USER=your_gmail@gmail.com
-# EMAIL_HOST_PASSWORD=your_16_digit_app_password  # Generate at: https://myaccount.google.com/apppasswords
-# DEFAULT_FROM_EMAIL=Ralendar <your_gmail@gmail.com>
+# EMAIL_HOST_USER=2064747320@qq.com
+# EMAIL_HOST_PASSWORD=zwcqgzukwkfyeaja
+# DEFAULT_FROM_EMAIL=Ralendar <2064747320@qq.com>
 
-# Note: Gmail requires:
-# 1. Enable 2-Step Verification first
-# 2. Generate App Password (16 digits, no spaces)
-# 3. Set profile name to "Ralendar" and upload logo as avatar
+# Gmail 设置说明：
+# 1. 已启用两步验证
+# 2. 已生成应用专用密码（16位，无空格）
+# 3. Gmail 个人资料名称设置为 "Ralendar"，头像上传 logo.png
 
 # ==================== Celery/Redis 配置 ====================
 CELERY_BROKER_URL=redis://localhost:6379/0
