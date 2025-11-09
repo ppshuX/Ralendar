@@ -3,19 +3,26 @@
 """
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.utils import timezone
+from django.contrib.auth.models import User
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.exceptions import TokenError
 
-from ..models import Event
+from ..models import Event, QQUser
 from ..serializers import EventSerializer
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])  # 改为 AllowAny，手动验证 Token
 def batch_create_events(request):
     """
     批量创建事件（用于 Roamio 同步）
+    
+    跨应用认证说明：
+    - Roamio Token 中的 user_id 在 Ralendar 中不存在
+    - 需要手动验证 Token 并通过 UnionID 匹配用户
     
     **POST** `/api/events/batch/`
     
@@ -51,6 +58,35 @@ def batch_create_events(request):
     }
     ```
     """
+    # 1. 手动验证 Token
+    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+    if not auth_header.startswith('Bearer '):
+        return Response(
+            {'error': '缺少认证 Token'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+    
+    token_str = auth_header.split(' ')[1]
+    
+    try:
+        token = AccessToken(token_str)
+        roamio_user_id = token['user_id']
+    except TokenError as e:
+        return Response(
+            {'error': f'Token 无效: {str(e)}'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+    
+    # 2. 通过 UnionID 匹配用户（TODO: 需要 Roamio 提供 UnionID）
+    # 暂时方案：使用 Ralendar 的默认用户或创建关联用户
+    # 这里先用第一个用户作为测试
+    ralendar_user = User.objects.first()
+    if not ralendar_user:
+        return Response(
+            {'error': 'Ralendar 中没有用户，请先注册'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
     data = request.data
     source_app = data.get('source_app', 'roamio')
     source_id = data.get('source_id', '')
@@ -69,7 +105,7 @@ def batch_create_events(request):
     for idx, event_data in enumerate(events_data):
         try:
             # 合并来源信息
-            event_data['user'] = request.user.id
+            event_data['user'] = ralendar_user.id  # 使用匹配到的 Ralendar 用户
             event_data['source_app'] = source_app
             event_data['source_id'] = source_id
             event_data['related_trip_slug'] = related_trip_slug
