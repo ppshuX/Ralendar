@@ -98,15 +98,29 @@ WSGI_APPLICATION = 'calendar_backend.wsgi.application'
 ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
 
 if ENVIRONMENT == 'production':
-    # 生产环境：使用 Ralendar 独立 MySQL 数据库
+    # 生产环境：多数据库配置（部分共享方案）
     DATABASES = {
+        # 默认数据库：用户、OAuth 等共享数据（与 Roamio 共享）
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('DB_NAME', 'ralendar_production'),  # Ralendar 独立数据库
-            'USER': os.environ.get('DB_USER', 'ralendar_user'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '3306'),
+            'NAME': os.environ.get('SHARED_DB_NAME', 'roamio_production'),
+            'USER': os.environ.get('SHARED_DB_USER', 'ralendar_user'),
+            'PASSWORD': os.environ.get('SHARED_DB_PASSWORD', ''),
+            'HOST': os.environ.get('SHARED_DB_HOST', 'localhost'),
+            'PORT': os.environ.get('SHARED_DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            }
+        },
+        # Ralendar 独立数据库：事件、节假日、黄历等 Ralendar 特有数据
+        'ralendar': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('RALENDAR_DB_NAME', 'ralendar_production'),
+            'USER': os.environ.get('RALENDAR_DB_USER', 'ralendar_user'),
+            'PASSWORD': os.environ.get('RALENDAR_DB_PASSWORD', ''),
+            'HOST': os.environ.get('RALENDAR_DB_HOST', 'localhost'),
+            'PORT': os.environ.get('RALENDAR_DB_PORT', '3306'),
             'OPTIONS': {
                 'charset': 'utf8mb4',
                 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
@@ -121,6 +135,9 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
+# 数据库路由配置（多数据库）
+DATABASE_ROUTERS = ['api.db_router.RalendarRouter'] if ENVIRONMENT == 'production' else []
 
 
 # Password validation
