@@ -43,27 +43,40 @@ class UserSerializer(serializers.ModelSerializer):
     
     def get_photo(self, obj):
         """获取用户头像（优先 AcWing，其次 QQ）"""
-        if hasattr(obj, 'acwing_profile'):
-            return obj.acwing_profile.photo_url
-        elif hasattr(obj, 'qq_profile'):
-            return obj.qq_profile.photo_url
+        try:
+            if hasattr(obj, 'acwing_profile') and obj.acwing_profile:
+                return obj.acwing_profile.photo_url or None
+            elif hasattr(obj, 'qq_profile') and obj.qq_profile:
+                return obj.qq_profile.photo_url or None
+        except Exception as e:
+            print(f"Error getting photo: {e}")
         return None
     
     def get_acwing_openid(self, obj):
         """获取 AcWing OpenID（用于判断是否绑定）"""
-        if hasattr(obj, 'acwing_profile'):
-            return obj.acwing_profile.openid
+        try:
+            if hasattr(obj, 'acwing_profile') and obj.acwing_profile:
+                return obj.acwing_profile.openid or None
+        except Exception as e:
+            print(f"Error getting acwing_openid: {e}")
         return None
     
     def get_qq_openid(self, obj):
         """获取 QQ OpenID（用于判断是否绑定）"""
-        if hasattr(obj, 'qq_profile'):
-            return obj.qq_profile.openid
+        try:
+            if hasattr(obj, 'qq_profile') and obj.qq_profile:
+                return obj.qq_profile.openid or None
+        except Exception as e:
+            print(f"Error getting qq_openid: {e}")
         return None
     
     def get_has_password(self, obj):
         """判断用户是否设置了密码"""
-        return obj.has_usable_password()
+        try:
+            return obj.has_usable_password()
+        except Exception as e:
+            print(f"Error checking password: {e}")
+            return False
 
 
 # ==================== 事件相关 ====================
