@@ -173,25 +173,50 @@ def get_today_holidays(request):
         'international_festivals': []
     }
     
-    # 添加一些国际节日（可以根据日期判断）
+    # 添加一些国际节日和特殊日子（可以根据日期判断）
     month_day = today.strftime('%m-%d')
     international_festivals = {
-        '01-01': '元旦',
-        '02-14': '情人节',
-        '03-08': '国际妇女节',
-        '04-01': '愚人节',
-        '05-01': '国际劳动节',
-        '05-04': '青年节',
-        '06-01': '国际儿童节',
-        '09-10': '教师节',
-        '10-01': '国庆节',
-        '12-25': '圣诞节'
+        '01-01': {'name': '元旦', 'emoji': '🎊'},
+        '02-14': {'name': '情人节', 'emoji': '💕'},
+        '03-08': {'name': '国际妇女节', 'emoji': '👩'},
+        '03-12': {'name': '植树节', 'emoji': '🌳'},
+        '04-01': {'name': '愚人节', 'emoji': '🤡'},
+        '05-01': {'name': '国际劳动节', 'emoji': '💪'},
+        '05-04': {'name': '青年节', 'emoji': '🎓'},
+        '06-01': {'name': '国际儿童节', 'emoji': '🧒'},
+        '07-01': {'name': '建党节', 'emoji': '🎉'},
+        '08-01': {'name': '建军节', 'emoji': '🎖️'},
+        '09-10': {'name': '教师节', 'emoji': '📚'},
+        '10-01': {'name': '国庆节', 'emoji': '🇨🇳'},
+        '11-11': {'name': '光棍节 / 双11购物节', 'emoji': '1️⃣'},
+        '12-24': {'name': '平安夜', 'emoji': '🎄'},
+        '12-25': {'name': '圣诞节', 'emoji': '🎅'}
     }
     
     if month_day in international_festivals:
+        festival = international_festivals[month_day]
         result['international_festivals'].append({
-            'name': international_festivals[month_day],
+            'name': festival['name'],
+            'emoji': festival['emoji'],
             'type': 'international'
+        })
+    
+    # 添加传统节日（农历节日，2025年对应的公历日期）
+    traditional_festivals = {
+        '01-28': {'name': '除夕', 'emoji': '🏮'},
+        '01-29': {'name': '春节', 'emoji': '🧨'},
+        '02-12': {'name': '元宵节', 'emoji': '🏮'},
+        '05-31': {'name': '端午节', 'emoji': '🐉'},
+        '10-06': {'name': '中秋节', 'emoji': '🥮'},
+        '10-29': {'name': '重阳节', 'emoji': '🍵'}
+    }
+    
+    if month_day in traditional_festivals:
+        festival = traditional_festivals[month_day]
+        result['traditional_festivals'].append({
+            'name': festival['name'],
+            'emoji': festival['emoji'],
+            'type': 'traditional'
         })
     
     return Response(result)
