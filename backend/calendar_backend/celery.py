@@ -25,6 +25,11 @@ app.conf.beat_schedule = {
         'task': 'api.tasks.check_and_send_reminders',
         'schedule': crontab(minute='*/1'),  # 每分钟执行一次
     },
+    # 每月1号凌晨3点同步节假日数据
+    'sync-holiday-data': {
+        'task': 'api.tasks.sync_holiday_data',
+        'schedule': crontab(hour=3, minute=0, day_of_month=1),  # 每月1号 03:00
+    },
 }
 
 # 时区配置

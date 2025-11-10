@@ -1,6 +1,6 @@
 """
 Celery 异步任务
-用于发送邮件提醒
+用于发送邮件提醒和同步节假日数据
 """
 from celery import shared_task
 from django.core.mail import send_mail
@@ -8,6 +8,9 @@ from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
 from .models import Event
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -198,4 +201,53 @@ def check_and_send_reminders():
         print(f"✓ 当前没有需要发送的提醒")
     
     return sent_count
+
+
+@shared_task
+def sync_holiday_data():
+    """
+    定时任务：同步节假日数据
+    每月1号凌晨执行
+    
+    同步策略：
+    1. 同步去年、今年、未来2年的节假日数据（共4年）
+    2. 自动替换已存在的数据（确保数据最新）
+    """
+    try:
+        from .utils.holiday_sync import HolidaySyncService
+        
+        logger.info("🔄 开始自动同步节假日数据...")
+        print("🔄 开始自动同步节假日数据...")
+        
+        service = HolidaySyncService()
+        current_year = timezone.now().year
+        
+        # 同步：去年、今年、未来2年
+        start_year = current_year - 1
+        end_year = current_year + 2
+        
+        logger.info(f"同步年份范围: {start_year} - {end_year}")
+        print(f"📅 同步年份范围: {start_year} - {end_year}")
+        
+        # 执行同步（replace=True 确保数据是最新的）
+        service.sync_multiple_years(start_year, end_year, replace=True)
+        
+        logger.info("✅ 节假日数据同步完成")
+        print("✅ 节假日数据同步完成")
+        
+        return {
+            'success': True,
+            'years': f'{start_year}-{end_year}',
+            'message': '节假日数据同步成功'
+        }
+        
+    except Exception as e:
+        error_msg = f'节假日数据同步失败: {str(e)}'
+        logger.error(f"❌ {error_msg}")
+        print(f"❌ {error_msg}")
+        
+        return {
+            'success': False,
+            'error': error_msg
+        }
 
