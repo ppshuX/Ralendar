@@ -1,35 +1,42 @@
 #!/bin/bash
 
-# Ralendar 后端部署脚本
+# Ralendar 后端部署脚本（Gunicorn版本）
+# 使用方法：ssh到服务器后执行：bash deploy.sh
 
 echo "🚀 开始部署 Ralendar Backend..."
 
-# 1. 安装依赖（仅首次部署或依赖更新时需要）
-# echo "📦 安装 Python 依赖..."
-# pip3 install -r requirements.txt
+# 1. 进入项目目录
+cd ~/kotlin_calendar || exit 1
 
-# 2. 数据库迁移
-echo "💾 执行数据库迁移..."
-python3 manage.py makemigrations
-python3 manage.py migrate
+# 2. 拉取最新代码
+echo "📥 拉取最新代码..."
+git pull origin master
 
-# 3. 创建超级用户（可选）
-# python3 manage.py createsuperuser
+# 3. 激活虚拟环境
+echo "🐍 激活虚拟环境..."
+source venv/bin/activate
 
-# 4. 创建日志目录
-echo "📁 创建日志目录..."
-mkdir -p logs
+# 4. 进入后端目录
+cd backend || exit 1
 
-# 5. 停止旧进程
-echo "🛑 停止旧进程..."
-uwsgi --stop uwsgi.pid 2>/dev/null || true
-pkill -f "uwsgi.*calendar_backend" || true
+# 5. 收集静态文件（如果需要）
+echo "📦 收集静态文件..."
+python manage.py collectstatic --noinput
 
-# 6. 启动 uWSGI
-echo "🔥 启动 uWSGI..."
-uwsgi --ini uwsgi.ini
+# 6. 重启服务
+echo "🔄 重启 Gunicorn 服务..."
+sudo systemctl restart gunicorn
 
-echo "✅ 后端部署完成！"
-echo "📍 API 地址：http://127.0.0.1:8000/api/"
-echo "📝 查看日志：tail -f logs/uwsgi.log"
+# 7. 检查服务状态
+echo "✅ 检查服务状态..."
+sudo systemctl status gunicorn --no-pager | head -n 10
+
+echo ""
+echo "✅ 部署完成！"
+echo ""
+echo "📡 测试 API："
+echo "curl https://app7626.acapp.acwing.com.cn/api/calendars/china-holidays/events-json/"
+echo ""
+echo "🔍 查看日志："
+echo "tail -f /var/log/gunicorn/error.log"
 

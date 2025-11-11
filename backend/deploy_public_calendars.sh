@@ -1,21 +1,31 @@
 #!/bin/bash
 
-# 部署公开日历订阅功能
-# 用法：./deploy_public_calendars.sh
+# 初始化公开日历数据
+# 用法：ssh到服务器后执行：bash deploy_public_calendars.sh
 
-echo "🚀 部署公开日历订阅功能..."
+echo "🚀 初始化公开日历数据..."
 
-# 1. 拉取最新代码
+# 1. 进入项目目录
+cd ~/kotlin_calendar || exit 1
+
+# 2. 拉取最新代码
 echo "📥 拉取代码..."
-git pull
+git pull origin master
 
-# 2. 初始化公开日历数据
+# 3. 激活虚拟环境
+echo "🐍 激活虚拟环境..."
+source venv/bin/activate
+
+# 4. 进入后端目录
+cd backend || exit 1
+
+# 5. 初始化公开日历数据
 echo "📅 初始化公开日历..."
-python3 manage.py init_public_calendars
+python manage.py init_public_calendars
 
-# 3. 重启服务
-echo "🔄 重启服务..."
-pkill -HUP uwsgi
+# 6. 重启服务
+echo "🔄 重启 Gunicorn 服务..."
+sudo systemctl restart gunicorn
 
 echo "✅ 部署完成！"
 echo ""
