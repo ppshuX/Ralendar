@@ -6,7 +6,7 @@
 echo "🚀 开始部署 JSON Events API..."
 
 # 1. 进入项目目录
-cd ~/Ralendar || exit 1
+cd ~/kotlin_calendar || exit 1
 
 # 2. 拉取最新代码
 echo "📥 拉取最新代码..."
