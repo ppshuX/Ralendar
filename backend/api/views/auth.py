@@ -155,8 +155,6 @@ def acwing_login(request):
 @permission_classes([AllowAny])
 def qq_login(request):
     """QQ OAuth2 一键登录"""
-    import traceback
-    
     code = request.data.get('code')
     
     if not code:
@@ -201,15 +199,31 @@ def qq_login(request):
         # 解析 OpenID（返回格式：callback( {"client_id":"YOUR_APPID","openid":"YOUR_OPENID"} );）
         import json
         import re
+        
+        # 解析 OpenID
         match = re.search(r'callback\(\s*(\{.*?\})\s*\)', openid_text)
         if not match:
+            try:
+                openid_data = json.loads(openid_text)
+            except json.JSONDecodeError:
+                return Response({
+                    'error': '获取OpenID失败'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            try:
+                openid_data = json.loads(match.group(1))
+            except json.JSONDecodeError:
+                return Response({
+                    'error': '获取OpenID失败'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if 'openid' not in openid_data or not openid_data['openid']:
             return Response({
                 'error': '获取OpenID失败'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        openid_data = json.loads(match.group(1))
         openid = openid_data['openid']
-        unionid = openid_data.get('unionid', '')  # ← 关键！从 /me 接口获取 UnionID！
+        unionid = openid_data.get('unionid', '')
         
         # 第三步：获取用户信息
         userinfo_url = "https://graph.qq.com/user/get_user_info"
@@ -229,8 +243,6 @@ def qq_login(request):
         nickname = userinfo_data.get('nickname', 'QQ用户')
         photo_url = userinfo_data.get('figureurl_qq_2') or userinfo_data.get('figureurl_qq_1', '')
         
-        logger.info(f'[QQ Login] OpenID: {openid[:15]}..., UnionID: {unionid[:15] if unionid else "None"}...')
-        
         # 尝试获取 QQ 邮箱（需要额外权限，可能失败）
         qq_email = None
         try:
@@ -244,16 +256,14 @@ def qq_login(request):
             email_response = requests.get(email_url, params=email_params, timeout=5)
             email_data = email_response.json()
             
-            # QQ 邮箱通常是 openid@qq.com 格式，但需要申请权限
-            # 如果没有权限，使用 openid 构造一个内部邮箱
             if 'email' in email_data:
                 qq_email = email_data['email']
             else:
-                # 没有权限获取邮箱，使用默认格式（用户可以后续在个人中心修改）
-                qq_email = f"{openid[:10]}@qq.com"
-        except:
-            # 获取邮箱失败，使用默认值
-            qq_email = f"{openid[:10]}@qq.com"
+                email_suffix = openid[:10] if len(openid) >= 10 else openid[:8] if len(openid) >= 8 else openid
+                qq_email = f"{email_suffix}@qq.com"
+        except Exception:
+            email_suffix = openid[:10] if len(openid) >= 10 else openid[:8] if len(openid) >= 8 else openid
+            qq_email = f"{email_suffix}@qq.com"
         
         # 查找或创建用户（优先使用 UnionID）
         qq_user = None
@@ -263,10 +273,6 @@ def qq_login(request):
             qq_user = QQUser.objects.filter(unionid=unionid).first()
             
             if qq_user:
-                # 找到了通过 UnionID 匹配的用户
-                logger.info(f'[QQ Login] Found existing user by UnionID: {qq_user.user.username}')
-                
-                # 更新当前应用的 openid（因为不同应用的 openid 不同）
                 qq_user.openid = openid
                 qq_user.access_token = access_token
                 qq_user.refresh_token = refresh_token
@@ -275,12 +281,9 @@ def qq_login(request):
                 qq_user.save()
                 user = qq_user.user
             else:
-                # UnionID 没有匹配，尝试通过 openid 查找（同应用内）
                 qq_user = QQUser.objects.filter(openid=openid).first()
                 
                 if qq_user:
-                    # 找到了老用户，补充 unionid
-                    logger.info(f'[QQ Login] Found user by OpenID, updating UnionID: {qq_user.user.username}')
                     qq_user.unionid = unionid
                     qq_user.access_token = access_token
                     qq_user.refresh_token = refresh_token
@@ -303,31 +306,43 @@ def qq_login(request):
         
         if not qq_user:
             # 新用户，创建账号
-            logger.info(f'[QQ Login] Creating new user with UnionID: {unionid[:15] if unionid else "None"}...')
+            safe_nickname = re.sub(r'[^\w\u4e00-\u9fff]', '_', nickname)[:30]
+            if not safe_nickname:
+                safe_nickname = f"QQ用户_{openid[:8]}"
             
-            # 使用 QQ 昵称作为用户名，如果冲突则添加后缀
-            username = nickname
+            username = safe_nickname
             base_username = username
             counter = 1
             while User.objects.filter(username=username).exists():
                 username = f"{base_username}_{counter}"
                 counter += 1
+                if counter > 1000:
+                    username = f"QQ用户_{openid[:8]}_{counter}"
+                    break
             
-            user = User.objects.create_user(
-                username=username,
-                email=qq_email,  # 设置QQ邮箱
-                password=None  # QQ登录不需要密码
-            )
-            
-            QQUser.objects.create(
-                user=user,
-                openid=openid,
-                unionid=unionid,  # ← 保存 UnionID
-                access_token=access_token,
-                refresh_token=refresh_token,
-                photo_url=photo_url,
-                nickname=nickname
-            )
+            try:
+                user = User.objects.create_user(
+                    username=username,
+                    email=qq_email,
+                    password=None
+                )
+                try:
+                    QQUser.objects.create(
+                        user=user,
+                        openid=openid,
+                        unionid=unionid or None,
+                        access_token=access_token,
+                        refresh_token=refresh_token or '',
+                        photo_url=photo_url or '',
+                        nickname=nickname or username
+                    )
+                except Exception:
+                    user.delete()
+                    raise
+            except Exception:
+                return Response({
+                    'error': '创建用户失败，请重试'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             # 更新用户邮箱（如果为空）
             if not user.email and qq_email:
@@ -348,18 +363,12 @@ def qq_login(request):
         }, status=status.HTTP_200_OK)
         
     except requests.RequestException as e:
-        error_msg = f'Request QQ API failed: {str(e)}'
-        logger.error(f"[QQ Login Error] {error_msg}")
-        logger.error(traceback.format_exc())
         return Response({
-            'error': error_msg
+            'error': 'QQ登录失败，请稍后重试'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
-        error_msg = f'Login failed: {str(e)}'
-        logger.error(f"[QQ Login Error] {error_msg}")
-        logger.error(traceback.format_exc())
         return Response({
-            'error': error_msg
+            'error': '登录失败，请稍后重试'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
