@@ -83,49 +83,46 @@
         </div>
       </div>
 
-      <!-- 城市切换 -->
+      <!-- 城市切换按钮 -->
       <div class="city-selector">
-        <el-button 
-          type="text" 
-          @click="showCityDialog = true"
+        <button 
+          @click="showCityPanel = !showCityPanel"
           class="change-city-btn"
         >
           <i class="bi bi-geo-alt"></i> 切换城市
-        </el-button>
+          <i :class="showCityPanel ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+        </button>
+      </div>
+
+      <!-- 城市选择面板（展开/收起） -->
+      <div v-show="showCityPanel" class="city-panel">
+        <div class="city-panel-title">选择城市</div>
+        
+        <div class="city-grid">
+          <button
+            v-for="cityOption in popularCities"
+            :key="cityOption"
+            :class="['city-chip', { active: city === cityOption }]"
+            @click="changeCity(cityOption)"
+          >
+            {{ cityOption }}
+          </button>
+        </div>
+        
+        <div class="custom-city-input">
+          <input
+            v-model="customCity"
+            type="text"
+            placeholder="输入其他城市名称"
+            @keyup.enter="changeCity(customCity)"
+            class="city-input"
+          />
+          <button @click="changeCity(customCity)" class="city-confirm-btn">
+            确定
+          </button>
+        </div>
       </div>
     </div>
-
-    <!-- 城市选择对话框 -->
-    <el-dialog
-      v-model="showCityDialog"
-      title="选择城市"
-      width="90%"
-      :style="{ maxWidth: '500px' }"
-    >
-      <div class="city-grid">
-        <el-button
-          v-for="cityOption in popularCities"
-          :key="cityOption"
-          :type="city === cityOption ? 'primary' : 'default'"
-          @click="changeCity(cityOption)"
-          class="city-btn"
-        >
-          {{ cityOption }}
-        </el-button>
-      </div>
-      
-      <div class="custom-city mt-3">
-        <el-input
-          v-model="customCity"
-          placeholder="输入其他城市名称"
-          @keyup.enter="changeCity(customCity)"
-        >
-          <template #append>
-            <el-button @click="changeCity(customCity)">确定</el-button>
-          </template>
-        </el-input>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
@@ -140,7 +137,7 @@ const loading = ref(false)
 const error = ref(null)
 const city = ref('北京')
 const customCity = ref('')
-const showCityDialog = ref(false)
+const showCityPanel = ref(false)
 
 // 热门城市列表
 const popularCities = [
@@ -188,7 +185,7 @@ const changeCity = (newCity) => {
   }
   
   city.value = newCity.trim()
-  showCityDialog.value = false
+  showCityPanel.value = false
   customCity.value = ''
   loadWeather()
   ElMessage.success('已切换到 ' + newCity)
@@ -363,25 +360,107 @@ onMounted(() => {
 .city-selector {
   display: flex;
   justify-content: center;
+  margin-top: 16px;
 }
 
 .change-city-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 14px;
   color: var(--primary-color);
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .change-city-btn:hover {
-  color: var(--primary-color-dark);
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--primary-color);
+}
+
+.city-panel {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.city-panel-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  text-align: center;
 }
 
 .city-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.city-btn {
-  width: 100%;
+.city-chip {
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.city-chip:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.city-chip.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-color: transparent;
+}
+
+.custom-city-input {
+  display: flex;
+  gap: 8px;
+}
+
+.city-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.city-input:focus {
+  border-color: var(--primary-color);
+}
+
+.city-confirm-btn {
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.city-confirm-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {
@@ -407,6 +486,11 @@ onMounted(() => {
   
   .city-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .city-chip {
+    font-size: 13px;
+    padding: 6px 10px;
   }
 }
 
