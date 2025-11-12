@@ -140,15 +140,7 @@ def check_holiday(request):
     # 获取法定节假日信息
     holiday_info = get_holiday_info(target_date)
     
-    # 构建完整的节日信息（和 get_today_holidays 一样的结构）
-    result = {
-        'date': target_date.strftime('%Y-%m-%d'),
-        'holiday': holiday_info if holiday_info and holiday_info['is_holiday'] else None,
-        'traditional_festivals': [],
-        'international_festivals': []
-    }
-    
-    # 检查国际节日和传统节日（复用 get_today_holidays 的逻辑）
+    # 检查国际节日和传统节日
     month_day = target_date.strftime('%m-%d')
     
     # 国际节日字典（带Emoji）
@@ -165,6 +157,7 @@ def check_holiday(request):
         '08-01': {'name': '建军节', 'emoji': '🎖️'},
         '09-10': {'name': '教师节', 'emoji': '📚'},
         '10-01': {'name': '国庆节', 'emoji': '🇨🇳'},
+        '10-31': {'name': '万圣节', 'emoji': '🎃'},
         '11-11': {'name': '光棍节 / 双11购物节', 'emoji': '1️⃣'},
         '12-24': {'name': '平安夜', 'emoji': '🎄'},
         '12-25': {'name': '圣诞节', 'emoji': '🎅'}
@@ -180,12 +173,15 @@ def check_holiday(request):
         '10-29': {'name': '重阳节', 'emoji': '🍵'}
     }
     
+    # 合并所有节日到一个列表（前端期望的格式）
+    festivals_list = []
+    
     # 添加国际节日（避免与法定节假日重复）
     if month_day in international_festivals_dict:
         festival = international_festivals_dict[month_day]
         # 如果已经有法定节假日，检查名称是否重复
-        if not (result['holiday'] and result['holiday']['holiday_name'] == festival['name']):
-            result['international_festivals'].append({
+        if not (holiday_info and holiday_info['is_holiday'] and holiday_info['holiday_name'] == festival['name']):
+            festivals_list.append({
                 'name': festival['name'],
                 'emoji': festival['emoji'],
                 'type': 'international'
@@ -195,12 +191,20 @@ def check_holiday(request):
     if month_day in traditional_festivals_dict:
         festival = traditional_festivals_dict[month_day]
         # 如果已经有法定节假日，检查名称是否重复
-        if not (result['holiday'] and result['holiday']['holiday_name'] == festival['name']):
-            result['traditional_festivals'].append({
+        if not (holiday_info and holiday_info['is_holiday'] and holiday_info['holiday_name'] == festival['name']):
+            festivals_list.append({
                 'name': festival['name'],
                 'emoji': festival['emoji'],
                 'type': 'traditional'
             })
+    
+    # 构建完整的节日信息（前端期望的数据结构）
+    result = {
+        'date': target_date.strftime('%Y-%m-%d'),
+        'is_holiday': holiday_info['is_holiday'] if holiday_info else False,
+        'lunar': None,  # 农历信息可以通过 lunar API 获取
+        'festivals': festivals_list if festivals_list else None
+    }
     
     return Response(result)
 
