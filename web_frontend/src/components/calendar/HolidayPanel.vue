@@ -29,8 +29,9 @@
     <div
       v-for="(festival, index) in allFestivals"
       :key="`festival-${index}`"
-      class="holiday-card"
+      class="holiday-card clickable"
       :class="getFestivalColorClass(index)"
+      @click="showFestivalDetail(festival)"
     >
       <div class="holiday-icon">{{ festival.emoji || '🎊' }}</div>
       <div class="holiday-info">
@@ -82,19 +83,37 @@ const displayDateLabel = computed(() => {
   })
 })
 
-const holiday = computed(() => props.todayHolidays?.holiday || null)
+const holiday = computed(() => {
+  console.log('节日数据:', props.todayHolidays)
+  return props.todayHolidays?.is_holiday || false
+})
 
-// 合并所有节日（国际 + 传统）
+// 合并所有节日（API返回的festivals数组）
 const allFestivals = computed(() => {
-  const international = props.todayHolidays?.international_festivals || []
-  const traditional = props.todayHolidays?.traditional_festivals || []
-  return [...international, ...traditional]
+  const festivals = props.todayHolidays?.festivals || []
+  console.log('所有节日:', festivals)
+  return festivals
 })
 
 // 获取节日卡片颜色类（4色循环）
 const getFestivalColorClass = (index) => {
   const colors = ['pink', 'purple', 'blue', 'green']
   return colors[index % 4]
+}
+
+// 显示节日详情
+const showFestivalDetail = (festival) => {
+  if (!festival || !festival.name) return
+  
+  ElMessage({
+    message: `${festival.emoji || '🎊'} ${festival.name}`,
+    type: 'info',
+    duration: 2000,
+    customClass: 'festival-message'
+  })
+  
+  // TODO: 未来可以改成弹出详细信息对话框
+  console.log('节日详情:', festival)
 }
 </script>
 
@@ -134,11 +153,12 @@ const getFestivalColorClass = (index) => {
   display: flex;
   align-items: center;
   gap: 15px;
-  padding: 15px;
+  padding: 16px;
   border-radius: 12px;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   margin-bottom: 12px;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* 农历卡片：橙色系 */
@@ -176,21 +196,23 @@ const getFestivalColorClass = (index) => {
   cursor: default;
 }
 
-/* 只有节日卡片才有hover效果 */
-.holiday-card.pink:hover,
-.holiday-card.purple:hover,
-.holiday-card.blue:hover,
-.holiday-card.green:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+/* 可点击的节日卡片才有hover效果 */
+.holiday-card.clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-.holiday-card.pink:active,
-.holiday-card.purple:active,
-.holiday-card.blue:active,
-.holiday-card.green:active {
-  transform: translateY(0px);
+.holiday-card.clickable:active {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
   transition: transform 0.1s ease;
+}
+
+/* 不可点击的卡片没有hover效果 */
+.holiday-card.lunar,
+.holiday-card.major,
+.holiday-card.empty {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .holiday-icon {

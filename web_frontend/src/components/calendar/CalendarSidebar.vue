@@ -88,9 +88,11 @@ const currentTab = computed({
   display: flex;
   flex-direction: column;
   padding: 16px;
-  background: var(--bg-soft);
+  background: #f8f9fc;
   border-radius: 12px;
-  margin-top: 8px;
+  margin-top: 12px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(102, 126, 234, 0.1);
 }
 
 @media (max-width: 992px) {
