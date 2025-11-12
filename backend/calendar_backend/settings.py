@@ -242,4 +242,5 @@ BAIDU_MAP_AK = os.environ.get('BAIDU_MAP_AK', '')  # 百度地图 API Key
 QWEN_API_KEY = os.environ.get('QWEN_API_KEY', '')  # 通义千问 API Key
 
 # ==================== 和风天气配置 ====================
-QWEATHER_API_KEY = os.environ.get('QWEATHER_API_KEY', '')  # 和风天气 API Key
+QWEATHER_API_KEY = os.environ.get('QWEATHER_API_KEY', '')  # 和风天气 API Key (已弃用)
+OPENWEATHER_API_KEY = os.environ.get('OPENWEATHER_API_KEY', '')  # OpenWeatherMap API Key
