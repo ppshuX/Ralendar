@@ -542,9 +542,11 @@ function handleSubscribe() {
     max-width: 100%;
   }
   
-  /* 日历高度减小 */
+  /* 日历高度固定 */
   .calendar-wrapper {
-    height: 380px;  /* 移动端日历更小 */
+    height: 380px;
+    max-height: 380px;
+    min-height: 380px;
   }
   
   /* 整体缩小间距 */
@@ -564,7 +566,15 @@ function handleSubscribe() {
   }
 }
 
-.calendar-wrapper,
+.calendar-wrapper {
+  height: 650px;
+  max-height: 650px;
+  min-height: 650px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
 .right-sidebar {
   flex: 1;
   width: 100%;

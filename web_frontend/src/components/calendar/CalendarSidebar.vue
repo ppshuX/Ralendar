@@ -78,10 +78,12 @@ const currentTab = computed({
   padding: 20px;
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  height: 650px;  /* 固定高度 */
+  height: 650px;
+  max-height: 650px;
+  min-height: 650px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;  /* 外部不滚动 */
+  overflow: hidden;
 }
 
 .tab-content {
@@ -101,6 +103,8 @@ const currentTab = computed({
 @media (max-width: 992px) {
   .right-sidebar {
     height: 500px;
+    max-height: 500px;
+    min-height: 500px;
     margin-top: 16px;
   }
 }
@@ -108,6 +112,8 @@ const currentTab = computed({
 @media (max-width: 768px) {
   .right-sidebar {
     height: 450px;
+    max-height: 450px;
+    min-height: 450px;
     padding: 14px;
     margin-top: 16px;
   }
@@ -121,6 +127,8 @@ const currentTab = computed({
 @media (max-width: 576px) {
   .right-sidebar {
     height: 400px;
+    max-height: 400px;
+    min-height: 400px;
     padding: 12px;
   }
   
