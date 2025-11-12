@@ -11,8 +11,8 @@ from django.conf import settings
 import requests
 import logging
 
-from ..models import AcWingUser, QQUser
-from ..serializers import UserRegisterSerializer, UserSerializer
+from ...models import AcWingUser, QQUser
+from ...serializers import UserRegisterSerializer, UserSerializer
 
 logger = logging.getLogger(__name__)
 

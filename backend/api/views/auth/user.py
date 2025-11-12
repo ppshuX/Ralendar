@@ -9,8 +9,8 @@ from django.contrib.auth import authenticate
 from django.utils import timezone
 from datetime import datetime, timedelta
 
-from ..models import Event, AcWingUser, QQUser
-from ..serializers import UserSerializer
+from ...models import Event, AcWingUser, QQUser
+from ...serializers import UserSerializer
 
 
 @api_view(['GET'])

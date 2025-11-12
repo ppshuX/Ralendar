@@ -13,8 +13,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# 节假日数据文件路径
-HOLIDAYS_DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')
+# 节假日数据文件路径（从views/external/向上两级到api/，再进入data/）
+HOLIDAYS_DATA_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data')
 
 
 def load_holidays_data(year):

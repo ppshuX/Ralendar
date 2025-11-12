@@ -5,8 +5,8 @@ from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from django.contrib.auth.models import User
 
-from ..models import Event
-from ..serializers import EventSerializer
+from ...models import Event
+from ...serializers import EventSerializer
 
 
 class EventViewSet(viewsets.ModelViewSet):

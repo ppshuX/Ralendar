@@ -11,8 +11,8 @@ from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
 
-from ..models import Event, QQUser
-from ..serializers import EventSerializer
+from ...models import Event, QQUser
+from ...serializers import EventSerializer
 
 # 初始化 logger
 logger = logging.getLogger('django')
