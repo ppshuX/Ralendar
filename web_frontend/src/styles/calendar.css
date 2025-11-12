@@ -348,45 +348,57 @@
 
 /* ==================== 周视图和日视图事件样式优化 ==================== */
 
-/* 时间网格事件基础样式 */
+/* 时间网格事件基础样式 - Material Design风格 */
 .fc-timegrid-event {
-  border-radius: 6px;
+  border-radius: 8px;
   border: none;
-  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 4px 6px;
+  border-left: 4px solid #5568d3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  background: white;
+  padding: 6px 10px;
 }
 
-/* 事件悬浮效果 */
+/* 事件悬浮效果 - Material提升 */
 .fc-timegrid-event:hover {
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
-  transform: translateY(-1px);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 事件标题样式 */
+/* 事件标题样式 - Material Typography */
 .fc-timegrid-event .fc-event-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  color: white;
-  line-height: 1.4;
+  color: #303133;
+  line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal;
   word-break: break-word;
+  margin-top: 2px;
 }
 
-/* 事件时间样式 */
+/* 事件时间样式 - Material小标题 */
 .fc-timegrid-event .fc-event-time {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 2px;
+  color: #667eea;
+  margin-bottom: 4px;
+  display: block;
 }
 
-/* 全天事件样式 */
+/* 全天事件样式 - 顶部条形 */
 .fc-timegrid-event.fc-event-start.fc-event-end {
-  border-left: 3px solid rgba(255, 255, 255, 0.6);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+  border-left: 4px solid #667eea;
+}
+
+.fc-timegrid-event.fc-event-start.fc-event-end .fc-event-title {
+  color: #4A148C;
+}
+
+.fc-timegrid-event.fc-event-start.fc-event-end .fc-event-time {
+  color: #667eea;
 }
 
 /* 周视图事件间距 */
@@ -411,11 +423,27 @@
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* 全天槽样式优化 */
+/* 全天槽样式优化 - Material风格 */
 .fc-timegrid-slot-label {
   font-size: 12px;
-  color: var(--ralendar-text-secondary);
-  padding: 4px 8px;
+  font-weight: 500;
+  color: #909399;
+  padding: 4px 10px;
+  text-align: right;
+}
+
+/* 时间槽分隔线 */
+.fc-timegrid-slot {
+  border-color: #f0f0f0;
+}
+
+.fc-timegrid-slot-minor {
+  border-color: #fafafa;
+}
+
+/* 时间轴左侧标签 */
+.fc-timegrid-axis {
+  background: #fafafa;
 }
 
 /* 当前时间线样式 */
@@ -434,19 +462,35 @@
   background: var(--ralendar-bg-hover);
 }
 
-/* 日视图事件宽度优化 */
+/* 日视图事件宽度优化 - Material卡片风格 */
 .fc-timeGridDay-view .fc-timegrid-event {
-  margin: 0 4px;
-  padding: 6px 10px;
+  margin: 0 8px;
+  padding: 10px 14px;
+  border-left-width: 5px;
 }
 
 .fc-timeGridDay-view .fc-event-title {
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
-/* 周视图紧凑布局 */
+.fc-timeGridDay-view .fc-event-time {
+  font-size: 13px;
+}
+
+/* 周视图紧凑布局 - Material紧凑卡片 */
 .fc-timeGridWeek-view .fc-timegrid-event {
+  padding: 4px 8px;
+  margin: 0 2px;
+  border-left-width: 3px;
+}
+
+.fc-timeGridWeek-view .fc-event-title {
   font-size: 12px;
+}
+
+.fc-timeGridWeek-view .fc-event-time {
+  font-size: 11px;
 }
 
 /* 事件内容垂直居中 */
@@ -479,23 +523,66 @@
   margin-left: 1px;
 }
 
+/* 事件点击/选中状态 - Material Ripple效果模拟 */
+.fc-timegrid-event:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* 时间网格列背景 */
+.fc-timegrid-col {
+  background: white;
+}
+
+/* 今天的列高亮 */
+.fc-day-today .fc-timegrid-col-frame {
+  background: rgba(102, 126, 234, 0.03);
+}
+
+/* 时间网格头部样式 */
+.fc-timegrid-axis-frame {
+  background: #fafafa;
+  font-weight: 500;
+}
+
+/* 周/日视图的日期头部 */
+.fc-col-header-cell {
+  padding: 10px 6px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #606266;
+  background: #fafafa;
+  border-bottom: 2px solid #e4e7ed;
+}
+
+.fc-col-header-cell.fc-day-today {
+  background: rgba(102, 126, 234, 0.08);
+  color: #667eea;
+}
+
 /* 移动端优化 */
 @media (max-width: 768px) {
   .fc-timegrid-event {
-    padding: 3px 4px;
-    border-radius: 4px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border-left-width: 3px;
   }
   
   .fc-timegrid-event .fc-event-title {
-    font-size: 11px;
+    font-size: 12px;
   }
   
   .fc-timegrid-event .fc-event-time {
-    font-size: 10px;
+    font-size: 11px;
   }
   
   .fc-timeGridDay-view .fc-timegrid-event {
-    margin: 0 2px;
-    padding: 4px 6px;
+    margin: 0 4px;
+    padding: 8px 10px;
+  }
+  
+  .fc-col-header-cell {
+    font-size: 12px;
+    padding: 8px 4px;
   }
 }
