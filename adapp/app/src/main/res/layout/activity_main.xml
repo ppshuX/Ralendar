@@ -341,18 +341,33 @@
                         android:id="@+id/tvHolidayTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="📅 今日节日"
+                        android:text="🎊 今日节日"
                         android:textSize="18sp"
                         android:textStyle="bold"
+                        android:textColor="#6A1B9A"
                         android:layout_marginBottom="12dp" />
 
-                    <TextView
-                        android:id="@+id/tvHolidayContent"
+                    <!-- 节日内容卡片 -->
+                    <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="暂无节日信息"
-                        android:textSize="16sp"
-                        android:lineSpacingExtra="4dp" />
+                        app:cardBackgroundColor="#F3E5F5"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="2dp"
+                        app:contentPadding="16dp">
+
+                        <TextView
+                            android:id="@+id/tvHolidayContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="加载中..."
+                            android:textSize="16sp"
+                            android:textColor="#4A148C"
+                            android:lineSpacingExtra="6dp"
+                            android:minHeight="80dp"
+                            android:gravity="top" />
+
+                    </com.google.android.material.card.MaterialCardView>
 
                 </LinearLayout>
 
@@ -372,15 +387,30 @@
                         android:text="🔮 今日运势"
                         android:textSize="18sp"
                         android:textStyle="bold"
+                        android:textColor="#6A1B9A"
                         android:layout_marginBottom="12dp" />
 
-                    <TextView
-                        android:id="@+id/tvFortuneContent"
+                    <!-- 运势内容卡片 -->
+                    <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="运势功能即将上线，敬请期待..."
-                        android:textSize="16sp"
-                        android:lineSpacingExtra="4dp" />
+                        app:cardBackgroundColor="#E8F5E9"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="2dp"
+                        app:contentPadding="16dp">
+
+                        <TextView
+                            android:id="@+id/tvFortuneContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="🌟 运势功能即将上线，敬请期待...\n\n未来将提供：\n• 每日运势\n• 星座分析\n• 生肖运程\n• 吉凶宜忌"
+                            android:textSize="16sp"
+                            android:textColor="#1B5E20"
+                            android:lineSpacingExtra="6dp"
+                            android:minHeight="80dp"
+                            android:gravity="top" />
+
+                    </com.google.android.material.card.MaterialCardView>
 
                 </LinearLayout>
 
