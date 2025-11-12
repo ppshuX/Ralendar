@@ -172,9 +172,7 @@ const { activeTab, tabs } = useSidebarTabs('fortune', isLoggedIn)
 const selectedDateForFilter = ref('')
 const selectedDateLabel = ref('')
 
-// 页面初始化：加载节日数据
-loadTodayHolidays()  // 加载今日节日
-loadHolidays(new Date().getFullYear())  // 加载全年节假日
+// 注意：节日数据在 onMounted 中统一加载，避免重复调用
 
 // 过滤后的日程列表（根据选中日期）
 const filteredEvents = computed(() => {

@@ -29,7 +29,7 @@
     <div
       v-for="(festival, index) in allFestivals"
       :key="`festival-${index}`"
-      class="holiday-card clickable"
+      class="holiday-card"
       :class="getFestivalColorClass(index)"
       @click="showFestivalDetail(festival)"
     >
@@ -56,6 +56,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({
   todayHolidays: {
@@ -196,22 +197,36 @@ const showFestivalDetail = (festival) => {
   cursor: default;
 }
 
-/* 可点击的节日卡片才有hover效果 */
-.holiday-card.clickable:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+/* 节日卡片悬浮效果（4色） */
+.holiday-card.pink:hover,
+.holiday-card.purple:hover,
+.holiday-card.blue:hover,
+.holiday-card.green:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
 }
 
-.holiday-card.clickable:active {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-  transition: transform 0.1s ease;
+.holiday-card.pink:active,
+.holiday-card.purple:active,
+.holiday-card.blue:active,
+.holiday-card.green:active {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transition: all 0.1s ease;
 }
 
-/* 不可点击的卡片没有hover效果 */
+/* 不可点击的卡片浅色阴影 */
 .holiday-card.lunar,
 .holiday-card.major,
 .holiday-card.empty {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.holiday-card.lunar:hover,
+.holiday-card.major:hover,
+.holiday-card.empty:hover {
+  transform: none;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 

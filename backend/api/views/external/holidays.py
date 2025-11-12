@@ -179,22 +179,37 @@ def check_holiday(request):
     # 合并所有节日到一个列表（前端期望的格式）
     festivals_list = []
     
-    # 添加国际节日（避免与法定节假日重复）
+    # 如果是法定节假日，也要添加到festivals列表（带emoji）
+    if holiday_info and holiday_info['is_holiday']:
+        # 为法定节假日匹配emoji
+        holiday_emoji = '🎉'
+        for key, festival in international_festivals_dict.items():
+            if festival['name'] in holiday_info['holiday_name']:
+                holiday_emoji = festival['emoji']
+                break
+        
+        festivals_list.append({
+            'name': holiday_info['holiday_name'],
+            'emoji': holiday_emoji,
+            'type': 'legal'
+        })
+    
+    # 添加国际节日（避免与已添加的法定节假日重复）
     if month_day in international_festivals_dict:
         festival = international_festivals_dict[month_day]
-        # 如果已经有法定节假日，检查名称是否重复
-        if not (holiday_info and holiday_info['is_holiday'] and holiday_info['holiday_name'] == festival['name']):
+        # 检查是否已经作为法定节假日添加过
+        if not any(f['name'] == festival['name'] for f in festivals_list):
             festivals_list.append({
                 'name': festival['name'],
                 'emoji': festival['emoji'],
                 'type': 'international'
             })
     
-    # 添加传统节日（避免与法定节假日重复）
+    # 添加传统节日（避免重复）
     if month_day in traditional_festivals_dict:
         festival = traditional_festivals_dict[month_day]
-        # 如果已经有法定节假日，检查名称是否重复
-        if not (holiday_info and holiday_info['is_holiday'] and holiday_info['holiday_name'] == festival['name']):
+        # 检查是否已经添加过
+        if not any(f['name'] == festival['name'] for f in festivals_list):
             festivals_list.append({
                 'name': festival['name'],
                 'emoji': festival['emoji'],
