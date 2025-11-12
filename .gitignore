@@ -56,6 +56,7 @@ backend/ENV_PRODUCTION_READY_TO_COPY.txt
 # 部署文档（可能包含敏感信息）
 DEPLOY_COMMANDS.txt
 QUICK_DEPLOY.txt
+DEPLOY_WEATHER.sh
 backend/DEPLOY_AI.sh
 backend/DEPLOY_MANUAL.sh
 

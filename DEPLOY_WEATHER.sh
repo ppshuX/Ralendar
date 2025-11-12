@@ -18,7 +18,9 @@ else
     echo "❌ .env中缺少QWEATHER_API_KEY，请手动添加！"
     echo ""
     echo "执行以下命令："
-    echo "echo 'QWEATHER_API_KEY=fba41fcef20e47ddaf3efe73dfc77d4b' >> ~/kotlin_calendar/backend/.env"
+    echo "echo 'QWEATHER_API_KEY=YOUR_API_KEY_HERE' >> ~/kotlin_calendar/backend/.env"
+    echo ""
+    echo "⚠️ 请将YOUR_API_KEY_HERE替换为实际的API Key"
     echo ""
 fi
 
