@@ -16,25 +16,16 @@
         </p>
       </div>
 
-    <!-- 农历信息卡片：总是显示 -->
-    <div class="holiday-card lunar">
+    <!-- 农历信息卡片：有数据才显示 -->
+    <div v-if="todayHolidays?.lunar" class="holiday-card lunar">
       <div class="holiday-icon">🏮</div>
       <div class="holiday-info">
         <div class="holiday-name">农历</div>
-        <div class="holiday-type">{{ todayHolidays?.lunar || '加载中...' }}</div>
+        <div class="holiday-type">{{ todayHolidays.lunar }}</div>
       </div>
     </div>
 
-    <!-- 法定节假日卡片 -->
-    <div class="holiday-card major" v-if="holiday">
-      <div class="holiday-icon">🎉</div>
-      <div class="holiday-info">
-        <div class="holiday-name">法定节假日</div>
-        <div class="holiday-type">今日为国家法定节假日</div>
-      </div>
-    </div>
-
-    <!-- 所有节日统一显示（使用4色循环） -->
+    <!-- 所有节日统一显示（使用4色循环，法定节假日也在里面） -->
     <div
       v-for="(festival, index) in allFestivals"
       :key="`festival-${index}`"
@@ -51,7 +42,7 @@
 
     <!-- 无节日提示 -->
     <div
-      v-if="!holiday && allFestivals.length === 0"
+      v-if="allFestivals.length === 0"
       class="holiday-card empty"
     >
       <div class="holiday-icon">📅</div>
@@ -98,14 +89,10 @@ const displayDateLabel = computed(() => {
   })
 })
 
-const holiday = computed(() => {
-  console.log('节日数据:', props.todayHolidays)
-  return props.todayHolidays?.is_holiday || false
-})
-
-// 合并所有节日（API返回的festivals数组）
+// 所有节日（API返回的festivals数组）
 const allFestivals = computed(() => {
   const festivals = props.todayHolidays?.festivals || []
+  console.log('节日数据:', props.todayHolidays)
   console.log('所有节日:', festivals)
   return festivals
 })
@@ -174,12 +161,6 @@ const showFestivalDetail = (festival) => {
   cursor: default;
 }
 
-/* 法定节假日卡片：黄色系 */
-.holiday-card.major {
-  background-color: #FFF9C4;
-  cursor: default;
-}
-
 /* 节日卡片：4色循环 */
 .holiday-card.pink {
   background-color: #F8BBD0;
@@ -224,13 +205,11 @@ const showFestivalDetail = (festival) => {
 
 /* 不可点击的卡片浅色阴影 */
 .holiday-card.lunar,
-.holiday-card.major,
 .holiday-card.empty {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .holiday-card.lunar:hover,
-.holiday-card.major:hover,
 .holiday-card.empty:hover {
   transform: none;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);

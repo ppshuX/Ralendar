@@ -196,6 +196,32 @@ export const weatherAPI = {
     }
 }
 
+// AI助手 API（公开接口，不需要Token）
+export const aiAPI = {
+    // 对话式助手
+    chat(message, context = {}) {
+        return api.post('/ai/chat/', {
+            message,
+            context
+        }, { skipAuth: true })
+    },
+    
+    // 解析自然语言为日程
+    parseEvent(text) {
+        return api.post('/ai/parse-event/', {
+            text
+        }, { skipAuth: true })
+    },
+    
+    // 总结日程
+    summarizeSchedule(events, dateRange = 'today') {
+        return api.post('/ai/summarize/', {
+            events,
+            date_range: dateRange
+        }, { skipAuth: true })
+    }
+}
+
 // 用户认证 API
 export const authAPI = {
     // 用户注册
