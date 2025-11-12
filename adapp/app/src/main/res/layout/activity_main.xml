@@ -317,7 +317,7 @@
                 android:id="@+id/contentContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="200dp">
+                android:minHeight="350dp">
 
     <!-- 日程列表 -->
     <androidx.recyclerview.widget.RecyclerView
@@ -325,7 +325,7 @@
         android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="8dp"
-                    android:minHeight="200dp"
+                    android:minHeight="350dp"
                     android:visibility="visible" />
 
                 <!-- 节日信息 -->
