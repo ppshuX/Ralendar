@@ -195,7 +195,7 @@ class MainActivity : AppCompatActivity() {
         
         // 初始化WeatherManager
         weatherManager = WeatherManager(
-            weatherCard, tvWeatherLocation, tvTemperature,
+            this, weatherCard, tvWeatherLocation, tvTemperature,
             tvWeatherDesc, tvFeelsLike, tvHumidity, tvWind
         )
         
