@@ -256,7 +256,7 @@ export default {
       }
       
       try {
-        const token = this.$store.state.user.accessToken
+        const token = this.$store.state.accessToken
         const headers = { 'Content-Type': 'application/json' }
         if (token) {
           headers['Authorization'] = `Bearer ${token}`
@@ -265,6 +265,12 @@ export default {
         const startTime = this.eventTime 
           ? `${this.eventDate}T${this.eventTime}:00`
           : `${this.eventDate}T00:00:00`
+        
+        console.log('创建事件:', {
+          title: this.eventTitle,
+          start_time: startTime,
+          token: token ? '有token' : '无token'
+        })
         
         const response = await fetch('https://app7626.acapp.acwing.com.cn/api/events/', {
           method: 'POST',
@@ -278,7 +284,12 @@ export default {
           })
         })
         
+        console.log('创建响应:', response.status, response.ok)
+        
         if (response.ok) {
+          const result = await response.json()
+          console.log('创建成功:', result)
+          
           this.showEventPreview = false
           this.parsedEvent = null
           this.chatHistory.push({
@@ -286,13 +297,15 @@ export default {
             content: '✅ 日程创建成功！已添加到您的日历中。'
           })
           // 刷新事件列表
-          this.$store.dispatch('fetchEvents')
+          await this.$store.dispatch('fetchEvents')
         } else {
-          throw new Error('创建失败')
+          const errorData = await response.json().catch(() => ({}))
+          console.error('创建失败:', response.status, errorData)
+          throw new Error(errorData.detail || '创建失败')
         }
       } catch (error) {
         console.error('创建事件失败:', error)
-        alert('创建日程失败，请稍后重试')
+        alert('创建日程失败：' + error.message)
       }
     }
   }
