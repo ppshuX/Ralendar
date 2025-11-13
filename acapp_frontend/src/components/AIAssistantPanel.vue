@@ -213,17 +213,17 @@ h2 {
   font-size: 10px;
   font-weight: 600;
   color: #606266;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .quick-btn {
-  padding: 4px 10px;
-  margin: 0 4px 4px 0;
+  padding: 3px 8px;
+  margin: 0 3px 3px 0;
   background: white;
   border: 1px solid #dcdfe6;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 10px;
   color: #606266;
   transition: all 0.3s;
   white-space: nowrap;
@@ -312,11 +312,11 @@ h2 {
 }
 
 .message-bubble {
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
   max-width: 70%;
-  font-size: 10px;
-  line-height: 1.3;
+  font-size: 12px;
+  line-height: 1.4;
   word-wrap: break-word;
   flex-shrink: 1;
 }
@@ -367,19 +367,24 @@ h2 {
 /* 输入区域 */
 .input-area {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
-  margin-top: 6px;
+  padding: 8px;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #e4e7ed;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .chat-input {
   flex: 1;
-  padding: 5px 8px;
-  border: 1px solid #dcdfe6;
+  padding: 6px 10px;
+  border: 1.5px solid #dcdfe6;
   border-radius: 6px;
-  font-size: 10px;
+  font-size: 12px;
   outline: none;
   transition: all 0.3s;
+  background: white;
 }
 
 .chat-input:focus {
@@ -392,13 +397,13 @@ h2 {
 }
 
 .send-btn {
-  padding: 5px 12px;
+  padding: 6px 14px;
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   transition: all 0.3s;
   white-space: nowrap;
