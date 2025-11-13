@@ -1,0 +1,96 @@
+# Ralendar Nginx 配置模板
+# 
+# 使用方法：
+# 1. 复制此文件为 nginx.conf
+# 2. 替换所有占位符（{{PLACEHOLDER}}）为实际值
+# 3. 确保 nginx.conf 在 .gitignore 中（不会被提交）
+
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+    worker_connections 768;
+}
+
+http {
+    # 基本配置
+    sendfile on;
+    tcp_nopush on;
+    keepalive_timeout 65;
+    
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    
+    # 日志
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+    
+    # Gzip 压缩
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
+    
+    # HTTP 重定向到 HTTPS
+    server {
+        listen 80;
+        server_name {{DOMAIN}};
+        return 301 https://$server_name$request_uri;
+    }
+    
+    # HTTPS 主服务
+    server {
+        listen 443 ssl;
+        server_name {{DOMAIN}};
+        
+        # SSL 证书（请替换为实际证书路径）
+        ssl_certificate {{SSL_CERT_PATH}};
+        ssl_certificate_key {{SSL_KEY_PATH}};
+        ssl_protocols TLSv1.2 TLSv1.3;
+        
+        charset utf-8;
+        client_max_body_size 10M;
+        
+        # Django Admin 后台（优先匹配）
+        location /admin/ {
+            include uwsgi_params;
+            uwsgi_pass 127.0.0.1:8000;
+            
+            # 确保传递 Authorization header
+            uwsgi_param HTTP_AUTHORIZATION $http_authorization;
+            uwsgi_pass_request_headers on;
+        }
+        
+        # Django API
+        location /api/ {
+            include uwsgi_params;
+            uwsgi_pass 127.0.0.1:8000;
+            
+            # 确保传递 Authorization header
+            uwsgi_param HTTP_AUTHORIZATION $http_authorization;
+            uwsgi_pass_request_headers on;
+        }
+        
+        # 静态文件
+        location /static/ {
+            alias {{PROJECT_PATH}}/backend/static/;
+            expires 30d;
+            add_header Cache-Control "public, immutable";
+        }
+        
+        # AcWing 平台应用
+        location /acapp/ {
+            alias {{PROJECT_PATH}}/acapp/dist/;
+            try_files $uri $uri/ /acapp/index.html;
+            add_header Access-Control-Allow-Origin *;
+        }
+        
+        # Web 前端（最后匹配）
+        location / {
+            root {{PROJECT_PATH}}/web;
+            index index.html;
+            try_files $uri $uri/ /index.html;
+        }
+    }
+}
+

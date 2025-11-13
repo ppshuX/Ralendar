@@ -275,6 +275,11 @@ h2 {
   margin-bottom: 8px;
   animation: fadeIn 0.3s;
   align-items: flex-end;
+  width: 100%;
+}
+
+.chat-message.assistant {
+  justify-content: flex-start;
 }
 
 .chat-message.user {
