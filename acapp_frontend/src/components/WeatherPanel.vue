@@ -38,8 +38,22 @@
           </div>
         </div>
 
+        <!-- 城市搜索 -->
+        <div class="city-search">
+          <input
+            v-model="searchCity"
+            @keyup.enter="searchCityWeather"
+            placeholder="输入城市名搜索（如：杭州市）"
+            class="search-input"
+          />
+          <button @click="searchCityWeather" class="search-btn">
+            🔍 搜索
+          </button>
+        </div>
+
         <!-- 切换城市 -->
         <div class="city-selector">
+          <div class="selector-title">热门城市</div>
           <button class="city-btn" @click="changeCity('北京市')">北京</button>
           <button class="city-btn" @click="changeCity('上海市')">上海</button>
           <button class="city-btn" @click="changeCity('广州市')">广州</button>
@@ -58,6 +72,7 @@ export default {
   data() {
     return {
       city: '南昌市',
+      searchCity: '',
       weather: {},
       loading: false,
       error: null
@@ -103,6 +118,19 @@ export default {
       }
     },
     changeCity(cityName) {
+      this.city = cityName
+      this.searchCity = ''
+      this.loadWeather()
+    },
+    searchCityWeather() {
+      if (!this.searchCity.trim()) return
+      
+      let cityName = this.searchCity.trim()
+      // 如果输入的城市名不包含"市"，自动添加
+      if (!cityName.endsWith('市') && !cityName.endsWith('省') && !cityName.endsWith('县')) {
+        cityName = cityName + '市'
+      }
+      
       this.city = cityName
       this.loadWeather()
     },
@@ -252,21 +280,70 @@ h2 {
   color: #303133;
 }
 
+/* 城市搜索 */
+.city-search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid #dcdfe6;
+  border-radius: 8px;
+  font-size: 12px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.search-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
 /* 城市选择器 */
 .city-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: center;
+  background: white;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.selector-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #606266;
+  margin-bottom: 8px;
+  text-align: center;
 }
 
 .city-btn {
-  padding: 6px 12px;
-  background: white;
+  padding: 5px 10px;
+  margin: 3px;
+  background: #f5f7fa;
   border: 1px solid #dcdfe6;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: #606266;
   transition: all 0.3s;
@@ -276,7 +353,7 @@ h2 {
   background: #ecf5ff;
   border-color: #3b82f6;
   color: #3b82f6;
-  transform: translateY(-2px);
+  transform: scale(1.05);
 }
 </style>
 
