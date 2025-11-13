@@ -217,7 +217,7 @@ h2 {
 
 .date {
   text-align: center;
-  font-size: 10px;
+  font-size: 11px;
   color: #606266;
   margin-bottom: 6px;
   font-weight: 500;
@@ -277,7 +277,7 @@ h2 {
 }
 
 .score-desc {
-  font-size: 10px;
+  font-size: 11px;
   color: #606266;
   font-weight: 500;
 }
@@ -289,7 +289,7 @@ h2 {
 
 .almanac-section {
   margin-bottom: 4px;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.4;
   color: #606266;
 }
@@ -319,7 +319,7 @@ h2 {
 }
 
 .lucky-item {
-  font-size: 10px;
+  font-size: 11px;
   color: #606266;
 }
 
@@ -339,7 +339,7 @@ h2 {
 }
 
 .tip-content {
-  font-size: 10px;
+  font-size: 11px;
   color: #606266;
   line-height: 1.4;
 }
