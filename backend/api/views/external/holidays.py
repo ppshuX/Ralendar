@@ -347,7 +347,7 @@ def get_festival_detail(request):
     
     try:
         # 加载节日信息数据
-        data_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'festivals_info.json')
+        data_file = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'festivals_info.json')
         
         if not os.path.exists(data_file):
             logger.error(f"节日数据文件不存在: {data_file}")
