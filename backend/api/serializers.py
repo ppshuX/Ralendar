@@ -83,7 +83,7 @@ class UserSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     """事件序列化器（融合版）"""
     username = serializers.CharField(source='user.username', read_only=True)
-    map_url = serializers.CharField(read_only=True)
+    map_url = serializers.CharField(read_only=True, allow_null=True)
     has_location = serializers.BooleanField(read_only=True)
     is_from_roamio = serializers.BooleanField(read_only=True)
     

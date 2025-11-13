@@ -390,12 +390,29 @@ def manage_event(request, event_id):
     
     elif request.method == 'PUT':
         # Update event
-        serializer = EventSerializer(event, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            logger.info(f"[Fusion API - PUT] Update event {event_id}: {event.title}")
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            logger.info(f"[Fusion API - PUT] 开始更新事件 {event_id}")
+            logger.info(f"[Fusion API - PUT] 请求数据: {request.data}")
+            logger.info(f"[Fusion API - PUT] 当前事件: {event.title} (用户: {event.user.username})")
+            
+            serializer = EventSerializer(event, data=request.data, partial=True)
+            if serializer.is_valid():
+                updated_event = serializer.save()
+                logger.info(f"[Fusion API - PUT] ✅ 保存成功: {updated_event.title}")
+                
+                # 重新序列化以获取最新数据（包括只读字段）
+                result_serializer = EventSerializer(updated_event)
+                logger.info(f"[Fusion API - PUT] ✅ 序列化成功，返回数据")
+                return Response(result_serializer.data)
+            else:
+                logger.error(f"[Fusion API - PUT] ❌ 验证失败: {serializer.errors}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"[Fusion API - PUT] ❌ 更新事件时发生异常: {str(e)}", exc_info=True)
+            return Response(
+                {'error': '更新失败', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     elif request.method == 'DELETE':
         # Delete event
