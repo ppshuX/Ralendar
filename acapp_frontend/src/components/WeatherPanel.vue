@@ -13,10 +13,14 @@
       <div v-else class="weather-info">
         <!-- 当前天气 -->
         <div class="current-weather">
-          <div class="city-name">{{ city }}</div>
-          <div class="temp-large">{{ weather.temperature }}°C</div>
-          <div class="weather-desc">{{ weather.weather }}</div>
-          <div class="weather-icon">{{ getWeatherIcon(weather.weather) }}</div>
+          <div class="weather-icon-large">{{ getWeatherIcon(weather.weather) }}</div>
+          <div class="weather-main">
+            <div class="temp-row">
+              <span class="temp-large">{{ weather.temperature }}°</span>
+              <span class="weather-desc">{{ weather.weather }}</span>
+            </div>
+            <div class="city-name">{{ city }}</div>
+          </div>
         </div>
 
         <!-- 详细信息 -->
@@ -209,35 +213,49 @@ h2 {
   background: white;
   border-radius: 12px;
   padding: 16px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 16px;
   margin-bottom: 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   border-left: 3px solid #3b82f6;
 }
 
-.city-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #303133;
-  margin-bottom: 8px;
+.weather-icon-large {
+  font-size: 48px;
+  flex-shrink: 0;
+}
+
+.weather-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.temp-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
 }
 
 .temp-large {
-  font-size: 36px;
+  font-size: 40px;
   font-weight: 700;
   color: #3b82f6;
   line-height: 1;
-  margin-bottom: 6px;
 }
 
 .weather-desc {
-  font-size: 14px;
+  font-size: 16px;
   color: #606266;
-  margin-bottom: 8px;
+  font-weight: 500;
 }
 
-.weather-icon {
-  font-size: 28px;
+.city-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #909399;
 }
 
 /* 详细信息 */
