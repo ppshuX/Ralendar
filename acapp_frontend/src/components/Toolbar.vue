@@ -1,19 +1,19 @@
 <template>
   <div class="toolbar">
-    <button class="tool-btn primary" @click="$emit('show-list')">
+    <button class="tool-btn" @click="$emit('show-list')">
       📝 我的日程 ({{ eventCount }})
     </button>
     <button class="tool-btn" @click="$emit('today')">
       📅 今天
     </button>
-    <button class="tool-btn fortune" @click="$emit('show-fortune')">
-      🔮 今日运势
+    <button class="tool-btn" @click="$emit('show-fortune')">
+      🔮 运势
     </button>
-    <button class="tool-btn weather" @click="$emit('show-weather')">
+    <button class="tool-btn" @click="$emit('show-weather')">
       🌤️ 天气
     </button>
-    <button class="tool-btn ai" @click="$emit('show-ai')">
-      🤖 AI助手
+    <button class="tool-btn" @click="$emit('show-ai')">
+      🤖 AI
     </button>
   </div>
 </template>
@@ -65,39 +65,6 @@ export default {
   box-shadow: 0 4px 8px rgba(102, 126, 234, 0.15);
 }
 
-.tool-btn.primary {
-  background: #667eea;
-  color: white;
-  border-color: #667eea;
-  font-weight: 500;
-}
-
-.tool-btn.primary:hover {
-  background: #5568d3;
-  border-color: #5568d3;
-}
-
-.tool-btn.fortune,
-.tool-btn.weather,
-.tool-btn.ai {
-  background: white;
-  color: #606266;
-  border-color: #e0e0e0;
-}
-
-.tool-btn.fortune:hover {
-  border-color: #fbbf24;
-  color: #fbbf24;
-}
-
-.tool-btn.weather:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
-}
-
-.tool-btn.ai:hover {
-  border-color: #8b5cf6;
-  color: #8b5cf6;
-}
+/* 移除特殊样式，所有按钮统一 */
 </style>
 

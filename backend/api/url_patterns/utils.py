@@ -1,6 +1,6 @@
 """
 工具类路由
-包括：农历转换、节假日查询、AI助手、天气查询
+包括：农历转换、节假日查询、AI助手、天气查询、运势查询
 """
 from django.urls import path
 from ..views import (
@@ -8,6 +8,7 @@ from ..views import (
     get_holidays,
     check_holiday,
     get_today_holidays,
+    get_today_fortune,
 )
 from ..views.external import holidays
 from ..views.ai.assistant import (
@@ -37,5 +38,8 @@ urlpatterns = [
     # 天气查询
     path('weather/', weather.get_weather, name='get_weather'),
     path('weather/search/', weather.search_location, name='search_location'),
+    
+    # 运势查询
+    path('fortune/today/', get_today_fortune, name='get_today_fortune'),
 ]
 

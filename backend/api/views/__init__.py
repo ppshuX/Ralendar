@@ -27,6 +27,7 @@ from .auth.oauth_callback import acwing_oauth_callback
 # External Services
 from .external.lunar import get_lunar_date
 from .external.holidays import get_holidays, check_holiday, get_today_holidays
+from .external.fortune import get_today_fortune
 
 # Third-party Integration
 from .integration.fusion import (
@@ -62,6 +63,7 @@ __all__ = [
     'get_holidays',
     'check_holiday',
     'get_today_holidays',
+    'get_today_fortune',
     # Fusion APIs
     'batch_create_events',
     'get_user_events',
