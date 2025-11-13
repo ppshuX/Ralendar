@@ -109,8 +109,15 @@ export default {
 <style scoped>
 .weather-panel {
   padding: 20px;
-  background: linear-gradient(to bottom, #4facfe, #00f2fe);
-  min-height: 100vh;
+  background: #f5f7fa;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.content {
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .header {
@@ -122,8 +129,8 @@ export default {
 
 .back-btn {
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
+  background: white;
+  border: 1px solid #dcdfe6;
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
@@ -131,13 +138,14 @@ export default {
 }
 
 .back-btn:hover {
-  background: white;
-  transform: translateY(-2px);
+  background: #ecf5ff;
+  border-color: #409eff;
+  color: #409eff;
 }
 
 h2 {
   font-size: 24px;
-  color: white;
+  color: #303133;
   margin: 0;
 }
 
@@ -145,7 +153,7 @@ h2 {
   text-align: center;
   padding: 40px;
   font-size: 16px;
-  color: white;
+  color: #606266;
 }
 
 .error {
@@ -155,46 +163,48 @@ h2 {
 
 /* 当前天气 */
 .current-weather {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
+  background: white;
+  border-radius: 16px;
   padding: 30px;
   text-align: center;
   margin-bottom: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #3b82f6;
 }
 
 .city-name {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
   color: #303133;
   margin-bottom: 15px;
 }
 
 .temp-large {
-  font-size: 64px;
+  font-size: 56px;
   font-weight: 700;
-  color: #667eea;
+  color: #3b82f6;
   line-height: 1;
   margin-bottom: 10px;
 }
 
 .weather-desc {
-  font-size: 20px;
+  font-size: 18px;
   color: #606266;
   margin-bottom: 15px;
 }
 
 .weather-icon {
-  font-size: 48px;
+  font-size: 42px;
 }
 
 /* 详细信息 */
 .weather-details {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
+  background: white;
+  border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #10b981;
 }
 
 .detail-item {
@@ -236,21 +246,21 @@ h2 {
 }
 
 .city-btn {
-  padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid transparent;
-  border-radius: 20px;
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  color: #303133;
+  color: #606266;
   transition: all 0.3s;
 }
 
 .city-btn:hover {
-  background: white;
-  border-color: #667eea;
-  color: #667eea;
+  background: #ecf5ff;
+  border-color: #3b82f6;
+  color: #3b82f6;
   transform: translateY(-2px);
 }
 </style>

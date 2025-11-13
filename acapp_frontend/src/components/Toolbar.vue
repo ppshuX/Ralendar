@@ -33,73 +33,71 @@ export default {
 <style scoped>
 .toolbar {
   display: flex;
-  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+  padding: 0 10px;
 }
 
 .tool-btn {
-  padding: 10px 16px;
-  background: #f5f7fa;
+  flex: 1;
+  min-width: 80px;
+  max-width: 120px;
+  padding: 10px 12px;
+  background: white;
   color: #606266;
-  border: 1px solid #dcdfe6;
-  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   transition: all 0.3s;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .tool-btn:hover {
-  background: #ecf5ff;
-  border-color: #409eff;
-  color: #409eff;
+  background: #f5f7fa;
+  border-color: #667eea;
+  color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.15);
 }
 
 .tool-btn.primary {
-  background: #67c23a;
+  background: #667eea;
   color: white;
-  border-color: #67c23a;
+  border-color: #667eea;
+  font-weight: 500;
 }
 
 .tool-btn.primary:hover {
-  background: #85ce61;
-  border-color: #85ce61;
+  background: #5568d3;
+  border-color: #5568d3;
 }
 
-.tool-btn.fortune {
-  background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
-  color: #2d3436;
-  border-color: #fdcb6e;
+.tool-btn.fortune,
+.tool-btn.weather,
+.tool-btn.ai {
+  background: white;
+  color: #606266;
+  border-color: #e0e0e0;
 }
 
 .tool-btn.fortune:hover {
-  background: linear-gradient(135deg, #fdcb6e, #f39c12);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(253, 203, 110, 0.4);
-}
-
-.tool-btn.weather {
-  background: linear-gradient(135deg, #74b9ff, #0984e3);
-  color: white;
-  border-color: #0984e3;
+  border-color: #fbbf24;
+  color: #fbbf24;
 }
 
 .tool-btn.weather:hover {
-  background: linear-gradient(135deg, #0984e3, #0652dd);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(9, 132, 227, 0.4);
-}
-
-.tool-btn.ai {
-  background: linear-gradient(135deg, #a29bfe, #6c5ce7);
-  color: white;
-  border-color: #6c5ce7;
+  border-color: #3b82f6;
+  color: #3b82f6;
 }
 
 .tool-btn.ai:hover {
-  background: linear-gradient(135deg, #6c5ce7, #5f3dc4);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(108, 92, 231, 0.4);
+  border-color: #8b5cf6;
+  color: #8b5cf6;
 }
 </style>
 

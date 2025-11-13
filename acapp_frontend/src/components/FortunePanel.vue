@@ -346,7 +346,14 @@ export default {
 .fortune-panel {
   padding: 20px;
   background: #f5f7fa;
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.content {
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .header {
@@ -354,6 +361,9 @@ export default {
   align-items: center;
   gap: 15px;
   margin-bottom: 20px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .back-btn {
@@ -373,7 +383,7 @@ export default {
 }
 
 h2 {
-  font-size: 24px;
+  font-size: 22px;
   color: #303133;
   margin: 0;
 }
@@ -414,9 +424,10 @@ h2 {
   font-size: 20px;
 }
 
-/* 运势指数卡片 */
+/* 运势指数卡片 - 统一配色 */
 .score-card {
-  background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+  background: white;
+  border-left: 4px solid #fbbf24;
 }
 
 .score-content {
@@ -431,29 +442,31 @@ h2 {
 .score-value {
   font-size: 28px;
   font-weight: 700;
-  color: #e17055;
+  color: #fbbf24;
   margin-bottom: 10px;
 }
 
 .score-desc {
   font-size: 16px;
-  color: #d63031;
+  color: #606266;
   font-weight: 500;
 }
 
-/* 黄历卡片 */
+/* 黄历卡片 - 统一配色 */
 .almanac-card {
-  background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+  background: white;
+  border-left: 4px solid #667eea;
 }
 
 .almanac-card .card-title {
-  color: white;
+  color: #303133;
 }
 
 .almanac-section {
   margin-bottom: 12px;
   font-size: 15px;
   line-height: 1.8;
+  color: #606266;
 }
 
 .almanac-section:last-child {
@@ -462,25 +475,27 @@ h2 {
 
 .label {
   font-weight: 600;
-  color: white;
+  color: #303133;
 }
 
 .items {
-  color: rgba(255, 255, 255, 0.95);
+  color: #606266;
 }
 
-/* 幸运元素卡片 */
+/* 幸运元素卡片 - 统一配色 */
 .lucky-card {
-  background: linear-gradient(135deg, #81ecec, #00b894);
+  background: white;
+  border-left: 4px solid #10b981;
 }
 
 .lucky-card .card-title {
-  color: white;
+  color: #303133;
 }
 
 .lucky-item {
   margin-bottom: 10px;
   font-size: 15px;
+  color: #606266;
 }
 
 .lucky-item:last-child {
@@ -489,26 +504,27 @@ h2 {
 
 .lucky-label {
   font-weight: 600;
-  color: white;
+  color: #303133;
 }
 
 .lucky-value {
-  color: #2d3436;
+  color: #667eea;
   font-weight: 500;
 }
 
-/* 提示卡片 */
+/* 提示卡片 - 统一配色 */
 .tip-card {
-  background: linear-gradient(135deg, #fab1a0, #e17055);
+  background: white;
+  border-left: 4px solid #f59e0b;
 }
 
 .tip-card .card-title {
-  color: white;
+  color: #303133;
 }
 
 .tip-content {
   font-size: 15px;
-  color: white;
+  color: #606266;
   line-height: 1.8;
 }
 </style>
