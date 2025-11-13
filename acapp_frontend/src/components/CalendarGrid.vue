@@ -110,13 +110,13 @@ export default {
 
     selectedDateEvents() {
       if (!this.selectedDateStr) return []
-      // 只显示用户创建的日程，不包括订阅的节日（subscription_id不为null的是订阅的节日）
+      // 只显示用户创建的日程，不包括订阅的节日
       return this.events.filter(event => {
         if (!event.start_time || !event.start_time.startsWith(this.selectedDateStr)) {
           return false
         }
         // 排除订阅的节日事件
-        return !event.subscription_id
+        return !event.is_public_calendar
       })
     },
 
