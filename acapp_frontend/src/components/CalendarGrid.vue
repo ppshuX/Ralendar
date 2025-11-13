@@ -13,7 +13,6 @@
     <!-- 操作按钮栏 -->
     <Toolbar 
       :event-count="eventCount"
-      @today="goToToday"
       @show-list="goToList"
       @show-fortune="goToFortune"
       @show-weather="goToWeather"
@@ -72,14 +71,8 @@ export default {
 
   data() {
     return {
-      // 节假日数据
-      holidays: {
-        '2025-01-01': '元旦',
-        '2025-02-10': '春节',
-        '2025-04-05': '清明',
-        '2025-05-01': '劳动节',
-        '2025-10-01': '国庆',
-      },
+      // 节日数据 Map<日期字符串, 节日名称>
+      datesWithFestivals: {},
       // 日期菜单
       showDateMenu: false,
       selectedDate: null,
@@ -117,8 +110,13 @@ export default {
 
     selectedDateEvents() {
       if (!this.selectedDateStr) return []
+      // 只显示用户创建的日程，不包括订阅的节日（subscription_id不为null的是订阅的节日）
       return this.events.filter(event => {
-        return event.start_time && event.start_time.startsWith(this.selectedDateStr)
+        if (!event.start_time || !event.start_time.startsWith(this.selectedDateStr)) {
+          return false
+        }
+        // 排除订阅的节日事件
+        return !event.subscription_id
       })
     },
 
@@ -151,13 +149,16 @@ export default {
         const dateStr = this.formatDate(date)
         const weekDay = date.getDay()
 
+        // 获取该日期的节日名称（优先显示法定节假日，然后是传统节日）
+        const festivalName = this.datesWithFestivals[dateStr] || null
+        
         days.push({
           date: i,
           isOtherMonth: false,
           isToday: this.isToday(year, month, i),
           isWeekend: weekDay === 0 || weekDay === 6,
-          isHoliday: !!this.holidays[dateStr],
-          holiday: this.holidays[dateStr],
+          isHoliday: !!festivalName,
+          holiday: festivalName,
           eventCount: this.getEventCountByDate(dateStr),
         })
       }
@@ -200,9 +201,55 @@ export default {
     },
 
     getEventCountByDate(dateStr) {
+      // 只统计用户创建的日程，不包括订阅的节日（subscriptionId不为null的是订阅的节日）
       return this.events.filter(event => {
-        return event.start_time && event.start_time.startsWith(dateStr)
+        if (!event.start_time || !event.start_time.startsWith(dateStr)) {
+          return false
+        }
+        // 排除订阅的节日事件（subscriptionId不为null）
+        return !event.subscription_id
       }).length
+    },
+
+    // 加载当前月份的节日信息
+    async loadFestivalsForMonth() {
+      const year = this.currentDate.getFullYear()
+      const month = this.currentDate.getMonth()
+      const lastDay = new Date(year, month + 1, 0)
+      
+      // 清空当前月份的节日数据
+      const newDatesWithFestivals = {}
+      
+      // 遍历当前月份的所有日期
+      for (let day = 1; day <= lastDay.getDate(); day++) {
+        const date = new Date(year, month, day)
+        const dateStr = this.formatDate(date)
+        
+        try {
+          // 调用API获取节日信息
+          const response = await fetch(`https://app7626.acapp.acwing.com.cn/api/holidays/check/?date=${dateStr}`)
+          const data = await response.json()
+          
+          // 优先显示法定节假日
+          if (data.is_holiday && data.holiday) {
+            newDatesWithFestivals[dateStr] = data.holiday
+          } 
+          // 然后显示传统节日（取第一个）
+          else if (data.festivals && data.festivals.length > 0) {
+            const traditionalFestival = data.festivals.find(f => f.type === 'traditional')
+            if (traditionalFestival) {
+              newDatesWithFestivals[dateStr] = traditionalFestival.name
+            } else if (data.festivals[0]) {
+              newDatesWithFestivals[dateStr] = data.festivals[0].name
+            }
+          }
+        } catch (error) {
+          console.error(`加载${dateStr}的节日信息失败:`, error)
+        }
+      }
+      
+      // 更新节日数据
+      this.datesWithFestivals = newDatesWithFestivals
     },
 
     prevMonth() {
@@ -280,8 +327,18 @@ export default {
     },
   },
 
+  watch: {
+    currentDate: {
+      handler() {
+        this.loadFestivalsForMonth()
+      },
+      immediate: true
+    }
+  },
+
   mounted() {
     this.fetchEvents()
+    this.loadFestivalsForMonth()
   },
 }
 </script>
