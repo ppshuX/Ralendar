@@ -12,14 +12,14 @@ from ...serializers import EventSerializer
 class EventViewSet(viewsets.ModelViewSet):
     """日程 CRUD API"""
     serializer_class = EventSerializer
-    permission_classes = [AllowAny]  # 允许所有人访问，未登录用户使用匿名账户
+    permission_classes = [AllowAny]  # 允许访问API，但只返回已登录用户的数据
     
     def get_queryset(self):
-        """只返回当前用户的日程（如果已登录）"""
+        """只返回当前用户的日程"""
         if self.request.user.is_authenticated:
             return Event.objects.filter(user=self.request.user)
-        # 开发环境：返回所有日程
-        return Event.objects.all()
+        # 未登录：返回空列表（保护隐私）
+        return Event.objects.none()
     
     def perform_create(self, serializer):
         """创建日程时关联用户"""
