@@ -157,8 +157,8 @@ export default {
 .header {
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding: 20px;
+  gap: 12px;
+  padding: 12px 16px;
   background: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   flex-shrink: 0;
@@ -166,19 +166,20 @@ export default {
 
 .scroll-container {
   flex: 1;
-  overflow-y: auto !important;
+  overflow-y: scroll !important;
   overflow-x: hidden;
-  padding: 15px;
+  padding: 12px;
   -webkit-overflow-scrolling: touch;
+  min-height: 0;
 }
 
 .content-card {
   max-width: 600px;
   margin: 0 auto;
   background: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .loading-state {
@@ -189,12 +190,12 @@ export default {
 }
 
 .back-btn {
-  padding: 8px 16px;
+  padding: 6px 12px;
   background: white;
   border: 1px solid #dcdfe6;
-  border-radius: 6px;
+  border-radius: 5px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   transition: all 0.3s;
 }
 
@@ -205,25 +206,25 @@ export default {
 }
 
 h2 {
-  font-size: 22px;
+  font-size: 18px;
   color: #303133;
   margin: 0;
 }
 
 .date {
   text-align: center;
-  font-size: 14px;
+  font-size: 12px;
   color: #606266;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   font-weight: 500;
 }
 
 .fortune-card {
   background: white;
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.3s;
 }
 
@@ -233,26 +234,26 @@ h2 {
 
 .fortune-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .card-title {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   color: #303133;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .icon {
-  font-size: 16px;
+  font-size: 14px;
 }
 
 /* 运势指数卡片 */
 .score-card {
-  border-left: 4px solid #fbbf24;
+  border-left: 2px solid #fbbf24;
 }
 
 .score-content {
@@ -260,32 +261,32 @@ h2 {
 }
 
 .stars {
-  font-size: 20px;
-  margin-bottom: 6px;
+  font-size: 18px;
+  margin-bottom: 4px;
 }
 
 .score-value {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: #fbbf24;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .score-desc {
-  font-size: 13px;
+  font-size: 11px;
   color: #606266;
   font-weight: 500;
 }
 
 /* 黄历卡片 */
 .almanac-card {
-  border-left: 3px solid #667eea;
+  border-left: 2px solid #667eea;
 }
 
 .almanac-section {
-  margin-bottom: 8px;
-  font-size: 13px;
-  line-height: 1.6;
+  margin-bottom: 6px;
+  font-size: 11px;
+  line-height: 1.5;
   color: #606266;
 }
 
@@ -304,17 +305,17 @@ h2 {
 
 /* 幸运元素卡片 */
 .lucky-card {
-  border-left: 3px solid #10b981;
+  border-left: 2px solid #10b981;
 }
 
 .lucky-content {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .lucky-item {
-  font-size: 13px;
+  font-size: 11px;
   color: #606266;
 }
 
@@ -330,12 +331,12 @@ h2 {
 
 /* 提示卡片 */
 .tip-card {
-  border-left: 3px solid #f59e0b;
+  border-left: 2px solid #f59e0b;
 }
 
 .tip-content {
-  font-size: 13px;
+  font-size: 11px;
   color: #606266;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 </style>
