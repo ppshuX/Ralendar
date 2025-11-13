@@ -161,6 +161,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         
+        // 设置Toolbar
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        
         // 初始化数据库和提醒管理器
         database = AppDatabase.getDatabase(this)
         eventDao = database.eventDao()
