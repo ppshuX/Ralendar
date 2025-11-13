@@ -276,8 +276,6 @@ export default {
       this.selectedDate = new Date(year, month, day.date)
       this.selectedDateStr = this.formatDate(this.selectedDate)
       this.showDateMenu = true
-      
-      console.log('选中日期:', day.date)
     },
 
     closeDateMenu() {

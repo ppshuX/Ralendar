@@ -266,12 +266,6 @@ export default {
           ? `${this.eventDate}T${this.eventTime}:00`
           : `${this.eventDate}T00:00:00`
         
-        console.log('创建事件:', {
-          title: this.eventTitle,
-          start_time: startTime,
-          token: token ? '有token' : '无token'
-        })
-        
         const response = await fetch('https://app7626.acapp.acwing.com.cn/api/events/', {
           method: 'POST',
           headers,
@@ -284,11 +278,8 @@ export default {
           })
         })
         
-        console.log('创建响应:', response.status, response.ok)
-        
         if (response.ok) {
-          const result = await response.json()
-          console.log('创建成功:', result)
+          await response.json()
           
           this.showEventPreview = false
           this.parsedEvent = null
