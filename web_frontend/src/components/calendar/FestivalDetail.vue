@@ -105,17 +105,21 @@ const quickQuestions = computed(() => {
   const name = props.festival.name
   
   if (name.includes('春节')) {
-    return ['传统习俗有哪些？', '为什么要贴春联？', '有哪些传统美食？']
+    return ['春节的传统习俗有哪些？', '为什么要贴春联？', '春节有哪些传统美食？']
   } else if (name.includes('国庆')) {
-    return ['国庆节的由来？', '假期有什么活动？', '阅兵多少年一次？']
+    return ['国庆节的由来？', '国庆假期有什么活动？', '国庆阅兵多少年一次？']
   } else if (name.includes('中秋')) {
-    return ['为什么吃月饼？', '传说故事？', '有哪些诗词？']
+    return ['中秋节为什么吃月饼？', '中秋节的传说故事？', '中秋节有哪些诗词？']
   } else if (name.includes('端午')) {
-    return ['为什么吃粽子？', '屈原的故事？', '赛龙舟的由来？']
+    return ['端午节为什么吃粽子？', '端午节和屈原的故事？', '端午节赛龙舟的由来？']
   } else if (name.includes('清明')) {
-    return ['为什么扫墓？', '有什么习俗？', '清明诗词？']
+    return ['清明节为什么扫墓？', '清明节有什么习俗？', '清明节的诗词？']
   } else {
-    return ['这个节日的由来？', '有什么传统习俗？', '有特色美食吗？']
+    return [
+      `${name}的由来？`,
+      `${name}有什么传统习俗？`,
+      `${name}有特色美食吗？`
+    ]
   }
 })
 
