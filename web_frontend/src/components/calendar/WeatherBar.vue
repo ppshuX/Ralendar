@@ -26,6 +26,7 @@
               <span class="weather-desc">{{ weatherData.weather }}</span>
             </div>
             <div class="weather-secondary">
+              <span v-if="weatherData.feelsLike !== '--'">体感{{ weatherData.feelsLike }}°C</span>
               <span v-if="weatherData.windDir !== '--'">{{ weatherData.windDir }}风</span>
               <span v-if="weatherData.windScale !== '--'">{{ weatherData.windScale }}级</span>
               <span v-if="weatherData.humidity !== '--'">湿度{{ weatherData.humidity }}%</span>

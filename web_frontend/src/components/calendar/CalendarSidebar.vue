@@ -23,10 +23,6 @@
       />
     </div>
 
-    <div v-show="currentTab === 'weather'" class="tab-content">
-      <WeatherPanel />
-    </div>
-
     <div v-show="currentTab === 'ai'" class="tab-content">
       <AIAssistantPanel />
     </div>
@@ -39,7 +35,6 @@ import SidebarTabs from './SidebarTabs.vue'
 import EventListPanel from './EventListPanel.vue'
 import HolidayPanel from './HolidayPanel.vue'
 import FortunePanel from './FortunePanel.vue'
-import WeatherPanel from './WeatherPanel.vue'
 import AIAssistantPanel from './AIAssistantPanel.vue'
 
 const props = defineProps({
