@@ -7,137 +7,82 @@
       </p>
     </div>
 
-    <!-- 运势指数卡片 -->
-    <div class="fortune-card score">
-      <div class="card-icon">📊</div>
-      <div class="card-content">
-        <div class="card-title">运势指数</div>
-        <div class="score-display">
-          <div class="stars">{{ starRating }}</div>
-          <div class="score-value">({{ fortuneScore }}分)</div>
-        </div>
-        <div class="fortune-desc">{{ fortuneDescription }}</div>
-      </div>
+    <div v-if="loading" class="loading-state">
+      加载中...
     </div>
 
-    <!-- 黄历宜忌 -->
-    <div class="fortune-card almanac">
-      <div class="card-icon">📖</div>
-      <div class="card-content">
-        <div class="card-title">黄历宜忌</div>
-        <div class="almanac-item good">
-          <span class="almanac-label">✅ 宜：</span>
-          <span class="almanac-text">{{ goodThings.join('、') }}</span>
-        </div>
-        <div class="almanac-item bad">
-          <span class="almanac-label">❌ 忌：</span>
-          <span class="almanac-text">{{ badThings.join('、') }}</span>
+    <template v-else>
+      <!-- 运势指数卡片 -->
+      <div class="fortune-card score">
+        <div class="card-icon">📊</div>
+        <div class="card-content">
+          <div class="card-title">运势指数</div>
+          <div class="score-display">
+            <div class="stars">{{ starRating }}</div>
+            <div class="score-value">({{ fortuneScore }}分)</div>
+          </div>
+          <div class="fortune-desc">{{ fortuneDescription }}</div>
         </div>
       </div>
-    </div>
 
-    <!-- 幸运元素 -->
-    <div class="fortune-card lucky">
-      <div class="card-icon">✨</div>
-      <div class="card-content">
-        <div class="card-title">幸运元素</div>
-        <div class="lucky-grid">
-          <div class="lucky-item">
-            <div class="lucky-label">🎨 幸运色</div>
-            <div class="lucky-value" :style="{ color: getLuckyColorHex(luckyColor) }">
-              {{ luckyColor }}
+      <!-- 黄历宜忌 -->
+      <div class="fortune-card almanac">
+        <div class="card-icon">📖</div>
+        <div class="card-content">
+          <div class="card-title">黄历宜忌</div>
+          <div class="almanac-item good">
+            <span class="almanac-label">✅ 宜：</span>
+            <span class="almanac-text">{{ goodThings.join('、') }}</span>
+          </div>
+          <div class="almanac-item bad">
+            <span class="almanac-label">❌ 忌：</span>
+            <span class="almanac-text">{{ badThings.join('、') }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 幸运元素 -->
+      <div class="fortune-card lucky">
+        <div class="card-icon">✨</div>
+        <div class="card-content">
+          <div class="card-title">幸运元素</div>
+          <div class="lucky-grid">
+            <div class="lucky-item">
+              <div class="lucky-label">🎨 幸运色</div>
+              <div class="lucky-value" :style="{ color: getLuckyColorHex(luckyColor) }">
+                {{ luckyColor }}
+              </div>
+            </div>
+            <div class="lucky-item">
+              <div class="lucky-label">🔢 幸运数字</div>
+              <div class="lucky-value">{{ luckyNumber }}</div>
+            </div>
+            <div class="lucky-item">
+              <div class="lucky-label">⚡ 五行</div>
+              <div class="lucky-value">{{ luckyElement }}</div>
             </div>
           </div>
-          <div class="lucky-item">
-            <div class="lucky-label">🔢 幸运数字</div>
-            <div class="lucky-value">{{ luckyNumber }}</div>
-          </div>
-          <div class="lucky-item">
-            <div class="lucky-label">⚡ 五行</div>
-            <div class="lucky-value">{{ luckyElement }}</div>
-          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 温馨提示 -->
-    <div class="fortune-card tip">
-      <div class="card-icon">💡</div>
-      <div class="card-content">
-        <div class="card-title">温馨提示</div>
-        <div class="tip-text">{{ weekdayTip }}</div>
+      <!-- 温馨提示 -->
+      <div class="fortune-card tip">
+        <div class="card-icon">💡</div>
+        <div class="card-content">
+          <div class="card-title">温馨提示</div>
+          <div class="tip-text">{{ weekdayTip }}</div>
+        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { weatherAPI } from '@/api'
-
-// 二十四节气数据（2025年）
-const solarTerms = {
-  '01-05': { name: '小寒', desc: '天气寒冷，宜养生保暖', boost: ['读书', '沐浴', '求医'], reduce: ['出行', '动土'] },
-  '01-20': { name: '大寒', desc: '一年中最冷的时节', boost: ['祭祀', '祈福', '修造'], reduce: ['移徙', '嫁娶'] },
-  '02-03': { name: '立春', desc: '春季开始，万物复苏', boost: ['开市', '求财', '纳财', '会友'], reduce: ['安葬', '破土'] },
-  '02-18': { name: '雨水', desc: '降雨增多，气温回升', boost: ['栽种', '祈福', '开市'], reduce: ['动土', '修造'] },
-  '03-05': { name: '惊蛰', desc: '春雷惊醒蛰伏', boost: ['出行', '交易', '求财', '会友'], reduce: ['安床', '移徙'] },
-  '03-20': { name: '春分', desc: '昼夜平分，春意盎然', boost: ['嫁娶', '纳采', '祭祀'], reduce: ['诉讼', '词讼'] },
-  '04-04': { name: '清明', desc: '天清地明，祭祖扫墓', boost: ['祭祀', '扫舍', '修墓'], reduce: ['嫁娶', '开市'] },
-  '04-20': { name: '谷雨', desc: '雨生百谷，播种佳时', boost: ['栽种', '开市', '纳财'], reduce: ['移徙', '入宅'] },
-  '05-05': { name: '立夏', desc: '夏季开始，气温升高', boost: ['出行', '会友', '交易'], reduce: ['动土', '破土'] },
-  '05-21': { name: '小满', desc: '麦类作物籽粒饱满', boost: ['纳财', '开市', '求财'], reduce: ['诉讼', '安葬'] },
-  '06-05': { name: '芒种', desc: '有芒作物成熟', boost: ['栽种', '纳财', '开市'], reduce: ['嫁娶', '移徙'] },
-  '06-21': { name: '夏至', desc: '白昼最长，阳气最盛', boost: ['祈福', '求财', '交易'], reduce: ['词讼', '安葬'] },
-  '07-07': { name: '小暑', desc: '天气炎热，注意防暑', boost: ['沐浴', '求医', '治病'], reduce: ['嫁娶', '移徙', '出行'] },
-  '07-22': { name: '大暑', desc: '一年中最热的时节', boost: ['沐浴', '扫舍', '解除'], reduce: ['出行', '开市', '动土'] },
-  '08-07': { name: '立秋', desc: '秋季开始，暑去凉来', boost: ['开市', '求财', '交易'], reduce: ['嫁娶', '移徙'] },
-  '08-23': { name: '处暑', desc: '炎热结束，秋高气爽', boost: ['出行', '会友', '祭祀'], reduce: ['安葬', '破土'] },
-  '09-07': { name: '白露', desc: '天气转凉，露水增多', boost: ['求医', '治病', '沐浴'], reduce: ['嫁娶', '移徙'] },
-  '09-23': { name: '秋分', desc: '昼夜平分，丰收时节', boost: ['纳财', '开市', '祭祀'], reduce: ['诉讼', '词讼'] },
-  '10-08': { name: '寒露', desc: '露水将凝，气温下降', boost: ['祈福', '祭祀', '求医'], reduce: ['嫁娶', '开市'] },
-  '10-23': { name: '霜降', desc: '天气渐冷，初霜出现', boost: ['纳财', '开市', '修造'], reduce: ['移徙', '出行'] },
-  '11-07': { name: '立冬', desc: '冬季开始，万物收藏', boost: ['祭祀', '修造', '纳财'], reduce: ['嫁娶', '移徙', '出行'] },
-  '11-22': { name: '小雪', desc: '开始降雪，气温降低', boost: ['祭祀', '祈福', '修造'], reduce: ['嫁娶', '出行'] },
-  '12-07': { name: '大雪', desc: '降雪增多，严寒将至', boost: ['修造', '祭祀', '沐浴'], reduce: ['嫁娶', '移徙', '出行'] },
-  '12-21': { name: '冬至', desc: '阴极阳生，白昼最短', boost: ['祭祀', '祈福', '沐浴'], reduce: ['嫁娶', '移徙'] }
-}
-
-// 黄历宜事列表
-const goodThingsList = [
-  "出行", "会友", "开市", "祈福", "求财", "纳财", "交易",
-  "立券", "移徙", "嫁娶", "祭祀", "安床", "入宅", "动土",
-  "修造", "纳采", "订盟", "理发", "求医", "治病", "沐浴",
-  "扫舍", "裁衣", "作灶", "解除", "栽种", "牧养"
-]
-
-// 黄历忌事列表
-const badThingsList = [
-  "诉讼", "词讼", "动土", "破土", "安葬", "开市", "交易",
-  "纳财", "栽种", "嫁娶", "移徙", "入宅", "安床", "作灶",
-  "修造", "出行", "祈福", "祭祀", "探病", "针灸", "求医",
-  "治病", "裁衣", "解除", "伐木", "捕捉", "畋猎"
-]
-
-const luckyColorsList = [
-  "红色", "橙色", "黄色", "绿色", "青色", "蓝色",
-  "紫色", "粉色", "白色", "金色", "银色", "米色"
-]
-
-const elementsList = ["金", "木", "水", "火", "土"]
-
-const fortuneDescriptionsList = [
-  "今日运势极佳，万事顺意！",
-  "运势平稳，适宜稳扎稳打。",
-  "小有波折，需谨慎行事。",
-  "运势上扬，把握机会！",
-  "诸事顺利，心情愉悦。",
-  "运势一般，保持平常心。",
-  "运势渐好，积极进取！"
-]
+import { ref, onMounted } from 'vue'
+import { fortuneAPI } from '@/api'
 
 // 响应式数据
-const todayDate = ref('')
+const todayDate = ref('加载中...')
 const fortuneScore = ref(0)
 const starRating = ref('')
 const fortuneDescription = ref('')
@@ -147,236 +92,49 @@ const luckyColor = ref('')
 const luckyNumber = ref(0)
 const luckyElement = ref('')
 const weekdayTip = ref('')
-const weatherData = ref(null)
+const loading = ref(true)
 
-// 获取今日天气
-const loadWeatherForFortune = async () => {
+// 从API加载今日运势
+const loadFortune = async () => {
   try {
-    const savedCity = localStorage.getItem('weather_city') || '北京'
-    const response = await weatherAPI.getWeather(savedCity)
-    if (response.success) {
-      weatherData.value = response.data
-    }
-  } catch (error) {
-    console.log('获取天气失败，使用默认运势')
-  }
-}
-
-// 生成今日运势（结合天气和节气）
-const generateFortune = () => {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth() + 1
-  const day = now.getDate()
-  const weekday = now.getDay()
-  
-  const weekdayNames = ['日', '一', '二', '三', '四', '五', '六']
-  const monthDay = `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-  
-  // 检查是否是节气
-  const solarTerm = solarTerms[monthDay]
-  
-  // 如果是节气，在日期后显示节气名称
-  if (solarTerm) {
-    todayDate.value = `${year}年${month}月${day}日 星期${weekdayNames[weekday]} • ${solarTerm.name}`
-  } else {
-    todayDate.value = `${year}年${month}月${day}日 星期${weekdayNames[weekday]}`
-  }
-  
-  // 基于日期计算种子（确定性）
-  const seed = year * 10000 + month * 100 + day
-  
-  // 简单的伪随机数生成器（基于seed）
-  const seededRandom = (function(s) {
-    let seed = s
-    return function() {
-      seed = (seed * 9301 + 49297) % 233280
-      return seed / 233280
-    }
-  })(seed)
-  
-  // 基础宜忌列表
-  let baseGoodThings = [...goodThingsList]
-  let baseBadThings = [...badThingsList]
-  
-  // 如果是节气，调整宜忌（节气优先）
-  if (solarTerm) {
-    // 将节气推荐的事项提升到前面
-    baseGoodThings = [...solarTerm.boost, ...baseGoodThings.filter(item => !solarTerm.boost.includes(item))]
-    // 将节气不推荐的事项提升到忌事前面
-    baseBadThings = [...solarTerm.reduce, ...baseBadThings.filter(item => !solarTerm.reduce.includes(item))]
-  }
-  
-  // 根据天气调整宜忌
-  if (weatherData.value) {
-    const weather = weatherData.value.weather
-    const temp = parseInt(weatherData.value.temperature)
+    const savedCity = localStorage.getItem('weather_city') || '南昌市'
+    const response = await fortuneAPI.getTodayFortune(savedCity)
     
-    // 晴天
-    if (weather.includes('晴')) {
-      // 晴天适合外出活动
-      baseGoodThings = ['出行', '会友', '祈福', '求财', ...baseGoodThings.filter(item => !['出行', '会友', '祈福', '求财'].includes(item))]
-    }
-    // 雨天
-    else if (weather.includes('雨')) {
-      // 雨天适合室内活动
-      baseGoodThings = ['读书', '沐浴', '扫舍', '修造', ...baseGoodThings.filter(item => !['读书', '沐浴', '扫舍', '修造'].includes(item))]
-      baseBadThings = ['出行', '移徙', '嫁娶', ...baseBadThings.filter(item => !['出行', '移徙', '嫁娶'].includes(item))]
-    }
-    // 雪天
-    else if (weather.includes('雪')) {
-      baseGoodThings = ['祭祀', '祈福', '沐浴', ...baseGoodThings.filter(item => !['祭祀', '祈福', '沐浴'].includes(item))]
-      baseBadThings = ['出行', '嫁娶', '移徙', '开市', ...baseBadThings.filter(item => !['出行', '嫁娶', '移徙', '开市'].includes(item))]
-    }
-    // 阴天/多云
-    else if (weather.includes('阴') || weather.includes('云')) {
-      baseGoodThings = ['祭祀', '修造', '求医', ...baseGoodThings.filter(item => !['祭祀', '修造', '求医'].includes(item))]
-    }
+    // 设置日期
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth() + 1
+    const day = now.getDate()
+    const weekdayNames = ['日', '一', '二', '三', '四', '五', '六']
+    const weekday = weekdayNames[now.getDay()]
     
-    // 高温（>30度）
-    if (temp > 30) {
-      baseBadThings = ['出行', '开市', '移徙', ...baseBadThings.filter(item => !['出行', '开市', '移徙'].includes(item))]
-    }
-    // 低温（<5度）
-    else if (temp < 5) {
-      baseBadThings = ['出行', '嫁娶', '移徙', ...baseBadThings.filter(item => !['出行', '嫁娶', '移徙'].includes(item))]
-    }
-  }
-  
-  // 随机选择宜忌
-  const goodCount = 4 + Math.floor(seededRandom() * 4) // 4-7项
-  const badCount = 3 + Math.floor(seededRandom() * 3)  // 3-5项
-  
-  const selectedGood = new Set()
-  const selectedBad = new Set()
-  
-  // 选择宜事（优先从调整后的列表前面选择）
-  for (let i = 0; i < goodCount && selectedGood.size < goodCount; i++) {
-    if (i < baseGoodThings.length) {
-      selectedGood.add(baseGoodThings[i])
-    }
-  }
-  while (selectedGood.size < goodCount && baseGoodThings.length > 0) {
-    const idx = Math.floor(seededRandom() * baseGoodThings.length)
-    selectedGood.add(baseGoodThings[idx])
-  }
-  
-  // 选择忌事（优先从调整后的列表前面选择）
-  for (let i = 0; i < badCount && selectedBad.size < badCount; i++) {
-    if (i < baseBadThings.length && !selectedGood.has(baseBadThings[i])) {
-      selectedBad.add(baseBadThings[i])
-    }
-  }
-  while (selectedBad.size < badCount && baseBadThings.length > 0) {
-    const idx = Math.floor(seededRandom() * baseBadThings.length)
-    const bad = baseBadThings[idx]
-    if (!selectedGood.has(bad)) {
-      selectedBad.add(bad)
-    }
-  }
-  
-  goodThings.value = Array.from(selectedGood)
-  badThings.value = Array.from(selectedBad)
-  
-  // 幸运元素
-  luckyColor.value = luckyColorsList[Math.floor(seededRandom() * luckyColorsList.length)]
-  luckyNumber.value = Math.floor(seededRandom() * 100)
-  luckyElement.value = elementsList[Math.floor(seededRandom() * elementsList.length)]
-  
-  // 基础运势分数
-  let baseScore = 60 + Math.floor(seededRandom() * 40) // 60-99分
-  
-  // 根据天气调整分数
-  if (weatherData.value) {
-    const weather = weatherData.value.weather
-    const temp = parseInt(weatherData.value.temperature)
-    
-    if (weather.includes('晴')) baseScore += 5  // 晴天加分
-    else if (weather.includes('雨') || weather.includes('雪')) baseScore -= 3  // 雨雪天减分
-    
-    if (temp >= 15 && temp <= 25) baseScore += 3  // 舒适温度加分
-    else if (temp > 35 || temp < 0) baseScore -= 5  // 极端温度减分
-  }
-  
-  // 确保分数在60-99范围内
-  fortuneScore.value = Math.max(60, Math.min(99, baseScore))
-  
-  // 根据节气、天气和分数生成运势描述
-  if (solarTerm) {
-    fortuneDescription.value = `今日${solarTerm.name}，${solarTerm.desc}。`
-  } else if (weatherData.value) {
-    const weather = weatherData.value.weather
-    if (weather.includes('晴')) {
-      fortuneDescription.value = '天气晴朗，运势上扬，把握机会！'
-    } else if (weather.includes('雨')) {
-      fortuneDescription.value = '雨天宜静养，适合思考和规划。'
-    } else if (weather.includes('雪')) {
-      fortuneDescription.value = '雪天出行需谨慎，适合室内活动。'
+    if (response.solar_term) {
+      todayDate.value = `${year}年${month}月${day}日 星期${weekday} • ${response.solar_term}`
     } else {
-      fortuneDescription.value = fortuneDescriptionsList[Math.floor(seededRandom() * fortuneDescriptionsList.length)]
-    }
-  } else {
-    fortuneDescription.value = fortuneDescriptionsList[Math.floor(seededRandom() * fortuneDescriptionsList.length)]
-  }
-  
-  // 星级评分
-  if (fortuneScore.value >= 90) starRating.value = "⭐⭐⭐⭐⭐"
-  else if (fortuneScore.value >= 80) starRating.value = "⭐⭐⭐⭐"
-  else if (fortuneScore.value >= 70) starRating.value = "⭐⭐⭐"
-  else if (fortuneScore.value >= 60) starRating.value = "⭐⭐"
-  else starRating.value = "⭐"
-  
-  // 温馨提示（结合天气）
-  let tip = ''
-  
-  if (weatherData.value) {
-    const weather = weatherData.value.weather
-    const temp = parseInt(weatherData.value.temperature)
-    
-    // 基于天气的提示
-    if (weather.includes('雨')) {
-      tip = '今日有雨，出门记得带伞哦！☔ '
-    } else if (weather.includes('雪')) {
-      tip = '今日下雪，注意保暖防滑！❄️ '
-    } else if (weather.includes('晴')) {
-      tip = '今日晴朗，适合户外活动！☀️ '
-    } else if (weather.includes('雾') || weather.includes('霾')) {
-      tip = '今日有雾霾，减少外出，注意健康！😷 '
+      todayDate.value = `${year}年${month}月${day}日 星期${weekday}`
     }
     
-    // 基于温度的提示
-    if (temp > 30) {
-      tip += '高温天气，多补充水分！🥤'
-    } else if (temp < 5) {
-      tip += '寒冷天气，注意保暖！🧣'
-    } else if (temp >= 15 && temp <= 25) {
-      tip += '温度适宜，心情愉悦！😊'
-    }
+    // 设置运势数据
+    fortuneScore.value = response.fortune_score
+    starRating.value = response.star_display
+    fortuneDescription.value = response.description
+    goodThings.value = response.good_things
+    badThings.value = response.bad_things
+    luckyColor.value = response.lucky_color
+    luckyNumber.value = response.lucky_number
+    luckyElement.value = response.lucky_element
+    weekdayTip.value = response.weekday_tip
+    
+  } catch (error) {
+    console.error('获取运势失败:', error)
+    todayDate.value = '加载失败'
+    fortuneDescription.value = '获取运势数据失败，请稍后重试'
+  } finally {
+    loading.value = false
   }
-  
-  // 如果没有天气数据，使用星期提示
-  if (!tip) {
-    const tips = [
-      "周日放松，为新的一周充电！⚡",
-      "周一元气满满！新的一周，加油开始！💪",
-      "保持节奏，稳步前进！🚀",
-      "周三已过半，坚持就是胜利！🌟",
-      "临近周末，再努力一把！💫",
-      "愉快的周五，周末即将到来！🎉",
-      "周末愉快，享受休闲时光！🌈"
-    ]
-    tip = tips[weekday]
-  }
-  
-  // 如果是节气，添加节气提示
-  if (solarTerm) {
-    tip = `${solarTerm.name}：${solarTerm.desc}。${tip}`
-  }
-  
-  weekdayTip.value = tip
 }
 
-// 获取幸运色的实际颜色代码
+// 获取幸运色的颜色代码
 const getLuckyColorHex = (colorName) => {
   const colorMap = {
     '红色': '#ff4757',
@@ -395,10 +153,9 @@ const getLuckyColorHex = (colorName) => {
   return colorMap[colorName] || '#667eea'
 }
 
-// 组件挂载时生成运势（先加载天气）
-onMounted(async () => {
-  await loadWeatherForFortune()  // 先获取天气数据
-  generateFortune()  // 然后生成结合天气的运势
+// 组件挂载时加载运势
+onMounted(() => {
+  loadFortune()
 })
 </script>
 
@@ -410,6 +167,13 @@ onMounted(async () => {
   height: 100%;
   overflow-y: auto;
   padding-right: 8px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
+  color: #909399;
 }
 
 .sidebar-header h4 {
@@ -448,46 +212,49 @@ onMounted(async () => {
 }
 
 .card-icon {
-  font-size: 32px;
+  font-size: 24px;
   margin-bottom: 8px;
+}
+
+.card-content {
+  flex: 1;
 }
 
 .card-title {
   font-size: 16px;
   font-weight: 600;
-  color: #4A148C;
+  color: #303133;
   margin-bottom: 12px;
 }
 
-.card-content {
-  text-align: left;
-}
-
+/* 运势指数样式 */
 .score-display {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  text-align: center;
+  margin: 12px 0;
 }
 
 .stars {
-  font-size: 20px;
+  font-size: 24px;
+  margin-bottom: 8px;
 }
 
 .score-value {
-  font-size: 18px;
-  font-weight: 600;
-  color: #667eea;
+  font-size: 28px;
+  font-weight: 700;
+  color: #f39c12;
+  margin-bottom: 8px;
 }
 
 .fortune-desc {
-  font-size: 14px;
-  color: #6A1B9A;
-  font-style: italic;
+  font-size: 15px;
+  color: #606266;
+  text-align: center;
 }
 
+/* 黄历宜忌样式 */
 .almanac-item {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  font-size: 14px;
   line-height: 1.8;
 }
 
@@ -497,121 +264,44 @@ onMounted(async () => {
 
 .almanac-label {
   font-weight: 600;
-  font-size: 14px;
-  color: #4A148C;
+  color: #303133;
 }
 
 .almanac-text {
-  font-size: 14px;
-  color: #6A1B9A;
+  color: #606266;
 }
 
+/* 幸运元素样式 */
 .lucky-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .lucky-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  background: white;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.6);
   border-radius: 8px;
 }
 
 .lucky-label {
   font-size: 14px;
-  color: #6A1B9A;
+  color: #606266;
 }
 
 .lucky-value {
   font-size: 16px;
   font-weight: 600;
-  color: #4A148C;
+  color: #667eea;
 }
 
+/* 温馨提示样式 */
 .tip-text {
   font-size: 14px;
-  color: #6A1B9A;
-  line-height: 1.6;
-}
-
-@media (max-width: 768px) {
-  .fortune-content {
-    gap: 12px;
-  }
-  
-  .sidebar-header h4 {
-    font-size: 16px;
-  }
-  
-  .sidebar-header p {
-    font-size: 11px;
-  }
-  
-  .fortune-card {
-    padding: 12px;
-  }
-  
-  .card-icon {
-    font-size: 24px;
-  }
-  
-  .card-title {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 576px) {
-  .fortune-content {
-    gap: 10px;
-  }
-  
-  .sidebar-header h4 {
-    font-size: 15px;
-  }
-  
-  .sidebar-header p {
-    font-size: 10px;
-  }
-  
-  .fortune-card {
-    padding: 10px;
-  }
-  
-  .card-icon {
-    font-size: 20px;
-    margin-bottom: 6px;
-  }
-  
-  .card-title {
-    font-size: 13px;
-    margin-bottom: 8px;
-  }
-  
-  .stars {
-    font-size: 16px;
-  }
-  
-  .score-value {
-    font-size: 14px;
-  }
-  
-  .fortune-desc {
-    font-size: 12px;
-  }
-  
-  .almanac-label,
-  .almanac-text,
-  .lucky-label,
-  .tip-text {
-    font-size: 12px;
-  }
-  
-  .lucky-value {
-    font-size: 13px;
-  }
+  color: #606266;
+  line-height: 1.8;
 }
 </style>

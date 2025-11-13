@@ -196,6 +196,17 @@ export const weatherAPI = {
     }
 }
 
+// 运势 API（公开接口，不需要Token）
+export const fortuneAPI = {
+    // 获取今日运势
+    getTodayFortune(city = '南昌市') {
+        return api.get('/fortune/today/', {
+            params: { city },
+            skipAuth: true  // 标记为跳过认证
+        })
+    }
+}
+
 // AI助手 API（公开接口，不需要Token）
 export const aiAPI = {
     // 对话式助手
