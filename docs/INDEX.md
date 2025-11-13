@@ -43,11 +43,11 @@ docs/
 ├── 🌐 api/                      # API 文档
 │   └── ROAMIO_ECOSYSTEM_API_DOCUMENTATION.md  # Roamio 生态 API 总文档
 │
-├── 📅 daily_logs/               # 开发日志
-│   ├── DAY10_SUMMARY.md        # Day 10 总结
-│   ├── Day12_ACWING_LOGIN.md   # Day 12: AcWing 登录（AcApp）
-│   ├── Day13_WEB_ACWING_LOGIN.md  # Day 13: Web 端 AcWing 登录
-│   ├── Day14_QQ_LOGIN_AND_CLEANUP.md  # Day 14: QQ 登录（简版）
+├── 📦 archive/                  # 归档文档（历史记录）
+│   ├── daily_logs/             # 历史开发日志（已归档）
+│   ├── plans/                   # 已完成计划（已归档）
+│   ├── integration/             # 历史集成文档（已归档）
+│   └── collaboration/          # 历史协作文档（已归档）
 │   ├── Day14_COMPLETE_SUMMARY.md  # Day 14: 完整总结
 │   ├── Day15_CODE_REFACTORING.md  # Day 15: 代码重构
 │   ├── Day15_SUMMARY.md        # Day 15: 总结
