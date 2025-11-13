@@ -201,7 +201,7 @@ h2 {
   display: flex;
   flex-direction: column;
   padding: 6px;
-  overflow: hidden;
+  overflow-y: auto;
   min-height: 0;
   gap: 4px;
 }
@@ -246,7 +246,7 @@ h2 {
 
 /* 聊天卡片容器 */
 .chat-card {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   display: flex;
   flex-direction: column;
   background: white;
@@ -254,8 +254,8 @@ h2 {
   border-radius: 10px;
   padding: 8px;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-  min-height: 100px;
-  max-height: calc(100vh - 200px);
+  min-height: 80px;
+  max-height: 300px;
   overflow: hidden;
 }
 
