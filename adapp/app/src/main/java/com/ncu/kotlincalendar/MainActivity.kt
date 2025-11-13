@@ -78,7 +78,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnAddEvent: Button
     private lateinit var btnAICreate: Button
     private lateinit var btnSubscribe: Button
-    private lateinit var btnSettings: ImageButton
+    private lateinit var btnCloudMode: Button
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: EventAdapter
     
@@ -192,7 +192,7 @@ class MainActivity : AppCompatActivity() {
         btnAddEvent = findViewById(R.id.btnAddEvent)
         btnAICreate = findViewById(R.id.btnAICreate)
         btnSubscribe = findViewById(R.id.btnSubscribe)
-        btnSettings = findViewById(R.id.btnSettings)
+        btnCloudMode = findViewById(R.id.btnCloudMode)
         recyclerView = findViewById(R.id.recyclerView)
         tabLayout = findViewById(R.id.tabLayout)
         weatherCard = findViewById(R.id.weatherCard)
@@ -331,11 +331,13 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
         
-        // 点击"设置"按钮
-        btnSettings.setOnClickListener {
-            val intent = Intent(this, SettingsActivity::class.java)
-            startActivityForResult(intent, REQUEST_SETTINGS)
+        // 点击"云端模式"按钮
+        btnCloudMode.setOnClickListener {
+            toggleCloudMode()
         }
+        
+        // 初始化云端模式按钮状态
+        updateCloudModeButton()
         
         Toast.makeText(this, "📅 日历已加载，数据会自动保存", Toast.LENGTH_SHORT).show()
         
@@ -403,9 +405,17 @@ class MainActivity : AppCompatActivity() {
             // 调用回调函数更新对话框
             onLocationSelectedCallback?.invoke(locationName, locationAddress, latitude, longitude)
         } else if (requestCode == REQUEST_SETTINGS && resultCode == RESULT_OK) {
-            // 从设置页返回，重新加载所有事件（可能切换了模式）
+            // 从设置页或登录页返回，重新加载所有事件（可能切换了模式）
+            updateCloudModeButton()
+            
+            // 如果登录成功，自动切换到云端模式
+            if (PreferenceManager.isLoggedIn(this) && !PreferenceManager.isCloudMode(this)) {
+                PreferenceManager.setCloudMode(this, true)
+                Toast.makeText(this, "已自动切换到云端模式", Toast.LENGTH_SHORT).show()
+            }
+            
             loadAllEvents()
-            Toast.makeText(this, "已刷新数据", Toast.LENGTH_SHORT).show()
+            updateCloudModeButton()
         }
     }
     
@@ -1621,5 +1631,70 @@ class MainActivity : AppCompatActivity() {
         }
         
         dialog.show()
+    }
+    
+    /**
+     * 切换云端/本地模式
+     */
+    private fun toggleCloudMode() {
+        val isCurrentlyCloud = PreferenceManager.isCloudMode(this)
+        
+        if (isCurrentlyCloud) {
+            // 当前是云端模式，切换到本地
+            AlertDialog.Builder(this)
+                .setTitle("切换到本地模式")
+                .setMessage("切换后将使用本地数据，云端数据不会同步。确定切换吗？")
+                .setPositiveButton("确定") { _, _ ->
+                    PreferenceManager.setCloudMode(this, false)
+                    updateCloudModeButton()
+                    loadAllEvents()
+                    Toast.makeText(this, "已切换到本地模式", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("取消", null)
+                .show()
+        } else {
+            // 当前是本地模式，切换到云端
+            if (!PreferenceManager.isLoggedIn(this)) {
+                // 未登录，需要先登录
+                AlertDialog.Builder(this)
+                    .setTitle("需要登录")
+                    .setMessage("云端模式需要登录账号。是否前往登录？")
+                    .setPositiveButton("去登录") { _, _ ->
+                        val intent = Intent(this, LoginActivity::class.java)
+                        startActivityForResult(intent, REQUEST_SETTINGS)
+                    }
+                    .setNegativeButton("取消", null)
+                    .show()
+            } else {
+                // 已登录，直接切换
+                AlertDialog.Builder(this)
+                    .setTitle("切换到云端模式")
+                    .setMessage("切换后将使用云端数据并同步到服务器。确定切换吗？")
+                    .setPositiveButton("确定") { _, _ ->
+                        PreferenceManager.setCloudMode(this, true)
+                        updateCloudModeButton()
+                        loadAllEvents()
+                        Toast.makeText(this, "已切换到云端模式", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("取消", null)
+                    .show()
+            }
+        }
+    }
+    
+    /**
+     * 更新云端模式按钮的显示状态
+     */
+    private fun updateCloudModeButton() {
+        val isCloudMode = PreferenceManager.isCloudMode(this)
+        val isLoggedIn = PreferenceManager.isLoggedIn(this)
+        
+        if (isCloudMode && isLoggedIn) {
+            btnCloudMode.text = "☁️\n云端"
+            btnCloudMode.setBackgroundColor(ContextCompat.getColor(this, android.R.color.holo_blue_light))
+        } else {
+            btnCloudMode.text = "📱\n本地"
+            btnCloudMode.setBackgroundColor(ContextCompat.getColor(this, android.R.color.darker_gray))
+        }
     }
 }

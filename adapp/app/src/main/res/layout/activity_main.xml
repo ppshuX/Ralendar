@@ -15,30 +15,12 @@
     tools:context=".MainActivity">
 
     <!-- 顶部按钮区域 -->
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp">
-
-        <!-- 设置按钮（右上角） -->
-        <ImageButton
-            android:id="@+id/btnSettings"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentEnd="true"
-            android:src="@android:drawable/ic_menu_manage"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="设置"
-            android:padding="8dp" />
-
-        <!-- 主按钮栏 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_toStartOf="@id/btnSettings"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginEnd="8dp">
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="6dp">
 
         <!-- 添加日程按钮 -->
         <com.google.android.material.button.MaterialButton
@@ -46,12 +28,15 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginEnd="2dp"
-            android:text="➕ 添加"
-            android:textSize="12sp"
+            android:layout_marginEnd="3dp"
+            android:text="➕\n添加"
+            android:textSize="10sp"
+            android:minHeight="48dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             app:cornerRadius="8dp"
             app:iconGravity="textStart"
-            app:iconPadding="4dp" />
+            app:iconPadding="2dp" />
 
         <!-- AI创建日程按钮 -->
         <com.google.android.material.button.MaterialButton
@@ -59,14 +44,17 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="2dp"
-            android:layout_marginEnd="2dp"
-            android:text="✨ AI"
-            android:textSize="12sp"
+            android:layout_marginStart="3dp"
+            android:layout_marginEnd="3dp"
+            android:text="✨\nAI"
+            android:textSize="10sp"
+            android:minHeight="48dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             app:cornerRadius="8dp"
             app:backgroundTint="#f093fb"
             app:iconGravity="textStart"
-            app:iconPadding="4dp" />
+            app:iconPadding="2dp" />
 
         <!-- 订阅管理按钮 -->
         <com.google.android.material.button.MaterialButton
@@ -74,14 +62,17 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="2dp"
-            android:layout_marginEnd="2dp"
-            android:text="📡 订阅"
-            android:textSize="13sp"
+            android:layout_marginStart="3dp"
+            android:layout_marginEnd="3dp"
+            android:text="📡\n订阅"
+            android:textSize="10sp"
+            android:minHeight="48dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             app:cornerRadius="8dp"
             app:backgroundTint="#FF6B6B"
             app:iconGravity="textStart"
-            app:iconPadding="4dp" />
+            app:iconPadding="2dp" />
 
         <!-- 视图切换按钮 -->
         <com.google.android.material.button.MaterialButton
@@ -89,17 +80,36 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="2dp"
-            android:text="📅 月"
-            android:textSize="13sp"
+            android:layout_marginStart="3dp"
+            android:layout_marginEnd="3dp"
+            android:text="📅\n月"
+            android:textSize="10sp"
+            android:minHeight="48dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             app:cornerRadius="8dp"
             app:backgroundTint="#4ECDC4"
             app:iconGravity="textStart"
-            app:iconPadding="4dp" />
+            app:iconPadding="2dp" />
 
-        </LinearLayout>
+        <!-- 云端模式切换按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCloudMode"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="3dp"
+            android:text="☁️\n本地"
+            android:textSize="10sp"
+            android:minHeight="48dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            app:cornerRadius="8dp"
+            app:backgroundTint="#95A5A6"
+            app:iconGravity="textStart"
+            app:iconPadding="2dp" />
 
-    </RelativeLayout>
+    </LinearLayout>
 
     <!-- 显示选中日期的文本 -->
     <TextView
