@@ -258,6 +258,7 @@ h2 {
 /* 运势指数卡片 */
 .score-card {
   border-left: 2px solid #fbbf24;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
 }
 
 .score-content {
@@ -285,6 +286,7 @@ h2 {
 /* 黄历卡片 */
 .almanac-card {
   border-left: 2px solid #667eea;
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
 }
 
 .almanac-section {
@@ -310,6 +312,7 @@ h2 {
 /* 幸运元素卡片 */
 .lucky-card {
   border-left: 2px solid #10b981;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
 }
 
 .lucky-content {
@@ -336,6 +339,7 @@ h2 {
 /* 提示卡片 */
 .tip-card {
   border-left: 2px solid #f59e0b;
+  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
 }
 
 .tip-content {
