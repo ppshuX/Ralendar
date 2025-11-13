@@ -214,20 +214,20 @@ h2 {
 }
 
 .section-title {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   color: #606266;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .quick-btn {
-  padding: 2px 6px;
-  margin: 0 2px 2px 0;
+  padding: 4px 10px;
+  margin: 0 4px 4px 0;
   background: white;
   border: 1px solid #dcdfe6;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 9px;
+  font-size: 11px;
   color: #606266;
   transition: all 0.3s;
   white-space: nowrap;
