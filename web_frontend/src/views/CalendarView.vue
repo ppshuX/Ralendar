@@ -135,6 +135,14 @@ const handleDateSelected = (dateStr) => {
   // 立即加载选中日期的节假日（不管当前在哪个标签页）⭐
   loadHolidaysForSelectedDate(dateStr)
   
+  // 如果当前在节假日标签页，需要立即更新显示
+  // 注意：数据已经在 loadHolidaysForSelectedDate 中更新，这里只是确保响应式更新
+  if (activeTab.value === 'holiday') {
+    // 数据已经加载，无需再次加载
+    // 但确保 todayHolidays 已经更新
+    console.log('日期选中，当前在节假日标签页，数据已更新:', todayHolidays.value)
+  }
+  
   // 只有登录后才自动切换到日程列表标签
   if (checkLoginStatus()) {
     activeTab.value = 'events'
@@ -447,10 +455,20 @@ watch(activeTab, async (newTab) => {
   if (newTab === 'holiday') {
     // 如果有选中的日期，加载该日期的节假日；否则加载今天的
     if (selectedDateForFilter.value) {
+      console.log('切换到节假日标签页，加载选中日期:', selectedDateForFilter.value)
       await loadHolidaysForSelectedDate(selectedDateForFilter.value)
     } else {
+      console.log('切换到节假日标签页，没有选中日期，加载今天')
       await loadTodayHolidays()
     }
+  }
+})
+
+// 监听选中日期变化，如果当前在节假日标签页，需要重新加载数据
+watch(selectedDateForFilter, async (newDate, oldDate) => {
+  if (activeTab.value === 'holiday' && newDate) {
+    console.log('选中日期变化，当前在节假日标签页，重新加载:', newDate)
+    await loadHolidaysForSelectedDate(newDate)
   }
 })
 
