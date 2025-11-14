@@ -292,19 +292,19 @@ calendarOptions.value.dayCellDidMount = (arg) => {
     holidayLabel.textContent = `${holiday.emoji || '🎉'} ${holiday.name}`
     holidayLabel.style.cssText = `
       position: absolute;
-      top: 1px;
+      top: 2px;
       left: 2px;
-      font-size: 8px;
-      line-height: 1.1;
+      font-size: 9px;
+      line-height: 1.2;
       color: #e74c3c;
       font-weight: 700;
-      text-shadow: 0 0 3px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 0.9);
-      z-index: 3;
-      background: rgba(255, 255, 255, 0.7);
+      text-shadow: 0 0 4px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 1);
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.85);
       border-radius: 2px;
-      padding: 1px 2px;
+      padding: 1px 3px;
       white-space: nowrap;
-      max-width: calc(100% - 4px);
+      max-width: 90%;
       overflow: hidden;
       text-overflow: ellipsis;
       pointer-events: none;
