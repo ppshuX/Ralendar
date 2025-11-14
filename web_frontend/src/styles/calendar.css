@@ -391,27 +391,27 @@
   }
 }
 
-/* 小屏手机优化 - 接近正方形 */
+/* 小屏手机优化 - 允许内容自然撑开 */
 @media (max-width: 576px) {
   .calendar-wrapper {
-    padding: 4px 0 !important;
-    min-height: 220px !important;
-    max-height: 220px !important;
-    height: 220px !important;
+    padding: 16px !important;
+    min-height: 500px !important;
+    height: auto !important;
+    max-height: none !important;
     width: 100% !important;
-    margin: 0 !important;
+    margin: 0 0 12px 0 !important;
   }
   
   .calendar-wrapper .fc {
-    min-height: 216px !important;
+    height: auto !important;
   }
   
   .calendar-wrapper .fc-daygrid-day {
-    min-height: 32px !important;
+    min-height: 55px !important;
   }
   
   .calendar-wrapper .fc-daygrid-day-frame {
-    min-height: 32px !important;
+    min-height: 55px !important;
   }
   
   .calendar-wrapper .fc-toolbar-title {
