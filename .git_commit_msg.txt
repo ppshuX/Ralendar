@@ -1,0 +1,28 @@
+Add week view toolbar and email check API for Roamio
+
+FEATURE 1: Week View Navigation Toolbar
+- Added toolbar at top of WeekView component
+- Left: Previous/Next week, Today buttons
+- Center: Week range title
+- Right: View switcher (Week/Month/Day buttons)
+- Click Month button to return to month view
+- New functions: previousWeek, nextWeek, goToToday
+- Emit switch-view event for view switching
+
+FEATURE 2: Email Availability Check API
+NEW ENDPOINT: POST /api/fusion/users/check-email/
+- Check if email already used in Ralendar
+- Return owner info (unionid/openid) for cross-app user matching
+- No authentication required (AllowAny)
+
+FILES:
+- web_frontend/src/components/calendar/WeekView.vue (toolbar)
+- web_frontend/src/views/CalendarView.vue (handleViewSwitch)
+- backend/api/views/integration/fusion.py (check_email_availability)
+- backend/api/url_patterns/fusion.py (route)
+- backend/API_EMAIL_CHECK_INTEGRATION.md (docs)
+
+USER ISSUE FIXED:
+User asked: How to return to month view after selecting week view?
+Solution: Added Month button in week view toolbar
+
