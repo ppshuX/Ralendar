@@ -815,47 +815,48 @@ const handleAICreate = async (eventData) => {
     padding-right: 4px;
   }
   
-  /* 日历高度再增加一些，更容易阅读 */
+  /* 日历高度大幅增加，确保舒适阅读 */
   .calendar-page .calendar-wrapper {
-    height: 360px;
-    max-height: 360px;
-    min-height: 360px;
+    height: 420px;
+    max-height: 420px;
+    min-height: 420px;
     margin: 0;
     width: 100%;
-    padding: 10px 0;
+    padding: 12px 0;
   }
   
-  /* 日期单元格 - 增大以便看清 */
+  /* 日期单元格 - 显著增大 */
   .calendar-page :deep(.fc-daygrid-day) {
-    min-height: 52px;
+    min-height: 58px;
   }
   
   /* 周标题 */
   .calendar-page :deep(.fc-col-header-cell) {
-    padding: 6px 2px;
-    font-size: 13px;
+    padding: 8px 2px;
+    font-size: 14px;
+    font-weight: 600;
   }
   
   /* 工具栏 */
   .calendar-page :deep(.fc-header-toolbar) {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
   
   .calendar-page :deep(.fc-toolbar-title) {
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 700;
   }
   
   .calendar-page :deep(.fc-button) {
-    padding: 5px 8px;
-    font-size: 13px;
+    padding: 6px 10px;
+    font-size: 14px;
   }
   
-  /* 日期数字 - 增大字体 */
+  /* 日期数字 - 显著增大字体 */
   .calendar-page :deep(.fc-daygrid-day-number) {
-    padding: 6px;
-    font-size: 15px;
-    font-weight: 600;
+    padding: 8px;
+    font-size: 17px;
+    font-weight: 700;
   }
 }
 

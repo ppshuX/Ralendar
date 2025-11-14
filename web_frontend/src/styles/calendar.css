@@ -284,12 +284,12 @@
 /* ==================== 移动端优化 ==================== */
 @media (max-width: 768px) {
 
-  /* 容器微调 - 增加高度以便看清楚 */
+  /* 容器微调 - 大幅增加高度以便看清楚 */
   .calendar-wrapper {
-    padding: 10px 0;
-    min-height: 360px;
-    max-height: 360px;
-    height: 360px;
+    padding: 12px 0;
+    min-height: 420px;
+    max-height: 420px;
+    height: 420px;
     margin-bottom: 12px;
     width: 100%;
   }
@@ -300,29 +300,29 @@
     width: 100%;
   }
 
-  /* 增加日历格子高度以便看清 */
+  /* 显著增加日历格子高度以便看清 */
   .calendar-wrapper .fc-daygrid-day {
-    min-height: 52px;
+    min-height: 58px;
   }
   
   .calendar-wrapper .fc-daygrid-day-frame {
-    min-height: 52px;
+    min-height: 58px;
   }
 
-  /* 调整字体大小 - 增大以便看清 */
+  /* 调整字体大小 - 显著增大以便看清 */
   .calendar-wrapper .fc-toolbar-title {
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 700;
   }
 
   .calendar-wrapper .fc-button {
-    font-size: 13px;
-    padding: 5px 8px;
+    font-size: 14px;
+    padding: 6px 10px;
   }
 
   /* 节假日文字 */
   .calendar-wrapper .fc-bg-event .fc-event-title {
-    font-size: 11px;
+    font-size: 12px;
   }
 
   /* 事件圆点稍小 */
@@ -331,16 +331,17 @@
     height: 6px;
   }
   
-  /* 周标题 - 增大字体 */
+  /* 周标题 - 显著增大字体 */
   .calendar-wrapper .fc-col-header-cell {
-    padding: 6px 2px;
-    font-size: 13px;
+    padding: 8px 2px;
+    font-size: 14px;
+    font-weight: 600;
   }
   
-  /* 日期数字 - 增大字体 */
+  /* 日期数字 - 显著增大字体 */
   .calendar-wrapper .fc-daygrid-day-number {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 17px;
+    font-weight: 700;
   }
   
   /* 确保日历不被遮挡 */
