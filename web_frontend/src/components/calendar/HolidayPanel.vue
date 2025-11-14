@@ -71,6 +71,10 @@ const props = defineProps({
   selectedDateLabel: {
     type: String,
     default: ''
+  },
+  holidaysMap: {
+    type: Object,
+    default: () => ({})
   }
 })
 
@@ -89,13 +93,33 @@ const displayDateLabel = computed(() => {
   })
 })
 
-// 所有节日（API返回的festivals数组）
+// 所有节日（合并API和holidaysMap的数据）
 const allFestivals = computed(() => {
-  // API 返回的数据结构：{date, holiday, traditional_festivals, international_festivals}
-  // 合并传统节日和国际节日
+  const festivals = []
+  
+  // 1. 从 API 返回的数据中获取传统节日和国际节日
   const traditional = props.todayHolidays?.traditional_festivals || []
   const international = props.todayHolidays?.international_festivals || []
-  const festivals = [...traditional, ...international]
+  festivals.push(...traditional, ...international)
+  
+  // 2. 从 holidaysMap 中获取该日期的节日（法定节假日等）
+  if (props.selectedDateLabel && props.holidaysMap) {
+    // 解析选中日期标签，提取日期字符串
+    // 尝试从 todayHolidays 中获取日期
+    const dateStr = props.todayHolidays?.date
+    if (dateStr && props.holidaysMap[dateStr]) {
+      const holiday = props.holidaysMap[dateStr]
+      // 检查是否已经存在同名节日，避免重复
+      const exists = festivals.some(f => f.name === holiday.name)
+      if (!exists) {
+        festivals.push({
+          name: holiday.name,
+          emoji: holiday.emoji || '🎉',
+          type: holiday.type
+        })
+      }
+    }
+  }
   
   console.log('节日数据:', props.todayHolidays)
   console.log('传统节日:', traditional)

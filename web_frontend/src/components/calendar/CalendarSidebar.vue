@@ -20,6 +20,7 @@
       <HolidayPanel 
         :today-holidays="todayHolidays" 
         :selected-date-label="selectedDate"
+        :holidays-map="holidaysMap"
       />
     </div>
 

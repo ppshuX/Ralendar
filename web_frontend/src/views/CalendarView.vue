@@ -28,6 +28,7 @@
             :selected-date="selectedDateLabel"
             :format-event-time="formatEventTime"
             :today-holidays="todayHolidays"
+            :holidays-map="holidaysMap"
             @select-event="handleEventCardSelect"
             @add-event="openAddDialogForSelectedDate"
           />
