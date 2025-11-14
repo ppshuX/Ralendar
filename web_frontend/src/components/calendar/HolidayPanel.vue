@@ -91,9 +91,17 @@ const displayDateLabel = computed(() => {
 
 // 所有节日（API返回的festivals数组）
 const allFestivals = computed(() => {
-  const festivals = props.todayHolidays?.festivals || []
+  // API 返回的数据结构：{date, holiday, traditional_festivals, international_festivals}
+  // 合并传统节日和国际节日
+  const traditional = props.todayHolidays?.traditional_festivals || []
+  const international = props.todayHolidays?.international_festivals || []
+  const festivals = [...traditional, ...international]
+  
   console.log('节日数据:', props.todayHolidays)
+  console.log('传统节日:', traditional)
+  console.log('国际节日:', international)
   console.log('所有节日:', festivals)
+  
   return festivals
 })
 

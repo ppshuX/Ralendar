@@ -430,6 +430,9 @@ const openAddDialogForSelectedDate = () => {
 const refreshEventDots = () => {
   setTimeout(() => {
     const dayCells = document.querySelectorAll('.fc-daygrid-day')
+    console.log('刷新事件圆点和节日标签，找到', dayCells.length, '个日期单元格')
+    console.log('当前节假日映射:', holidaysMap.value)
+    
     dayCells.forEach(cell => {
       // 移除旧圆点
       const oldDot = cell.querySelector('.event-dot')
@@ -439,85 +442,125 @@ const refreshEventDots = () => {
       const oldHolidayLabel = cell.querySelector('.holiday-label')
       if (oldHolidayLabel) oldHolidayLabel.remove()
       
-      // 重新创建圆点
+      // 获取日期属性
       const dateAttr = cell.getAttribute('data-date')
-      if (dateAttr) {
-        const count = getEventsCountForDate(dateAttr)
-        if (count > 0) {
-          const dot = document.createElement('div')
-          dot.className = 'event-dot'
-          
-          let bgColor
-          if (count === 1) bgColor = 'rgba(102, 126, 234, 0.3)'
-          else if (count === 2) bgColor = 'rgba(102, 126, 234, 0.5)'
-          else if (count <= 4) bgColor = 'rgba(102, 126, 234, 0.7)'
-          else bgColor = 'rgba(102, 126, 234, 0.9)'
-          
-          dot.style.cssText = `
-            position: absolute; bottom: 4px; right: 4px;
-            width: 8px; height: 8px; border-radius: 50%;
-            background: ${bgColor}; z-index: 10;
-            transition: transform 0.2s ease; cursor: pointer;
-          `
-          
-          const tooltip = document.createElement('div')
-          tooltip.textContent = `${count} 个日程`
-          tooltip.style.cssText = `
-            position: absolute; bottom: 100%; right: 0; margin-bottom: 8px;
-            padding: 6px 10px; background: rgba(0, 0, 0, 0.8); color: white;
-            font-size: 12px; border-radius: 4px; white-space: nowrap;
-            pointer-events: none; opacity: 0; transform: translateY(4px);
-            transition: opacity 0.2s ease, transform 0.2s ease; z-index: 1000;
-          `
-          dot.appendChild(tooltip)
-          
-          dot.addEventListener('mouseenter', () => {
-            dot.style.transform = 'scale(1.3)'
-            tooltip.style.opacity = '1'
-            tooltip.style.transform = 'translateY(0)'
-          })
-          dot.addEventListener('mouseleave', () => {
-            dot.style.transform = 'scale(1)'
-            tooltip.style.opacity = '0'
-            tooltip.style.transform = 'translateY(4px)'
-          })
-          
-          cell.style.position = 'relative'
-          cell.appendChild(dot)
+      if (!dateAttr) {
+        // 如果没有 data-date，尝试从其他属性获取
+        const fcDate = cell.getAttribute('data-fc-date')
+        if (fcDate) {
+          // FullCalendar 的日期格式可能是 ISO 字符串，提取日期部分
+          const dateStr = fcDate.split('T')[0]
+          if (holidaysMap.value[dateStr]) {
+            const holiday = holidaysMap.value[dateStr]
+            cell.style.position = 'relative'
+            const holidayLabel = document.createElement('div')
+            holidayLabel.className = 'holiday-label'
+            holidayLabel.textContent = `${holiday.emoji || '🎉'} ${holiday.name}`
+            holidayLabel.style.cssText = `
+              position: absolute;
+              top: 1px;
+              left: 2px;
+              font-size: 8px;
+              line-height: 1.1;
+              color: #e74c3c;
+              font-weight: 700;
+              text-shadow: 0 0 3px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 0.9);
+              z-index: 3;
+              background: rgba(255, 255, 255, 0.7);
+              border-radius: 2px;
+              padding: 1px 2px;
+              white-space: nowrap;
+              max-width: calc(100% - 4px);
+              overflow: hidden;
+              text-overflow: ellipsis;
+              pointer-events: none;
+            `
+            cell.appendChild(holidayLabel)
+            console.log('刷新时添加节日标签（从fc-date）:', dateStr, holiday.name)
+          }
         }
+        return
+      }
+      
+      // 标准化日期格式（处理可能的时区信息）
+      const dateStr = dateAttr.split('T')[0]
+      
+      // 重新创建圆点
+      const count = getEventsCountForDate(dateAttr)
+      if (count > 0) {
+        const dot = document.createElement('div')
+        dot.className = 'event-dot'
         
-        // 添加节日标签（使用之前获取的 dateAttr）
-        if (dateAttr && holidaysMap.value[dateAttr]) {
-          const holiday = holidaysMap.value[dateAttr]
-          // 确保单元格是相对定位
-          cell.style.position = 'relative'
-          
-          // 创建节日标签
-          const holidayLabel = document.createElement('div')
-          holidayLabel.className = 'holiday-label'
-          holidayLabel.textContent = `${holiday.emoji || '🎉'} ${holiday.name}`
-          holidayLabel.style.cssText = `
-            position: absolute;
-            top: 1px;
-            left: 2px;
-            font-size: 8px;
-            line-height: 1.1;
-            color: #e74c3c;
-            font-weight: 700;
-            text-shadow: 0 0 3px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 0.9);
-            z-index: 3;
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 2px;
-            padding: 1px 2px;
-            white-space: nowrap;
-            max-width: calc(100% - 4px);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            pointer-events: none;
-          `
-          cell.appendChild(holidayLabel)
-          console.log('刷新时添加节日标签:', dateAttr, holiday.name)
-        }
+        let bgColor
+        if (count === 1) bgColor = 'rgba(102, 126, 234, 0.3)'
+        else if (count === 2) bgColor = 'rgba(102, 126, 234, 0.5)'
+        else if (count <= 4) bgColor = 'rgba(102, 126, 234, 0.7)'
+        else bgColor = 'rgba(102, 126, 234, 0.9)'
+        
+        dot.style.cssText = `
+          position: absolute; bottom: 4px; right: 4px;
+          width: 8px; height: 8px; border-radius: 50%;
+          background: ${bgColor}; z-index: 10;
+          transition: transform 0.2s ease; cursor: pointer;
+        `
+        
+        const tooltip = document.createElement('div')
+        tooltip.textContent = `${count} 个日程`
+        tooltip.style.cssText = `
+          position: absolute; bottom: 100%; right: 0; margin-bottom: 8px;
+          padding: 6px 10px; background: rgba(0, 0, 0, 0.8); color: white;
+          font-size: 12px; border-radius: 4px; white-space: nowrap;
+          pointer-events: none; opacity: 0; transform: translateY(4px);
+          transition: opacity 0.2s ease, transform 0.2s ease; z-index: 1000;
+        `
+        dot.appendChild(tooltip)
+        
+        dot.addEventListener('mouseenter', () => {
+          dot.style.transform = 'scale(1.3)'
+          tooltip.style.opacity = '1'
+          tooltip.style.transform = 'translateY(0)'
+        })
+        dot.addEventListener('mouseleave', () => {
+          dot.style.transform = 'scale(1)'
+          tooltip.style.opacity = '0'
+          tooltip.style.transform = 'translateY(4px)'
+        })
+        
+        cell.style.position = 'relative'
+        cell.appendChild(dot)
+      }
+      
+      // 添加节日标签（使用标准化的日期字符串）
+      if (holidaysMap.value[dateStr]) {
+        const holiday = holidaysMap.value[dateStr]
+        // 确保单元格是相对定位
+        cell.style.position = 'relative'
+        
+        // 创建节日标签
+        const holidayLabel = document.createElement('div')
+        holidayLabel.className = 'holiday-label'
+        holidayLabel.textContent = `${holiday.emoji || '🎉'} ${holiday.name}`
+        holidayLabel.style.cssText = `
+          position: absolute;
+          top: 1px;
+          left: 2px;
+          font-size: 8px;
+          line-height: 1.1;
+          color: #e74c3c;
+          font-weight: 700;
+          text-shadow: 0 0 3px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 0.9);
+          z-index: 3;
+          background: rgba(255, 255, 255, 0.7);
+          border-radius: 2px;
+          padding: 1px 2px;
+          white-space: nowrap;
+          max-width: calc(100% - 4px);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          pointer-events: none;
+        `
+        cell.appendChild(holidayLabel)
+        console.log('刷新时添加节日标签:', dateStr, holiday.name)
       }
     })
   }, 100)
@@ -777,7 +820,7 @@ const handleAICreate = async (eventData) => {
 /* 浮动添加按钮 */
 .floating-add-btn {
   position: fixed;
-  right: 24px;
+  left: 24px;
   bottom: 24px;
   width: 60px;
   height: 60px;
@@ -807,7 +850,7 @@ const handleAICreate = async (eventData) => {
 /* AI创建按钮 */
 .floating-ai-btn {
   position: fixed;
-  right: 24px;
+  left: 24px;
   bottom: 100px;
   width: 56px;
   height: 56px;
@@ -837,7 +880,7 @@ const handleAICreate = async (eventData) => {
 /* 未登录引导按钮 */
 .floating-login-btn {
   position: fixed;
-  right: 24px;
+  left: 24px;
   bottom: 24px;
   height: 60px;
   padding: 0 24px;
@@ -884,15 +927,23 @@ const handleAICreate = async (eventData) => {
   }
   
   .floating-add-btn {
-    right: 16px;
+    left: 16px;
     bottom: 16px;
     width: 50px;
     height: 50px;
     font-size: 22px;
   }
   
+  .floating-ai-btn {
+    left: 16px;
+    bottom: 84px;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  
   .floating-login-btn {
-    right: 16px;
+    left: 16px;
     bottom: 16px;
     height: 50px;
     padding: 0 20px;
