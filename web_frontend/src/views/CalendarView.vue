@@ -748,33 +748,35 @@ const handleAICreate = async (eventData) => {
   background: var(--color-background-soft);
 }
 
-/* 桌面端日历完全自适应容器大小 */
-.calendar-wrapper :deep(.fc) {
-  height: 100%;
-  width: 100%;
-}
+/* 桌面端日历完全自适应容器大小 - 仅桌面端应用 */
+@media (min-width: 768px) {
+  .calendar-wrapper :deep(.fc) {
+    height: 100%;
+    width: 100%;
+  }
 
-/* 月视图 - 自适应，不固定高度 */
-.calendar-wrapper :deep(.fc-dayGridMonth-view) {
-  height: 100%;
-}
+  /* 月视图 - 自适应，不固定高度 */
+  .calendar-wrapper :deep(.fc-dayGridMonth-view) {
+    height: 100%;
+  }
 
-/* 日历内容自适应缩放 */
-.calendar-wrapper :deep(.fc-view-harness) {
-  height: 100% !important;
-}
+  /* 日历内容自适应缩放 */
+  .calendar-wrapper :deep(.fc-view-harness) {
+    height: 100% !important;
+  }
 
-/* 周/日时间轴视图 - 自适应高度 */
-.calendar-wrapper :deep(.fc-timeGridWeek-view),
-.calendar-wrapper :deep(.fc-timeGridDay-view) {
-  height: 100%;
-  max-height: none;
-}
+  /* 周/日时间轴视图 - 自适应高度 */
+  .calendar-wrapper :deep(.fc-timeGridWeek-view),
+  .calendar-wrapper :deep(.fc-timeGridDay-view) {
+    height: 100%;
+    max-height: none;
+  }
 
-/* 时间轴滚动区域 */
-.calendar-wrapper :deep(.fc-timegrid-body) {
-  max-height: 500px;
-  overflow-y: auto;
+  /* 时间轴滚动区域 */
+  .calendar-wrapper :deep(.fc-timegrid-body) {
+    max-height: 500px;
+    overflow-y: auto;
+  }
 }
 
 /* PC端容器 */
