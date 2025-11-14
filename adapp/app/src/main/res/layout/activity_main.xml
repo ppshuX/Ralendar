@@ -14,15 +14,19 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <!-- 顶部标题栏 -->
+    <!-- 顶部标题栏（淡紫色卡片样式） -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@android:color/white"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/actionBarSize"
+        android:background="@drawable/toolbar_purple_card"
         android:elevation="4dp"
-        app:title="📅 日历"
-        app:titleTextColor="#303133" />
+        android:layout_margin="8dp"
+        android:layout_marginBottom="4dp"
+        app:title="📅 Ralendar"
+        app:titleTextColor="#FFFFFF"
+        app:titleTextAppearance="@style/ToolbarTitleStyle" />
 
     <!-- 顶部按钮区域 -->
     <LinearLayout
@@ -426,7 +430,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="晴"
-                        android:textSize="16sp"
+        android:textSize="16sp"
                         android:textColor="#FFFFFF"
                         android:layout_marginTop="4dp"
                         android:alpha="0.9" />
@@ -540,7 +544,7 @@
                             android:id="@+id/tvHolidayTitle"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
+        android:layout_weight="1"
                             android:text="🎊 今日节日"
                             android:textSize="18sp"
                             android:textStyle="bold"
