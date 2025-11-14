@@ -1186,11 +1186,12 @@ class MainActivity : AppCompatActivity() {
     private fun switchViewMode(mode: Int) {
         when (mode) {
             0 -> {
-                // 月视图：显示整月日历 + 下方Tab
+                // 月视图：显示整月日历 + 下方Tab + 天气
                 monthViewCard.visibility = View.VISIBLE
                 weekViewContainer.visibility = View.GONE
                 dayViewCard.visibility = View.GONE
                 bottomContentCard.visibility = View.VISIBLE
+                weatherCard.visibility = View.VISIBLE
                 tvSelectedDate.visibility = View.VISIBLE
                 btnViewSwitch.text = "📅 月"
                 
@@ -1244,11 +1245,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             1 -> {
-                // 周视图：横向7天选择器 + 时间线（不显示底部内容）
+                // 周视图：横向7天选择器 + 时间线（不显示底部内容和天气）
                 monthViewCard.visibility = View.GONE
                 weekViewContainer.visibility = View.VISIBLE
                 dayViewCard.visibility = View.GONE
                 bottomContentCard.visibility = View.GONE
+                weatherCard.visibility = View.GONE
                 tvSelectedDate.visibility = View.VISIBLE
                 btnViewSwitch.text = "📅 周"
                 
@@ -1270,11 +1272,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             2 -> {
-                // 日视图：只显示时间线（不显示底部内容）
+                // 日视图：只显示时间线（不显示底部内容和天气）
                 monthViewCard.visibility = View.GONE
                 weekViewContainer.visibility = View.GONE
                 dayViewCard.visibility = View.VISIBLE
                 bottomContentCard.visibility = View.GONE
+                weatherCard.visibility = View.GONE
                 tvSelectedDate.visibility = View.VISIBLE
                 btnViewSwitch.text = "📅 日"
                 
