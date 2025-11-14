@@ -591,11 +591,11 @@ const handleAICreate = async (eventData) => {
     padding-right: 4px;
   }
   
-  /* 日历高度缩短，为下方栏腾出更多空间，但宽度更宽 */
+  /* 日历高度进一步缩短，为下方栏腾出更多空间，但宽度更宽 */
   .calendar-wrapper {
-    height: 280px;
-    max-height: 280px;
-    min-height: 280px;
+    height: 240px;
+    max-height: 240px;
+    min-height: 240px;
     margin: 0 2px;
     width: calc(100% - 4px);
   }
