@@ -286,30 +286,30 @@ const handleTodayClick = async () => {
   await loadTodayHolidays()
 }
 
-// 配置自定义"回到今天"按钮（始终可点击）
+// 配置自定义按钮（今天 + 周视图）
 calendarOptions.value.customButtons = {
   myToday: {
     text: '今天',
     click: handleTodayClick
-  }
-}
-
-// 替换工具栏中的 today 按钮为自定义按钮
-calendarOptions.value.headerToolbar = {
-  left: 'prev,next myToday',  // 使用自定义的 myToday 按钮
-  center: 'title',
-  right: 'dayGridMonth,customWeek,timeGridDay'
-}
-
-// 添加自定义周视图按钮
-calendarOptions.value.customButtons = {
-  ...calendarOptions.value.customButtons,
+  },
   customWeek: {
     text: '周',
     click: () => {
       currentView.value = 'week'
+      // 如果没有选中日期，默认选中今天
+      if (!selectedDateForFilter.value) {
+        const today = new Date().toISOString().split('T')[0]
+        handleWeekDateSelect(today)
+      }
     }
   }
+}
+
+// 替换工具栏中的按钮
+calendarOptions.value.headerToolbar = {
+  left: 'prev,next myToday',
+  center: 'title',
+  right: 'dayGridMonth,customWeek,timeGridDay'
 }
 
 // 监听视图变化
