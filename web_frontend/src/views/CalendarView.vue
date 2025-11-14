@@ -28,6 +28,7 @@
               @date-select="handleWeekDateSelect"
               @event-click="handleEventClick"
               @date-click="handleDateClick"
+              @switch-view="handleViewSwitch"
             />
           </div>
         </div>
@@ -256,6 +257,21 @@ const handleWeekDateSelect = async (dateStr) => {
   
   // 加载选中日期的节假日
   await loadHolidaysForSelectedDate(dateStr)
+}
+
+// 处理视图切换
+const handleViewSwitch = (viewType) => {
+  if (viewType === 'month') {
+    currentView.value = 'month'
+    if (fullCalendarRef.value) {
+      fullCalendarRef.value.getApi().changeView('dayGridMonth')
+    }
+  } else if (viewType === 'day') {
+    currentView.value = 'day'
+    if (fullCalendarRef.value) {
+      fullCalendarRef.value.getApi().changeView('timeGridDay')
+    }
+  }
 }
 
 // 定义"今天"按钮的处理函数

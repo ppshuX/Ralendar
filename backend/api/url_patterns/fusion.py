@@ -1,6 +1,6 @@
 """
 融合相关路由 (Roamio × Ralendar)
-包括：批量操作、旅行关联、特殊查询
+包括：批量操作、旅行关联、特殊查询、用户邮箱检查
 """
 from django.urls import path
 from ..views import (
@@ -13,9 +13,13 @@ from ..views import (
     get_events_with_location,
     get_roamio_events,
     sync_from_roamio,
+    check_email_availability,
 )
 
 urlpatterns = [
+    # 用户相关
+    path('users/check-email/', check_email_availability, name='check_email_availability'),
+    
     # RESTful CRUD with UnionID support
     path('events/batch/', batch_create_events, name='batch_create_events'),  # Batch create
     path('events/', get_user_events, name='get_user_events'),  # GET list

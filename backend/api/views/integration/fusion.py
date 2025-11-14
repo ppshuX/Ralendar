@@ -2,6 +2,7 @@
 融合相关视图 - 支持 Roamio × Ralendar 跨项目功能
 """
 import logging
+import re
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -11,7 +12,7 @@ from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
 
-from ...models import Event, QQUser
+from ...models import Event, QQUser, AcWingUser
 from ...serializers import EventSerializer
 
 # 初始化 logger
@@ -692,4 +693,136 @@ def sync_from_roamio(request):
         'synced_count': len(events_to_create),
         'events': result_serializer.data
     }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@authentication_classes([])  # 允许未认证访问
+@permission_classes([AllowAny])
+def check_email_availability(request):
+    """
+    检查邮箱是否已被占用（Roamio 集成接口）
+    
+    **POST** `/api/fusion/users/check-email/`
+    
+    ### 请求体
+    ```json
+    {
+        "email": "user@example.com"
+    }
+    ```
+    
+    ### 响应 - 邮箱不存在
+    ```json
+    {
+        "exists": false
+    }
+    ```
+    
+    ### 响应 - 邮箱已被占用
+    ```json
+    {
+        "exists": true,
+        "provider": "qq",
+        "match_type": "unionid",
+        "owner": {
+            "email": "user@example.com",
+            "unionid": "UNIONID_xxx",
+            "openid": "OPENID_xxx",
+            "user_id": 12345,
+            "nickname": "QQ用户昵称"
+        }
+    }
+    ```
+    
+    ### 错误响应
+    - 400: `{"error": "invalid_email"}` - 邮箱格式错误
+    - 500: `{"error": "server_error"}` - 服务器错误
+    """
+    try:
+        # 1. 获取并验证邮箱
+        email = request.data.get('email', '').strip().lower()
+        
+        if not email:
+            return Response(
+                {'error': 'invalid_email', 'message': '邮箱不能为空'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # 简单的邮箱格式验证
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_regex, email):
+            return Response(
+                {'error': 'invalid_email', 'message': '邮箱格式不正确'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        logger.info(f"[Email Check] 检查邮箱: {email}")
+        
+        # 2. 查找邮箱对应的用户
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # 邮箱不存在
+            logger.info(f"[Email Check] ✅ 邮箱可用: {email}")
+            return Response({'exists': False}, status=status.HTTP_200_OK)
+        
+        # 3. 邮箱已被占用，获取详细信息
+        logger.info(f"[Email Check] ❌ 邮箱已被占用: {email} (User ID: {user.id})")
+        
+        # 优先尝试获取 QQ 信息（因为 Roamio 主要使用 QQ 登录）
+        try:
+            qq_user = QQUser.objects.get(user=user)
+            return Response({
+                'exists': True,
+                'provider': 'qq',
+                'match_type': 'unionid' if qq_user.unionid else 'openid',
+                'owner': {
+                    'email': user.email,
+                    'unionid': qq_user.unionid or '',
+                    'openid': qq_user.openid,
+                    'user_id': user.id,
+                    'nickname': qq_user.nickname or user.username
+                }
+            }, status=status.HTTP_200_OK)
+        except QQUser.DoesNotExist:
+            pass
+        
+        # 尝试获取 AcWing 信息
+        try:
+            acwing_user = AcWingUser.objects.get(user=user)
+            return Response({
+                'exists': True,
+                'provider': 'acwing',
+                'match_type': 'openid',
+                'owner': {
+                    'email': user.email,
+                    'unionid': '',  # AcWing 没有 unionid
+                    'openid': acwing_user.openid,
+                    'user_id': user.id,
+                    'nickname': user.username
+                }
+            }, status=status.HTTP_200_OK)
+        except AcWingUser.DoesNotExist:
+            pass
+        
+        # 用户存在但没有关联的第三方账号（普通注册用户）
+        return Response({
+            'exists': True,
+            'provider': 'email',
+            'match_type': 'email',
+            'owner': {
+                'email': user.email,
+                'unionid': '',
+                'openid': '',
+                'user_id': user.id,
+                'nickname': user.username
+            }
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        logger.error(f"[Email Check] 服务器错误: {str(e)}", exc_info=True)
+        return Response(
+            {'error': 'server_error', 'message': '服务器内部错误'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 

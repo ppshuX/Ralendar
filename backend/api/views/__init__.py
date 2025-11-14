@@ -39,7 +39,8 @@ from .integration.fusion import (
     mark_notification_sent,
     get_events_with_location,
     get_roamio_events,
-    sync_from_roamio
+    sync_from_roamio,
+    check_email_availability
 )
 
 # 导出所有视图
@@ -74,5 +75,6 @@ __all__ = [
     'get_events_with_location',
     'get_roamio_events',
     'sync_from_roamio',
+    'check_email_availability',
 ]
 
