@@ -291,26 +291,29 @@ calendarOptions.value.dayCellDidMount = (arg) => {
     holidayLabel.className = 'holiday-label'
     holidayLabel.textContent = `${holiday.emoji || '🎉'} ${holiday.name}`
     holidayLabel.style.cssText = `
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      font-size: 9px;
-      line-height: 1.2;
-      color: #e74c3c;
-      font-weight: 700;
-      text-shadow: 0 0 4px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 1);
-      z-index: 10;
-      background: rgba(255, 255, 255, 0.85);
-      border-radius: 2px;
-      padding: 1px 3px;
-      white-space: nowrap;
-      max-width: 90%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      pointer-events: none;
+      position: absolute !important;
+      bottom: 2px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      font-size: 9px !important;
+      line-height: 1.1 !important;
+      color: #e74c3c !important;
+      font-weight: 700 !important;
+      text-shadow: 0 0 3px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 1) !important;
+      z-index: 100 !important;
+      background: rgba(255, 255, 255, 0.85) !important;
+      border-radius: 2px !important;
+      padding: 1px 3px !important;
+      white-space: nowrap !important;
+      max-width: 90% !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      pointer-events: none !important;
+      display: block !important;
+      visibility: visible !important;
     `
     arg.el.appendChild(holidayLabel)
-    console.log('添加节日标签:', dateStr, holiday.name)
+    console.log('✅ 添加节日标签:', dateStr, holiday.name, holidayLabel)
   }
   
   const count = getEventsCountForDate(dateStr)
@@ -755,24 +758,24 @@ const handleAICreate = async (eventData) => {
     padding-right: 4px;
   }
   
-  /* 日历高度更短，宽度更宽（接近正方形） */
+  /* 日历高度适中，宽度更宽（接近正方形） */
   .calendar-wrapper {
-    height: 180px !important;
-    max-height: 180px !important;
-    min-height: 180px !important;
+    height: 220px !important;
+    max-height: 220px !important;
+    min-height: 220px !important;
     margin: 0 !important;
     width: 100% !important;
-    padding: 2px 0 !important;
+    padding: 4px 0 !important;
   }
   
   /* 整体缩小间距和字体 */
   .calendar-page :deep(.fc) {
-    font-size: 11px;
+    font-size: 12px;
   }
   
-  /* 日期单元格缩小 */
+  /* 日期单元格适中 */
   .calendar-page :deep(.fc-daygrid-day) {
-    min-height: 28px;
+    min-height: 35px;
   }
   
   /* 周标题缩小 */
