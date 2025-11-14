@@ -258,13 +258,42 @@ calendarOptions.value.headerToolbar = {
   right: 'dayGridMonth,dayGridWeek,timeGridDay'
 }
 
-// 配置日期单元格渲染（添加圆点指示器）
+// 配置日期单元格渲染（添加圆点指示器和节日文字）
 calendarOptions.value.dayCellDidMount = (arg) => {
   // 使用本地日期，避免时区问题
   const year = arg.date.getFullYear()
   const month = String(arg.date.getMonth() + 1).padStart(2, '0')
   const day = String(arg.date.getDate()).padStart(2, '0')
   const dateStr = `${year}-${month}-${day}`
+  
+  // 检查是否有节日，添加节日标签
+  const holiday = holidaysMap.value[dateStr]
+  if (holiday) {
+    // 创建节日标签
+    const holidayLabel = document.createElement('div')
+    holidayLabel.className = 'holiday-label'
+    holidayLabel.textContent = `${holiday.emoji || '🎉'} ${holiday.name}`
+    holidayLabel.style.cssText = `
+      position: absolute;
+      top: 1px;
+      left: 2px;
+      font-size: 8px;
+      line-height: 1.1;
+      color: #e74c3c;
+      font-weight: 700;
+      text-shadow: 0 0 3px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 0.9);
+      z-index: 3;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 2px;
+      padding: 1px 2px;
+      white-space: nowrap;
+      max-width: calc(100% - 4px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    `
+    arg.el.style.position = 'relative'
+    arg.el.appendChild(holidayLabel)
+  }
   
   const count = getEventsCountForDate(dateStr)
   
@@ -388,6 +417,10 @@ const refreshEventDots = () => {
       const oldDot = cell.querySelector('.event-dot')
       if (oldDot) oldDot.remove()
       
+      // 移除旧节日标签
+      const oldHolidayLabel = cell.querySelector('.holiday-label')
+      if (oldHolidayLabel) oldHolidayLabel.remove()
+      
       // 重新创建圆点
       const dateAttr = cell.getAttribute('data-date')
       if (dateAttr) {
@@ -434,6 +467,37 @@ const refreshEventDots = () => {
           cell.style.position = 'relative'
           cell.appendChild(dot)
         }
+        
+        // 添加节日标签
+        const dateAttr = cell.getAttribute('data-date')
+        if (dateAttr) {
+          const holiday = holidaysMap.value[dateAttr]
+          if (holiday) {
+            const holidayLabel = document.createElement('div')
+            holidayLabel.className = 'holiday-label'
+            holidayLabel.textContent = `${holiday.emoji || '🎉'} ${holiday.name}`
+            holidayLabel.style.cssText = `
+              position: absolute;
+              top: 1px;
+              left: 2px;
+              font-size: 8px;
+              line-height: 1.1;
+              color: #e74c3c;
+              font-weight: 700;
+              text-shadow: 0 0 3px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 0.9);
+              z-index: 3;
+              background: rgba(255, 255, 255, 0.7);
+              border-radius: 2px;
+              padding: 1px 2px;
+              white-space: nowrap;
+              max-width: calc(100% - 4px);
+              overflow: hidden;
+              text-overflow: ellipsis;
+            `
+            cell.style.position = 'relative'
+            cell.appendChild(holidayLabel)
+          }
+        }
       }
     })
   }, 100)
@@ -445,9 +509,10 @@ watch(eventsList, () => {
   refreshEventDots()
 })
 
-// 监听节假日数据变化，自动更新日历
+// 监听节假日数据变化，自动更新日历和节日标签
 watch(holidaysMap, () => {
   updateCalendarEvents()
+  refreshEventDots()  // 刷新时也会更新节日标签
 })
 
 // 监听标签页切换，当切换到节假日标签时加载对应日期的数据
