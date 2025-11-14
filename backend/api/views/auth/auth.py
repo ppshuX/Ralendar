@@ -12,23 +12,9 @@ import requests
 import logging
 
 from ...models import AcWingUser, QQUser
-from ...serializers import UserRegisterSerializer, UserSerializer
+from ...serializers import UserSerializer
 
 logger = logging.getLogger(__name__)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def register(request):
-    """用户注册"""
-    serializer = UserRegisterSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        return Response({
-            'message': '注册成功',
-            'user': UserSerializer(user).data
-        }, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])

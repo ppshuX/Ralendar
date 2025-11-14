@@ -1,11 +1,10 @@
 """
 认证相关路由
-包括：用户注册、登录、AcWing OAuth、QQ OAuth
+包括：AcWing OAuth、QQ OAuth（仅支持第三方登录）
 """
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 from ..views import (
-    register,
     get_current_user,
     acwing_login,
     get_acwing_login_url,
@@ -16,8 +15,6 @@ from ..views import (
 
 urlpatterns = [
     # 基础认证
-    path('register/', register, name='register'),
-    path('login/', TokenObtainPairView.as_view(), name='login'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('me/', get_current_user, name='current_user'),
     

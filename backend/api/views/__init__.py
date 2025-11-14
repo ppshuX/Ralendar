@@ -16,7 +16,7 @@ from .calendar.events import EventViewSet
 from .calendar.calendars import PublicCalendarViewSet
 
 # Authentication
-from .auth.auth import register, get_current_user, acwing_login, qq_login, get_acwing_login_url, get_qq_login_url
+from .auth.auth import get_current_user, acwing_login, qq_login, get_acwing_login_url, get_qq_login_url
 
 # User Profile
 from .auth.user import get_user_stats, get_bindings, update_profile, change_password, unbind_acwing, unbind_qq
@@ -47,7 +47,6 @@ from .integration.fusion import (
 __all__ = [
     'EventViewSet',
     'PublicCalendarViewSet',
-    'register',
     'get_current_user',
     'acwing_login',
     'qq_login',

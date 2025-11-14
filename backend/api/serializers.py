@@ -4,30 +4,6 @@ from .models import Event, PublicCalendar
 
 
 # ==================== 用户相关 ====================
-class UserRegisterSerializer(serializers.ModelSerializer):
-    """用户注册序列化器"""
-    password = serializers.CharField(write_only=True, min_length=6)
-    password_confirm = serializers.CharField(write_only=True)
-    
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password', 'password_confirm']
-    
-    def validate(self, data):
-        if data['password'] != data['password_confirm']:
-            raise serializers.ValidationError("两次密码不一致")
-        return data
-    
-    def create(self, validated_data):
-        validated_data.pop('password_confirm')
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data.get('email', ''),
-            password=validated_data['password']
-        )
-        return user
-
-
 class UserSerializer(serializers.ModelSerializer):
     """用户信息序列化器"""
     photo = serializers.SerializerMethodField()
