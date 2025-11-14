@@ -779,7 +779,7 @@ class MainActivity : AppCompatActivity() {
                                 showAddEventDialog(event)
                             }
                             builder.setNegativeButton("删除") { _, _ ->
-                                deleteEvent(event)
+                                showDeleteConfirmDialog(event)
                             }
                         }
                         
@@ -811,7 +811,7 @@ class MainActivity : AppCompatActivity() {
                         showAddEventDialog(event)
                     }
                     .setNegativeButton("删除") { _, _ ->
-                        deleteEvent(event)
+                        showDeleteConfirmDialog(event)
                     }
                     .setNeutralButton("关闭", null)
                     .show()
@@ -839,7 +839,7 @@ class MainActivity : AppCompatActivity() {
                 showAddEventDialog(event)
             }
             builder.setNegativeButton("删除") { _, _ ->
-                deleteEvent(event)
+                showDeleteConfirmDialog(event)
             }
         }
         
