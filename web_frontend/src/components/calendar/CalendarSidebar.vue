@@ -111,9 +111,9 @@ const currentTab = computed({
 
 @media (max-width: 768px) {
   .right-sidebar {
-    height: 450px;
-    max-height: 450px;
-    min-height: 450px;
+    height: 600px;
+    max-height: 600px;
+    min-height: 600px;
     padding: 14px;
     margin-top: 16px;
   }
@@ -126,9 +126,9 @@ const currentTab = computed({
 
 @media (max-width: 576px) {
   .right-sidebar {
-    height: 400px;
-    max-height: 400px;
-    min-height: 400px;
+    height: calc(100vh - 200px);
+    max-height: calc(100vh - 200px);
+    min-height: 500px;
     padding: 12px;
   }
   
