@@ -381,19 +381,51 @@
     font-size: 9px;
   }
   
-  /* 确保节日小字显示 */
+  /* 确保节日小字显示 - 移动端优化 */
+  .calendar-wrapper .fc-bg-event {
+    opacity: 0.6 !important;
+    padding-top: 0 !important;
+    padding: 2px 1px !important;
+    font-size: 9px !important;
+    min-height: auto !important;
+    height: auto !important;
+  }
+  
   .calendar-wrapper .fc-bg-event .fc-event-title {
-    font-size: 8px !important;
-    line-height: 1.1;
-    padding: 1px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+    padding: 0 1px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 1px !important;
+    right: 1px !important;
+    color: #e74c3c !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.8) !important;
+    z-index: 3 !important;
+  }
+  
+  .calendar-wrapper .fc-bg-event.holiday-event {
+    background-color: rgba(255, 107, 107, 0.08) !important;
+    opacity: 0.7 !important;
   }
   
   .calendar-wrapper .fc-daygrid-day-top {
-    flex-direction: row;
-    justify-content: space-between;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    position: relative !important;
+    min-height: 20px !important;
+  }
+  
+  .calendar-wrapper .fc-daygrid-day-number {
+    position: absolute !important;
+    bottom: 2px !important;
+    right: 2px !important;
+    z-index: 4 !important;
   }
   
   /* 进一步缩小工具栏 */
