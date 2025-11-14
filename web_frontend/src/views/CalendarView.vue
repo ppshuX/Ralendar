@@ -292,26 +292,26 @@ calendarOptions.value.dayCellDidMount = (arg) => {
     holidayLabel.className = 'holiday-label'
     holidayLabel.textContent = `${holiday.emoji || '🎉'} ${holiday.name}`
     holidayLabel.style.cssText = `
-      position: absolute !important;
-      bottom: 3px !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
-      font-size: 10px !important;
-      line-height: 1.2 !important;
-      color: #e74c3c !important;
-      font-weight: 700 !important;
-      text-shadow: 0 0 3px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 1) !important;
-      z-index: 100 !important;
-      background: rgba(255, 255, 255, 0.85) !important;
-      border-radius: 3px !important;
-      padding: 2px 4px !important;
-      white-space: nowrap !important;
-      max-width: 90% !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-      pointer-events: none !important;
-      display: block !important;
-      visibility: visible !important;
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      line-height: 1.2;
+      color: #e74c3c;
+      font-weight: 700;
+      text-shadow: 0 0 3px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 1);
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 3px;
+      padding: 2px 4px;
+      white-space: nowrap;
+      max-width: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: none;
+      display: block;
+      visibility: visible;
     `
     arg.el.appendChild(holidayLabel)
     console.log('✅ 添加节日标签:', dateStr, holiday.name, holidayLabel)
@@ -545,26 +545,26 @@ const refreshEventDots = () => {
         holidayLabel.className = 'holiday-label'
         holidayLabel.textContent = `${holiday.emoji || '🎉'} ${holiday.name}`
         holidayLabel.style.cssText = `
-          position: absolute !important;
-          bottom: 3px !important;
-          left: 50% !important;
-          transform: translateX(-50%) !important;
-          font-size: 10px !important;
-          line-height: 1.2 !important;
-          color: #e74c3c !important;
-          font-weight: 700 !important;
-          text-shadow: 0 0 3px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 1) !important;
-          z-index: 100 !important;
-          background: rgba(255, 255, 255, 0.85) !important;
-          border-radius: 3px !important;
-          padding: 2px 4px !important;
-          white-space: nowrap !important;
-          max-width: 90% !important;
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
-          pointer-events: none !important;
-          display: block !important;
-          visibility: visible !important;
+          position: absolute;
+          bottom: 3px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 10px;
+          line-height: 1.2;
+          color: #e74c3c;
+          font-weight: 700;
+          text-shadow: 0 0 3px rgba(255, 255, 255, 1), 1px 1px 0 rgba(255, 255, 255, 1);
+          z-index: 100;
+          background: rgba(255, 255, 255, 0.85);
+          border-radius: 3px;
+          padding: 2px 4px;
+          white-space: nowrap;
+          max-width: 90%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          pointer-events: none;
+          display: block;
+          visibility: visible;
         `
         cell.appendChild(holidayLabel)
         console.log('刷新时添加节日标签:', dateStr, holiday.name)
