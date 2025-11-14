@@ -15,18 +15,21 @@
     tools:context=".MainActivity">
 
     <!-- 顶部标题栏（淡紫色卡片样式） -->
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize"
-        android:background="@drawable/toolbar_purple_card"
-        android:elevation="4dp"
         android:layout_margin="8dp"
         android:layout_marginBottom="4dp"
-        app:title="📅 Ralendar"
-        app:titleTextColor="#FFFFFF"
-        app:titleTextAppearance="@style/ToolbarTitleStyle" />
+        android:elevation="4dp"
+        app:cardBackground="@drawable/toolbar_purple_card"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
+
+        <include
+            android:id="@+id/toolbar"
+            layout="@layout/toolbar_custom" />
+
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- 顶部按钮区域 -->
     <LinearLayout
