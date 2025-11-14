@@ -284,47 +284,55 @@
 /* ==================== 移动端优化 ==================== */
 @media (max-width: 768px) {
 
-  /* 容器微调 - 确保有足够高度和间距 */
+  /* 容器微调 - 缩小高度为下方栏腾出空间 */
   .calendar-wrapper {
-    padding: 12px 8px;
-    min-height: 500px;
-    margin-bottom: 16px;
+    padding: 10px 6px;
+    min-height: 320px;
+    max-height: 320px;
+    height: 320px;
+    margin-bottom: 12px;
   }
 
   /* 确保日历内容完整显示 */
   .calendar-wrapper .fc {
-    min-height: 450px;
+    min-height: 300px;
     width: 100%;
   }
 
-  /* 让日历格子有足够高度显示完整月份 */
+  /* 缩小日历格子高度 */
   .calendar-wrapper .fc-daygrid-day {
-    min-height: 60px;
+    min-height: 42px;
   }
   
   .calendar-wrapper .fc-daygrid-day-frame {
-    min-height: 60px;
+    min-height: 42px;
   }
 
   /* 调整字体大小 */
   .calendar-wrapper .fc-toolbar-title {
-    font-size: 18px;
+    font-size: 15px;
   }
 
   .calendar-wrapper .fc-button {
-    font-size: 12px;
-    padding: 4px 8px;
+    font-size: 11px;
+    padding: 3px 6px;
   }
 
   /* 节假日文字稍小 */
   .calendar-wrapper .fc-bg-event .fc-event-title {
-    font-size: 11px;
+    font-size: 10px;
   }
 
-  /* 事件圆点稍大 */
+  /* 事件圆点稍小 */
   .calendar-wrapper .event-dot {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
+  }
+  
+  /* 周标题缩小 */
+  .calendar-wrapper .fc-col-header-cell {
+    padding: 5px 2px;
+    font-size: 11px;
   }
   
   /* 确保日历不被遮挡 */
@@ -337,28 +345,40 @@
 @media (max-width: 576px) {
   .calendar-wrapper {
     padding: 8px 4px;
-    min-height: 450px;
+    min-height: 320px;
+    max-height: 320px;
+    height: 320px;
   }
   
   .calendar-wrapper .fc {
-    min-height: 400px;
+    min-height: 300px;
   }
   
   .calendar-wrapper .fc-daygrid-day {
-    min-height: 50px;
+    min-height: 42px;
   }
   
   .calendar-wrapper .fc-daygrid-day-frame {
-    min-height: 50px;
+    min-height: 42px;
   }
   
   .calendar-wrapper .fc-toolbar-title {
-    font-size: 16px;
+    font-size: 14px;
   }
   
   .calendar-wrapper .fc-button {
+    font-size: 10px;
+    padding: 2px 5px;
+  }
+  
+  .calendar-wrapper .fc-col-header-cell {
+    padding: 5px 2px;
     font-size: 11px;
-    padding: 3px 6px;
+  }
+  
+  .calendar-wrapper .fc-daygrid-day-number {
+    padding: 3px;
+    font-size: 11px;
   }
 }
 

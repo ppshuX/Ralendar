@@ -584,27 +584,47 @@ const handleAICreate = async (eventData) => {
     max-width: 100%;
   }
   
-  /* 日历高度固定 */
+  /* 日历高度缩小，为下方栏腾出更多空间 */
   .calendar-wrapper {
-    height: 380px;
-    max-height: 380px;
-    min-height: 380px;
+    height: 320px;
+    max-height: 320px;
+    min-height: 320px;
   }
   
-  /* 整体缩小间距 */
+  /* 整体缩小间距和字体 */
   .calendar-page :deep(.fc) {
-    font-size: 13px;
+    font-size: 12px;
   }
   
   /* 日期单元格缩小 */
   .calendar-page :deep(.fc-daygrid-day) {
-    min-height: 50px !important;
+    min-height: 42px !important;
   }
   
   /* 周标题缩小 */
   .calendar-page :deep(.fc-col-header-cell) {
-    padding: 6px 2px;
-    font-size: 12px;
+    padding: 5px 2px;
+    font-size: 11px;
+  }
+  
+  /* 工具栏缩小 */
+  .calendar-page :deep(.fc-header-toolbar) {
+    margin-bottom: 0.5em !important;
+  }
+  
+  .calendar-page :deep(.fc-toolbar-title) {
+    font-size: 1.1em !important;
+  }
+  
+  .calendar-page :deep(.fc-button) {
+    padding: 0.3em 0.5em !important;
+    font-size: 0.85em !important;
+  }
+  
+  /* 日期数字缩小 */
+  .calendar-page :deep(.fc-daygrid-day-number) {
+    padding: 3px !important;
+    font-size: 11px !important;
   }
 }
 
