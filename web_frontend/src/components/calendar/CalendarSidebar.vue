@@ -62,6 +62,10 @@ const props = defineProps({
   selectedDate: {
     type: String,
     default: ''
+  },
+  holidaysMap: {
+    type: Object,
+    default: () => ({})
   }
 })
 
