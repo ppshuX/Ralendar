@@ -296,7 +296,7 @@
 
   /* 确保日历内容完整显示 */
   .calendar-wrapper .fc {
-    min-height: 450px;
+    height: 100% !important;
     width: 100%;
   }
   
@@ -304,8 +304,20 @@
     height: 100% !important;
   }
   
+  .calendar-wrapper .fc-scroller {
+    overflow: visible !important;
+  }
+  
   .calendar-wrapper .fc-daygrid-body {
-    height: auto !important;
+    height: 100% !important;
+  }
+  
+  .calendar-wrapper .fc-scrollgrid {
+    height: 100% !important;
+  }
+  
+  .calendar-wrapper .fc-scrollgrid-sync-table {
+    height: 100% !important;
   }
 
   /* 显著增加日历格子高度确保内容完整显示 */
