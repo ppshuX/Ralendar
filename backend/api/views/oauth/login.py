@@ -51,7 +51,8 @@ def oauth_web_login(request):
     elif provider == 'qq':
         # QQ登录：重定向到QQ授权页面
         QQ_APPID = getattr(settings, 'QQ_APPID', '')
-        REDIRECT_URI = f"{request.scheme}://{request.get_host()}/oauth/login/callback/qq/"
+        # 注意：QQ互联要求回调地址不能有末尾斜杠，且必须在QQ开放平台配置白名单
+        REDIRECT_URI = f"{request.scheme}://{request.get_host()}/oauth/login/callback/qq"
         
         # 将 next_url 存储在 session 中
         request.session['oauth_next_url'] = next_url
@@ -168,11 +169,13 @@ def oauth_login_callback_qq(request):
     
     try:
         # 获取 access_token
+        # 注意：回调地址必须与授权时的地址完全一致（不能有末尾斜杠）
+        REDIRECT_URI = f"{request.scheme}://{request.get_host()}/oauth/login/callback/qq"
         token_url = (
             f"https://graph.qq.com/oauth2.0/token"
             f"?grant_type=authorization_code&client_id={QQ_APPID}"
             f"&client_secret={QQ_APPKEY}&code={code}"
-            f"&redirect_uri={request.scheme}://{request.get_host()}/oauth/login/callback/qq/"
+            f"&redirect_uri={REDIRECT_URI}"
         )
         token_response = requests.get(token_url, timeout=10)
         token_text = token_response.text

@@ -22,7 +22,9 @@ urlpatterns = [
     # OAuth授权页面的登录（用于授权流程中的登录）
     path('login', oauth_web_login, name='oauth_web_login'),
     path('login/callback/acwing/', oauth_login_callback_acwing, name='oauth_login_callback_acwing'),
-    path('login/callback/qq/', oauth_login_callback_qq, name='oauth_login_callback_qq'),
+    # QQ回调：同时支持有斜杠和无斜杠，但实际使用无斜杠版本（QQ互联要求）
+    path('login/callback/qq', oauth_login_callback_qq, name='oauth_login_callback_qq'),
+    path('login/callback/qq/', oauth_login_callback_qq, name='oauth_login_callback_qq_slash'),  # 兼容性
     
     # Token 端点（获取/刷新访问令牌）
     path('token', oauth_token, name='oauth_token'),
