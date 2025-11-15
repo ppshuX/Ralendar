@@ -215,21 +215,9 @@
   font-size: 14px;
 }
 
-/* 月视图：显示事件块 */
+/* 月视图：隐藏事件块，只显示日期数字 */
 .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-event {
-  display: block;
-  cursor: pointer;
-  border-radius: 4px;
-  padding: 2px 6px;
-  margin: 1px 2px;
-  font-size: 11px;
-  background: linear-gradient(135deg, var(--ralendar-primary), var(--ralendar-secondary));
-  border: none;
-  color: white;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: none;
 }
 
 /* 月视图：隐藏节日小字标签 */
@@ -543,12 +531,9 @@
     display: none;
   }
   
-  /* 移动端月视图事件样式 */
+  /* 移动端月视图：隐藏事件 */
   .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-event {
-    display: block;
-    font-size: 9px;
-    padding: 1px 4px;
-    margin: 1px;
+    display: none;
   }
   
   .calendar-wrapper .fc-bg-event .fc-event-title {
