@@ -26,6 +26,33 @@ def oauth_authorize(request):
     URL: /oauth/authorize?client_id=xxx&redirect_uri=xxx&response_type=code&state=xxx&scope=xxx
     """
     
+    # 调试：立即返回测试内容，确认路由是否工作
+    logger.info(f"[OAuth] oauth_authorize called! Method: {request.method}, Path: {request.path}, User: {request.user}")
+    
+    # 临时测试：直接返回简单HTML
+    test_response = HttpResponse(
+        f"""
+        <html>
+        <head><title>OAuth 测试</title></head>
+        <body style="background: white; padding: 20px; font-family: Arial;">
+            <h1>✅ OAuth 路由工作正常！</h1>
+            <p>视图函数已被调用</p>
+            <p>请求路径: {request.path}</p>
+            <p>请求方法: {request.method}</p>
+            <p>用户: {request.user}</p>
+            <p>已认证: {request.user.is_authenticated if hasattr(request, 'user') else 'Unknown'}</p>
+            <hr>
+            <h2>查询参数：</h2>
+            <pre>{dict(request.GET)}</pre>
+            <hr>
+            <p>如果看到这个页面，说明路由配置正确。现在将尝试渲染实际模板...</p>
+        </body>
+        </html>
+        """,
+        content_type='text/html; charset=utf-8'
+    )
+    return test_response  # 临时返回测试，确认路由工作后删除这行
+    
     # 获取参数
     client_id = request.GET.get('client_id') or request.POST.get('client_id')
     redirect_uri = request.GET.get('redirect_uri') or request.POST.get('redirect_uri')
