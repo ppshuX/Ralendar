@@ -51,8 +51,9 @@ def oauth_web_login(request):
     elif provider == 'qq':
         # QQ登录：重定向到QQ授权页面
         QQ_APPID = getattr(settings, 'QQ_APPID', '')
-        # 注意：QQ互联要求回调地址不能有末尾斜杠，且必须在QQ开放平台配置白名单
-        REDIRECT_URI = f"{request.scheme}://{request.get_host()}/oauth/login/callback/qq"
+        # 注意：QQ开放平台只能配置一个回调地址，统一使用 /qq/callback
+        # 这与普通QQ登录保持一致，避免需要配置多个回调地址
+        REDIRECT_URI = f"{request.scheme}://{request.get_host()}/qq/callback"
         
         # 将 next_url 存储在 session 中
         request.session['oauth_next_url'] = next_url
@@ -154,23 +155,36 @@ def oauth_login_callback_acwing(request):
 @permission_classes([AllowAny])
 @csrf_exempt
 def oauth_login_callback_qq(request):
-    """QQ登录回调处理"""
+    """
+    QQ登录回调处理（统一处理OAuth登录和普通QQ登录）
+    
+    这个函数被 /qq/callback 路由调用，QQ开放平台只能配置一个回调地址
+    通过检查 session 中的 oauth_next_url 来判断是OAuth流程还是普通登录流程
+    """
     from django.conf import settings
+    from django.contrib.auth import login as django_login
+    from django.contrib.auth.models import User
+    from ...models import QQUser
     
     code = request.GET.get('code')
     if not code:
         return HttpResponse('缺少授权码', status=400)
     
-    # 获取存储的 next_url
-    next_url = request.session.pop('oauth_next_url', '/oauth/authorize')
+    # 获取存储的 next_url（OAuth流程会在session中存储）
+    # 如果没有，说明是普通QQ登录（API调用），需要返回JSON
+    next_url = request.session.pop('oauth_next_url', None)
+    is_oauth_flow = next_url is not None
+    if not is_oauth_flow:
+        next_url = '/oauth/authorize'  # 默认值，不会用到
     
     QQ_APPID = getattr(settings, 'QQ_APPID', '')
     QQ_APPKEY = getattr(settings, 'QQ_APPKEY', '')
     
     try:
         # 获取 access_token
-        # 注意：回调地址必须与授权时的地址完全一致（不能有末尾斜杠）
-        REDIRECT_URI = f"{request.scheme}://{request.get_host()}/oauth/login/callback/qq"
+        # 注意：回调地址必须与授权时的地址完全一致
+        # 统一使用 /qq/callback，与QQ开放平台配置的回调地址保持一致
+        REDIRECT_URI = f"{request.scheme}://{request.get_host()}/qq/callback"
         token_url = (
             f"https://graph.qq.com/oauth2.0/token"
             f"?grant_type=authorization_code&client_id={QQ_APPID}"

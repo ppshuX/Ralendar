@@ -19,8 +19,15 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+# Import QQ callback handler
+from api.views.oauth.login import oauth_login_callback_qq
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # QQ回调地址（必须在根路径，因为QQ开放平台只能配置一个回调地址）
+    # 统一使用 /qq/callback，同时处理OAuth登录和普通QQ登录
+    path('qq/callback', oauth_login_callback_qq, name='qq_callback'),
     
     # OAuth 2.0 路由（需要在根路径，因为第三方应用可能直接访问 /oauth/authorize）
     path('oauth/', include('api.url_patterns.oauth')),
