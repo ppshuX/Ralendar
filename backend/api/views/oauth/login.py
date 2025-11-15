@@ -398,7 +398,10 @@ def oauth_login_callback_qq(request):
                 # 即使没有参数，也重定向，让授权页面显示错误信息（这比停留在主界面好）
             
             logger.info(f"[QQ Callback] ✅ Redirecting to authorization page: {next_url}")
-            return redirect(next_url)
+            logger.info(f"[QQ Callback] ✅ Full redirect URL (with host): {request.scheme}://{request.get_host()}{next_url}")
+            
+            # 使用 HttpResponseRedirect 确保重定向执行
+            return HttpResponseRedirect(next_url)
         else:
             # 如果不是OAuth流程，或者无法恢复 next_url
             # 显示一个提示页面，让用户手动返回授权页面

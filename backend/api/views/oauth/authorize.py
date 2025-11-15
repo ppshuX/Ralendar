@@ -28,6 +28,9 @@ def oauth_authorize(request):
     
     # 日志记录
     logger.info(f"[OAuth] oauth_authorize called - Method: {request.method}, Path: {request.path}, User: {request.user}")
+    logger.info(f"[OAuth] GET params: {dict(request.GET)}")
+    if request.method == 'POST':
+        logger.info(f"[OAuth] POST params: {dict(request.POST)}")
     
     # 获取参数
     client_id = request.GET.get('client_id') or request.POST.get('client_id')
@@ -35,6 +38,8 @@ def oauth_authorize(request):
     response_type = request.GET.get('response_type') or request.POST.get('response_type')
     state = request.GET.get('state') or request.POST.get('state', '')
     scope = request.GET.get('scope') or request.POST.get('scope', 'calendar:read user:read')
+    
+    logger.info(f"[OAuth] Parsed params - client_id: {client_id}, redirect_uri: {redirect_uri}, response_type: {response_type}, state: {state[:50] if state else 'None'}, scope: {scope}")
     
     # 参数验证
     if not all([client_id, redirect_uri, response_type]):
