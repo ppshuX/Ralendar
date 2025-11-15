@@ -137,8 +137,32 @@ def oauth_authorize(request):
                 )
             
             try:
+                # 直接渲染模板
                 response = render(request, 'oauth/authorize.html', context)
-                logger.info(f"[OAuth] Template rendered successfully")
+                logger.info(f"[OAuth] Template rendered successfully, content length: {len(response.content)}")
+                
+                # 检查响应内容是否为空
+                if len(response.content) < 100:
+                    logger.warning(f"[OAuth] Template rendered but content is very short: {len(response.content)} bytes")
+                    # 返回测试内容
+                    test_html = f"""
+                    <html>
+                    <head><title>模板渲染测试</title></head>
+                    <body style="background: white; padding: 20px;">
+                        <h1>警告：模板内容过短</h1>
+                        <p>Client: {client.client_name if client else 'None'}</p>
+                        <p>is_authenticated: {request.user.is_authenticated}</p>
+                        <p>Template path: {template_path}</p>
+                        <p>Template exists: {os.path.exists(template_path)}</p>
+                        <p>Rendered content length: {len(response.content)} bytes</p>
+                        <hr>
+                        <h2>实际模板内容（前500字符）：</h2>
+                        <pre>{response.content.decode('utf-8', errors='ignore')[:500]}</pre>
+                    </body>
+                    </html>
+                    """
+                    return HttpResponse(test_html, content_type='text/html; charset=utf-8')
+                
                 return response
             except Exception as render_error:
                 logger.error(f"[OAuth] Template render error: {str(render_error)}")
