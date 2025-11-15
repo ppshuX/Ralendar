@@ -178,6 +178,11 @@ def oauth_authorize(request):
     
     # POST 请求：处理授权决定
     if request.method == 'POST':
+        logger.info(f"[OAuth] 🔵 POST request received at /oauth/authorize")
+        logger.info(f"[OAuth] POST data: {dict(request.POST)}")
+        logger.info(f"[OAuth] User authenticated: {request.user.is_authenticated}")
+        logger.info(f"[OAuth] CSRF token in POST: {request.POST.get('csrfmiddlewaretoken', 'NOT FOUND')}")
+        
         # 必须登录
         if not request.user.is_authenticated:
             logger.warning(f"[OAuth] POST request without authentication")
