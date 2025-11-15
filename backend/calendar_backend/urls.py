@@ -21,6 +21,11 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # OAuth 2.0 路由（需要在根路径，因为第三方应用可能直接访问 /oauth/authorize）
+    path('oauth/', include('api.url_patterns.oauth')),
+    
+    # API 路由
     path('api/', include('api.urls')),        # 保留旧版本（向后兼容）
     path('api/v1/', include('api.urls')),     # v1 版本（Roamio 对接使用）
     path('api-auth/', include('rest_framework.urls')),
