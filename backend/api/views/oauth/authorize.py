@@ -175,9 +175,34 @@ def oauth_authorize(request):
     if request.method == 'POST':
         # 必须登录
         if not request.user.is_authenticated:
+            logger.warning(f"[OAuth] POST request without authentication")
             return HttpResponse('未登录', status=401)
         
+        # 重新验证参数（POST请求中可能包含）
+        client_id = request.POST.get('client_id') or client_id
+        redirect_uri = request.POST.get('redirect_uri') or redirect_uri
+        state = request.POST.get('state') or state
+        scope = request.POST.get('scope') or scope
+        
+        # 验证必需参数
+        if not all([client_id, redirect_uri]):
+            logger.error(f"[OAuth] Missing required parameters in POST: client_id={client_id}, redirect_uri={redirect_uri}")
+            return HttpResponse('缺少必需参数: client_id, redirect_uri', status=400)
+        
+        # 重新获取客户端（防止client对象丢失）
+        try:
+            client = OAuthClient.objects.get(client_id=client_id, is_active=True)
+        except OAuthClient.DoesNotExist:
+            logger.error(f"[OAuth] Invalid client_id in POST: {client_id}")
+            return HttpResponse(f'无效的 client_id: {client_id}', status=400)
+        
+        # 验证 redirect_uri
+        if not client.is_redirect_uri_allowed(redirect_uri):
+            logger.error(f"[OAuth] Invalid redirect_uri in POST: {redirect_uri} for client {client.client_name}")
+            return HttpResponse(f'redirect_uri 不在白名单内: {redirect_uri}', status=400)
+        
         action = request.POST.get('action')
+        logger.info(f"[OAuth] POST action: {action}, client: {client.client_name}, redirect_uri: {redirect_uri}, state: {state[:50] if state else 'None'}")
         
         if action == 'authorize':
             # 用户同意授权
@@ -200,7 +225,7 @@ def oauth_authorize(request):
                 params['state'] = state
             
             redirect_url = f"{redirect_uri}?{urlencode(params)}"
-            logger.info(f"[OAuth] Redirecting to {redirect_uri} with authorization code")
+            logger.info(f"[OAuth] ✅ Redirecting to {redirect_uri} with authorization code {auth_code.code[:20]}...")
             return redirect(redirect_url)
         
         elif action == 'deny':
