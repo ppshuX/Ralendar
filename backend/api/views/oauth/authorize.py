@@ -236,13 +236,25 @@ def oauth_authorize(request):
             if state:
                 params['state'] = state
             
+            # 确保 redirect_uri 是完整的 URL（必须以 http:// 或 https:// 开头）
+            if not redirect_uri.startswith(('http://', 'https://')):
+                logger.error(f"[OAuth] ❌ redirect_uri is not a complete URL: {redirect_uri}")
+                return HttpResponse(
+                    f'无效的 redirect_uri: {redirect_uri}（必须是完整的 URL，如 https://example.com/callback）',
+                    status=400
+                )
+            
             redirect_url = f"{redirect_uri}?{urlencode(params)}"
             logger.info(f"[OAuth] ✅ Redirecting to {redirect_uri} with authorization code {auth_code.code[:20]}...")
             logger.info(f"[OAuth] ✅ Full redirect URL: {redirect_url}")
             logger.info(f"[OAuth] ✅ Redirect params: {params}")
+            logger.info(f"[OAuth] ✅ About to execute HttpResponseRedirect to: {redirect_url}")
             
             # 使用 HttpResponseRedirect 确保重定向执行
-            return HttpResponseRedirect(redirect_url)
+            # 返回 302 重定向响应，浏览器会自动跳转
+            response = HttpResponseRedirect(redirect_url)
+            logger.info(f"[OAuth] ✅ HttpResponseRedirect created successfully, status_code: {response.status_code}")
+            return response
         
         elif action == 'deny':
             # 用户拒绝授权
