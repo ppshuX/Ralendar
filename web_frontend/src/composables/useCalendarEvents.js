@@ -72,6 +72,10 @@ export function useCalendarEvents({ applyHolidayEvents, onDateSelect } = {}) {
     handleWindowResize: true,  // 自动处理窗口 resize
     windowResizeDelay: 100,  // resize 防抖
     views: {
+      dayGridMonth: {
+        // 月视图：不显示事件块，只显示日期数字
+        eventDisplay: 'none'
+      },
       dayGridWeek: {
         dayHeaderFormat: { weekday: 'short' }
       },

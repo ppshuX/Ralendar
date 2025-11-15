@@ -76,14 +76,6 @@ def oauth_authorize(request):
     
     # GET 请求：显示授权页面
     if request.method == 'GET':
-        # 检查用户是否已登录
-        if not request.user.is_authenticated:
-            # 未登录，跳转到登录页面，登录后再回来
-            login_url = f'/login?next={request.get_full_path()}'
-            logger.info(f"[OAuth] User not authenticated, redirecting to login")
-            return redirect(login_url)
-        
-        # 已登录，显示授权确认页面
         from ...models import get_scope_description
         
         context = {
@@ -96,9 +88,16 @@ def oauth_authorize(request):
             'redirect_uri': redirect_uri,
             'state': state,
             'user': request.user,
+            'is_authenticated': request.user.is_authenticated,
+            'next_url': request.get_full_path(),  # 授权完成后的回调URL
         }
         
-        logger.info(f"[OAuth] Showing authorization page for user {request.user.id}, client {client.client_name}")
+        # 如果未登录，模板会显示登录选项
+        if not request.user.is_authenticated:
+            logger.info(f"[OAuth] User not authenticated, showing login form on authorization page")
+        else:
+            logger.info(f"[OAuth] Showing authorization page for user {request.user.id}, client {client.client_name}")
+        
         return render(request, 'oauth/authorize.html', context)
     
     # POST 请求：处理授权决定

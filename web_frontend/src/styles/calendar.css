@@ -216,18 +216,27 @@
 }
 
 /* 月视图：隐藏事件块，只显示日期数字 */
-.calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-event {
-  display: none;
+/* 使用更具体的选择器确保优先级 */
+.calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .fc-daygrid-event {
+  display: none !important;
+}
+
+.calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .fc-daygrid-event-frame {
+  display: none !important;
+}
+
+.calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .fc-daygrid-day-events {
+  display: none !important;
 }
 
 /* 月视图：隐藏节日小字标签 */
-.calendar-wrapper .fc.fc-dayGridMonth-view .holiday-label {
-  display: none;
+.calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .holiday-label {
+  display: none !important;
 }
 
 /* 月视图：隐藏背景节日事件 */
-.calendar-wrapper .fc.fc-dayGridMonth-view .fc-bg-event {
-  display: none;
+.calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .fc-bg-event {
+  display: none !important;
 }
 
 /* 周视图和日视图的事件样式（保留原样式）*/
@@ -522,18 +531,25 @@
     overflow: visible;
   }
   
-  /* 移动端月视图：隐藏节日，显示事件 */
-  .calendar-wrapper .fc.fc-dayGridMonth-view .holiday-label {
-    display: none;
+  /* 移动端月视图：隐藏事件和节日，只显示日期数字 */
+  .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .fc-daygrid-event {
+    display: none !important;
   }
   
-  .calendar-wrapper .fc.fc-dayGridMonth-view .fc-bg-event {
-    display: none;
+  .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .fc-daygrid-event-frame {
+    display: none !important;
   }
   
-  /* 移动端月视图：隐藏事件 */
-  .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-event {
-    display: none;
+  .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .fc-daygrid-day-events {
+    display: none !important;
+  }
+  
+  .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .holiday-label {
+    display: none !important;
+  }
+  
+  .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .fc-bg-event {
+    display: none !important;
   }
   
   .calendar-wrapper .fc-bg-event .fc-event-title {
