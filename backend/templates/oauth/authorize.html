@@ -228,15 +228,17 @@
             <!-- 应用Logo和名称 -->
             <div class="app-header">
                 <div class="app-logo">
-                    {% if client.logo_url %}
-                        <img src="{{ client.logo_url }}" alt="{{ client.client_name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px;">
+                    {% if client and client.logo_url %}
+                        <img src="{{ client.logo_url }}" alt="{{ client.client_name|default:'未知应用' }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px;">
                     {% else %}
                         📱
                     {% endif %}
                 </div>
-                <div class="app-name">{{ client.client_name }}</div>
-                {% if client.client_description %}
+                <div class="app-name">{{ client.client_name|default:client_name|default:'未知应用' }}</div>
+                {% if client and client.client_description %}
                     <div class="app-description">{{ client.client_description }}</div>
+                {% elif client_description %}
+                    <div class="app-description">{{ client_description }}</div>
                 {% endif %}
             </div>
 
@@ -244,7 +246,7 @@
             <!-- 未登录：显示登录选项 -->
             <div class="auth-request">
                 <h2>请先登录</h2>
-                <p class="request-description">{{ client.client_name }} 请求访问您的 Ralendar，请先登录以继续授权。</p>
+                <p class="request-description">{{ client.client_name|default:client_name|default:'未知应用' }} 请求访问您的 Ralendar，请先登录以继续授权。</p>
                 
                 <div class="login-options" style="margin-top: 24px;">
                     <a href="/oauth/login?provider=acwing&next={{ next_url|urlencode }}" class="btn btn-authorize" style="text-decoration: none; display: block; margin-bottom: 12px;">
@@ -260,7 +262,7 @@
             {% else %}
             <!-- 已登录：显示授权表单 -->
             <div class="auth-request">
-                <h2>{{ client.client_name }} 请求访问您的 Ralendar</h2>
+                <h2>{{ client.client_name|default:client_name|default:'未知应用' }} 请求访问您的 Ralendar</h2>
                 <p class="request-description">该应用将获得以下权限：</p>
                 
                 <!-- 权限列表 -->
@@ -277,26 +279,28 @@
                 <div class="security-note">
                     <div class="security-note-icon">🛡️</div>
                     <p>
-                        授权后，{{ client.client_name }} 可以访问上述数据。<br>
+                        授权后，{{ client.client_name|default:client_name|default:'该应用' }} 可以访问上述数据。<br>
                         您可以随时在设置中撤销此授权。
                     </p>
                 </div>
             </div>
 
             <!-- 用户信息 -->
+            {% if user %}
             <div class="user-info">
                 <div class="user-avatar">👤</div>
                 <span>以 {{ user.username }} 的身份授权</span>
             </div>
+            {% endif %}
 
             <!-- 操作按钮 -->
             <form method="POST">
                 {% csrf_token %}
-                <input type="hidden" name="client_id" value="{{ client.client_id }}">
-                <input type="hidden" name="redirect_uri" value="{{ redirect_uri }}">
+                <input type="hidden" name="client_id" value="{{ client.client_id|default:'' }}">
+                <input type="hidden" name="redirect_uri" value="{{ redirect_uri|default:'' }}">
                 <input type="hidden" name="response_type" value="code">
-                <input type="hidden" name="state" value="{{ state }}">
-                <input type="hidden" name="scope" value="{{ scope }}">
+                <input type="hidden" name="state" value="{{ state|default:'' }}">
+                <input type="hidden" name="scope" value="{{ scope|default:'' }}">
                 
                 <div class="action-buttons">
                     <button type="submit" name="action" value="deny" class="btn btn-cancel">

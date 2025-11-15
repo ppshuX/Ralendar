@@ -74,7 +74,7 @@ ROOT_URLCONF = 'calendar_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # 项目级模板目录
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

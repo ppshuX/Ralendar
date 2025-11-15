@@ -76,29 +76,46 @@ def oauth_authorize(request):
     
     # GET 请求：显示授权页面
     if request.method == 'GET':
-        from ...models import get_scope_description
-        
-        context = {
-            'client': client,
-            'client_name': client.client_name,
-            'client_description': client.client_description,
-            'logo_url': client.logo_url,
-            'scope': scope,
-            'scope_descriptions': get_scope_description(scope),
-            'redirect_uri': redirect_uri,
-            'state': state,
-            'user': request.user,
-            'is_authenticated': request.user.is_authenticated,
-            'next_url': request.get_full_path(),  # 授权完成后的回调URL
-        }
-        
-        # 如果未登录，模板会显示登录选项
-        if not request.user.is_authenticated:
-            logger.info(f"[OAuth] User not authenticated, showing login form on authorization page")
-        else:
-            logger.info(f"[OAuth] Showing authorization page for user {request.user.id}, client {client.client_name}")
-        
-        return render(request, 'oauth/authorize.html', context)
+        try:
+            from ...models import get_scope_description
+            
+            # 安全地获取 scope_descriptions
+            try:
+                scope_descriptions = get_scope_description(scope)
+            except Exception as e:
+                logger.error(f"[OAuth] Error getting scope descriptions: {str(e)}")
+                scope_descriptions = ['读取日历', '读取用户信息']  # 默认值
+            
+            context = {
+                'client': client,
+                'client_name': client.client_name or '未知应用',
+                'client_description': client.client_description or '',
+                'logo_url': client.logo_url or '',
+                'scope': scope,
+                'scope_descriptions': scope_descriptions,
+                'redirect_uri': redirect_uri,
+                'state': state,
+                'user': request.user if request.user.is_authenticated else None,
+                'is_authenticated': request.user.is_authenticated,
+                'next_url': request.get_full_path(),  # 授权完成后的回调URL
+            }
+            
+            # 如果未登录，模板会显示登录选项
+            if not request.user.is_authenticated:
+                logger.info(f"[OAuth] User not authenticated, showing login form on authorization page. Client: {client.client_name}")
+            else:
+                logger.info(f"[OAuth] Showing authorization page for user {request.user.id}, client {client.client_name}")
+            
+            return render(request, 'oauth/authorize.html', context)
+        except Exception as e:
+            logger.error(f"[OAuth] Error rendering authorization page: {str(e)}", exc_info=True)
+            return HttpResponse(
+                f'渲染授权页面时出错: {str(e)}<br><br>'
+                f'Client ID: {client_id}<br>'
+                f'Client: {client.client_name if client else "None"}<br>'
+                f'Authenticated: {request.user.is_authenticated}',
+                status=500
+            )
     
     # POST 请求：处理授权决定
     if request.method == 'POST':
