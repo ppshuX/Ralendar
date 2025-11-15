@@ -55,13 +55,21 @@ def oauth_web_login(request):
         # 这与普通QQ登录保持一致，避免需要配置多个回调地址
         REDIRECT_URI = f"{request.scheme}://{request.get_host()}/qq/callback"
         
-        # 将 next_url 存储在 session 中
+        # 将 next_url 存储在 session 中（用于回调后重定向）
         request.session['oauth_next_url'] = next_url
+        logger.info(f"[OAuth Login] Storing next_url in session: {next_url}")
+        
+        # 同时将 next_url 编码到 state 参数中，防止 session 丢失
+        # QQ的 state 参数可以传递自定义数据
+        import base64
+        import urllib.parse
+        encoded_next_url = base64.urlsafe_b64encode(next_url.encode('utf-8')).decode('utf-8')
+        state_param = f"qq_oauth_{encoded_next_url}"
         
         auth_url = (
             f"https://graph.qq.com/oauth2.0/authorize"
             f"?response_type=code&client_id={QQ_APPID}&redirect_uri={REDIRECT_URI}"
-            f"&state=qq&unionid=1"
+            f"&state={state_param}&unionid=1"
         )
         logger.info(f"[OAuth Login] Redirecting to QQ auth: {auth_url}")
         return redirect(auth_url)
@@ -171,11 +179,105 @@ def oauth_login_callback_qq(request):
         return HttpResponse('缺少授权码', status=400)
     
     # 获取存储的 next_url（OAuth流程会在session中存储）
-    # 如果没有，说明是普通QQ登录（API调用），需要返回JSON
+    # 如果没有，尝试从 state 参数或 referer 中恢复
     next_url = request.session.pop('oauth_next_url', None)
     is_oauth_flow = next_url is not None
+    
+    logger.info(f"[QQ Callback] Initial check: is_oauth_flow={is_oauth_flow}, next_url={next_url}")
+    
     if not is_oauth_flow:
-        next_url = '/oauth/authorize'  # 默认值，不会用到
+        logger.warning(f"[QQ Callback] No oauth_next_url in session, checking state parameter")
+        # Session 可能在跨域名时丢失（QQ授权在 graph.qq.com，回调回到我们的域名）
+        # 尝试从 state 参数中解析 next_url（我们在授权时将 next_url 编码到了 state 中）
+        state = request.GET.get('state', '')
+        logger.info(f"[QQ Callback] State parameter: {state[:100]}")  # 只记录前100个字符
+        
+        if state and state.startswith('qq_oauth_'):
+            try:
+                import base64
+                encoded_next_url = state.replace('qq_oauth_', '')
+                decoded_next_url = base64.urlsafe_b64decode(encoded_next_url.encode('utf-8')).decode('utf-8')
+                next_url = decoded_next_url
+                is_oauth_flow = True
+                logger.info(f"[QQ Callback] ✅ Recovered next_url from state parameter: {next_url}")
+            except Exception as e:
+                logger.error(f"[QQ Callback] ❌ Failed to decode next_url from state: {str(e)}")
+                # 如果解析失败，尝试从 referer 获取
+                referer = request.META.get('HTTP_REFERER', '')
+                logger.info(f"[QQ Callback] Checking referer: {referer}")
+                if referer and 'oauth/authorize' in referer:
+                    from urllib.parse import urlparse, parse_qs
+                    parsed = urlparse(referer)
+                    # 重建完整的授权URL，包括查询参数
+                    query_params = parse_qs(parsed.query)
+                    if query_params:
+                        from urllib.parse import urlencode
+                        query_string = urlencode(query_params, doseq=True)
+                        next_url = f"{parsed.path}?{query_string}"
+                    else:
+                        next_url = parsed.path
+                    is_oauth_flow = True
+                    logger.info(f"[QQ Callback] ✅ Recovered next_url from referer: {next_url}")
+                else:
+                    # 最后尝试从 GET 参数中获取原始请求参数
+                    # QQ可能不会保留原始参数，但我们可以尝试重建
+                    next_url = None  # 设置为None，后续会处理
+                    logger.warning(f"[QQ Callback] Could not recover next_url from state or referer")
+        
+        # 如果 state 不包含我们的标记，检查是否是QQ的默认state
+        elif state == 'qq':
+            # QQ默认state，可能是从普通QQ登录来的，不是OAuth流程
+            logger.info(f"[QQ Callback] QQ default state 'qq' detected, might be normal QQ login")
+            referer = request.META.get('HTTP_REFERER', '')
+            if referer and 'oauth/authorize' in referer:
+                from urllib.parse import urlparse, parse_qs
+                parsed = urlparse(referer)
+                query_params = parse_qs(parsed.query)
+                if query_params:
+                    from urllib.parse import urlencode
+                    query_string = urlencode(query_params, doseq=True)
+                    next_url = f"{parsed.path}?{query_string}"
+                else:
+                    next_url = parsed.path
+                is_oauth_flow = True
+                logger.info(f"[QQ Callback] ✅ Recovered next_url from referer (state=qq): {next_url}")
+        
+        # 如果还是没有找到 next_url，尝试从 referer 获取（即使没有state标记）
+        if not is_oauth_flow or not next_url:
+            referer = request.META.get('HTTP_REFERER', '')
+            logger.info(f"[QQ Callback] Final check - referer: {referer}, current is_oauth_flow: {is_oauth_flow}, next_url: {next_url}")
+            if referer and 'oauth/authorize' in referer:
+                from urllib.parse import urlparse, parse_qs
+                parsed = urlparse(referer)
+                query_params = parse_qs(parsed.query)
+                if query_params:
+                    from urllib.parse import urlencode
+                    query_string = urlencode(query_params, doseq=True)
+                    next_url = f"{parsed.path}?{query_string}"
+                else:
+                    next_url = parsed.path
+                is_oauth_flow = True
+                logger.info(f"[QQ Callback] ✅ Recovered next_url from referer (fallback): {next_url}")
+        
+        # 如果还是没有 next_url，说明可能不是OAuth流程，或者参数丢失了
+        if not next_url or not is_oauth_flow:
+            # 尝试从请求头中获取原始授权页面的URL（如果浏览器保留了）
+            referer = request.META.get('HTTP_REFERER', '')
+            if referer and 'oauth/authorize' in referer:
+                # 即使之前失败了，再次尝试从referer恢复
+                from urllib.parse import urlparse, parse_qs
+                parsed = urlparse(referer)
+                query_params = parse_qs(parsed.query)
+                if query_params:
+                    from urllib.parse import urlencode
+                    query_string = urlencode(query_params, doseq=True)
+                    next_url = f"{parsed.path}?{query_string}"
+                else:
+                    next_url = parsed.path
+                is_oauth_flow = True
+                logger.info(f"[QQ Callback] ✅ Recovered next_url from referer (last attempt): {next_url}")
+            else:
+                logger.warning(f"[QQ Callback] ❌ Could not recover next_url, user might stay at current page")
     
     QQ_APPID = getattr(settings, 'QQ_APPID', '')
     QQ_APPKEY = getattr(settings, 'QQ_APPKEY', '')
@@ -258,10 +360,45 @@ def oauth_login_callback_qq(request):
         
         # 使用Django的login函数设置session
         django_login(request, user)
-        logger.info(f"[OAuth Login] User {user.id} logged in via QQ, redirecting to {next_url}")
+        logger.info(f"[QQ Callback] User {user.id} logged in via QQ, is_oauth_flow: {is_oauth_flow}, next_url: {next_url}")
         
-        # 重定向回OAuth授权页面
-        return redirect(next_url)
+        # 如果是OAuth流程，重定向回授权页面（带原始参数）
+        if is_oauth_flow:
+            # 确保 next_url 包含完整的OAuth授权URL和参数
+            # next_url 应该已经是完整的URL，如 /oauth/authorize?client_id=xxx&...
+            # 如果 next_url 是相对路径，确保它以 / 开头
+            if not next_url.startswith('/'):
+                next_url = '/' + next_url
+            logger.info(f"[QQ Callback] Redirecting to authorization page: {next_url}")
+            return redirect(next_url)
+        else:
+            # 如果不是OAuth流程，可能是普通QQ登录（API调用）
+            # 这种情况下，用户已经在主界面了，不需要重定向
+            # 或者重定向到默认授权页面（如果没有 next_url）
+            logger.warning(f"[QQ Callback] No OAuth flow detected, user might be at main interface")
+            # 不要重定向，让用户停留在当前页面（可能是主界面）
+            return HttpResponse(
+                '''
+                <html>
+                <head><title>登录成功</title></head>
+                <body style="font-family: Arial; padding: 30px; text-align: center;">
+                    <h1>✅ QQ登录成功！</h1>
+                    <p>您已成功登录，请返回授权页面继续授权。</p>
+                    <p><a href="/oauth/authorize">返回授权页面</a></p>
+                    <script>
+                        // 尝试从 referer 获取原始授权页面
+                        const referer = document.referrer;
+                        if (referer && referer.includes('/oauth/authorize')) {
+                            setTimeout(() => {
+                                window.location.href = referer;
+                            }, 1000);
+                        }
+                    </script>
+                </body>
+                </html>
+                ''',
+                content_type='text/html; charset=utf-8'
+            )
         
     except Exception as e:
         logger.error(f"[OAuth Login] QQ login error: {str(e)}")
