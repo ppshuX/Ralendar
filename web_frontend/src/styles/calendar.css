@@ -215,8 +215,30 @@
   font-size: 14px;
 }
 
-/* 月视图：隐藏事件块，只显示圆点 */
+/* 月视图：显示事件块 */
 .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-event {
+  display: block;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: 1px 2px;
+  font-size: 11px;
+  background: linear-gradient(135deg, var(--ralendar-primary), var(--ralendar-secondary));
+  border: none;
+  color: white;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 月视图：隐藏节日小字标签 */
+.calendar-wrapper .fc.fc-dayGridMonth-view .holiday-label {
+  display: none;
+}
+
+/* 月视图：隐藏背景节日事件 */
+.calendar-wrapper .fc.fc-dayGridMonth-view .fc-bg-event {
   display: none;
 }
 
@@ -501,7 +523,7 @@
     z-index: 10;
   }
   
-  /* 确保节日小字显示 - 移动端优化 */
+  /* 移动端事件显示优化 */
   .calendar-wrapper .fc-daygrid-day {
     position: relative;
     overflow: visible;
@@ -512,35 +534,21 @@
     overflow: visible;
   }
   
-  .calendar-wrapper .fc-daygrid-day-events {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: 0;
+  /* 移动端月视图：隐藏节日，显示事件 */
+  .calendar-wrapper .fc.fc-dayGridMonth-view .holiday-label {
+    display: none;
   }
   
-  .calendar-wrapper .fc-bg-event {
-    opacity: 1;
-    padding: 0;
+  .calendar-wrapper .fc.fc-dayGridMonth-view .fc-bg-event {
+    display: none;
+  }
+  
+  /* 移动端月视图事件样式 */
+  .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-event {
+    display: block;
     font-size: 9px;
-    min-height: auto;
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-  }
-  
-  .calendar-wrapper .fc-bg-event.holiday-event {
-    background-color: rgba(255, 107, 107, 0.1);
-    opacity: 1;
+    padding: 1px 4px;
+    margin: 1px;
   }
   
   .calendar-wrapper .fc-bg-event .fc-event-title {
