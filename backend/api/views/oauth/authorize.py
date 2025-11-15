@@ -26,20 +26,12 @@ def oauth_authorize(request):
     URL: /oauth/authorize?client_id=xxx&redirect_uri=xxx&response_type=code&state=xxx&scope=xxx
     """
     
-    # 日志记录
-    logger.info(f"[OAuth] oauth_authorize called - Method: {request.method}, Path: {request.path}, User: {request.user}")
-    logger.info(f"[OAuth] GET params: {dict(request.GET)}")
-    if request.method == 'POST':
-        logger.info(f"[OAuth] POST params: {dict(request.POST)}")
-    
     # 获取参数
     client_id = request.GET.get('client_id') or request.POST.get('client_id')
     redirect_uri = request.GET.get('redirect_uri') or request.POST.get('redirect_uri')
     response_type = request.GET.get('response_type') or request.POST.get('response_type')
     state = request.GET.get('state') or request.POST.get('state', '')
     scope = request.GET.get('scope') or request.POST.get('scope', 'calendar:read user:read')
-    
-    logger.info(f"[OAuth] Parsed params - client_id: {client_id}, redirect_uri: {redirect_uri}, response_type: {response_type}, state: {state[:50] if state else 'None'}, scope: {scope}")
     
     # 参数验证
     if not all([client_id, redirect_uri, response_type]):
@@ -115,9 +107,6 @@ def oauth_authorize(request):
             
             # 如果未登录，模板会显示登录选项
             if not request.user.is_authenticated:
-                logger.info(f"[OAuth] User not authenticated, showing login form on authorization page. Client: {client.client_name}")
-            else:
-                logger.info(f"[OAuth] Showing authorization page for user {request.user.id}, client {client.client_name}")
             
             # 调试信息：检查模板是否存在
             from django.template.loader import get_template
@@ -178,11 +167,6 @@ def oauth_authorize(request):
     
     # POST 请求：处理授权决定
     if request.method == 'POST':
-        logger.info(f"[OAuth] 🔵 POST request received at /oauth/authorize")
-        logger.info(f"[OAuth] POST data: {dict(request.POST)}")
-        logger.info(f"[OAuth] User authenticated: {request.user.is_authenticated}")
-        logger.info(f"[OAuth] CSRF token in POST: {request.POST.get('csrfmiddlewaretoken', 'NOT FOUND')}")
-        
         # 必须登录
         if not request.user.is_authenticated:
             logger.warning(f"[OAuth] POST request without authentication")
@@ -250,16 +234,10 @@ def oauth_authorize(request):
                 )
             
             redirect_url = f"{redirect_uri}?{urlencode(params)}"
-            logger.info(f"[OAuth] ✅ Redirecting to {redirect_uri} with authorization code {auth_code.code[:20]}...")
-            logger.info(f"[OAuth] ✅ Full redirect URL: {redirect_url}")
-            logger.info(f"[OAuth] ✅ Redirect params: {params}")
-            logger.info(f"[OAuth] ✅ About to execute HttpResponseRedirect to: {redirect_url}")
+            logger.info(f"[OAuth] User {request.user.id} authorized client {client.client_name}, redirecting to {redirect_uri}")
             
             # 使用 HttpResponseRedirect 确保重定向执行
-            # 返回 302 重定向响应，浏览器会自动跳转
-            response = HttpResponseRedirect(redirect_url)
-            logger.info(f"[OAuth] ✅ HttpResponseRedirect created successfully, status_code: {response.status_code}")
-            return response
+            return HttpResponseRedirect(redirect_url)
         
         elif action == 'deny':
             # 用户拒绝授权
@@ -274,8 +252,7 @@ def oauth_authorize(request):
                 params['state'] = state
             
             redirect_url = f"{redirect_uri}?{urlencode(params)}"
-            logger.info(f"[OAuth] Redirecting to {redirect_uri} with access_denied error")
-            logger.info(f"[OAuth] Full deny redirect URL: {redirect_url}")
+            logger.info(f"[OAuth] User {request.user.id} denied authorization for client {client.client_name}, redirecting to {redirect_uri}")
             
             # 使用 HttpResponseRedirect 确保重定向执行
             return HttpResponseRedirect(redirect_url)
