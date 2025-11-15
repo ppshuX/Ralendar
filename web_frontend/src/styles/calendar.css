@@ -60,6 +60,13 @@
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   padding: 20px;
+  /* 防止内容水平超出卡片，垂直方向允许滚动 */
+  overflow-x: hidden;
+  overflow-y: visible;
+  box-sizing: border-box;
+  /* 确保内容包裹在卡片内 */
+  width: 100%;
+  max-width: 100%;
 }
 
 /* ==================== FullCalendar 基础样式 ==================== */
@@ -135,10 +142,32 @@
 .calendar-wrapper .fc-scroller {
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  /* 确保不超出卡片 */
+  max-width: 100%;
 }
 
 .calendar-wrapper .fc-timegrid-body {
   overflow: visible !important;
+}
+
+/* 确保表格不超出卡片 */
+.calendar-wrapper .fc-scrollgrid {
+  width: 100% !important;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.calendar-wrapper .fc-scrollgrid-sync-table {
+  width: 100% !important;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.calendar-wrapper .fc-col-header,
+.calendar-wrapper .fc-daygrid-body {
+  width: 100% !important;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* 日期数字 - 根据格子大小自适应 */
@@ -305,9 +334,13 @@
   /* 移动端日历卡片样式 */
   .calendar-wrapper .fc {
     width: 100%;
+    max-width: 100%;
     height: auto;
     padding: 16px;
     border-radius: 12px;
+    overflow-x: hidden;
+    overflow-y: visible;
+    box-sizing: border-box;
   }
   
   .calendar-wrapper .fc-view-harness {
@@ -414,6 +447,11 @@
     height: auto !important;
     padding: 12px !important;
     border-radius: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    box-sizing: border-box !important;
   }
   
   .calendar-wrapper .fc-daygrid-day {
