@@ -53,6 +53,9 @@ adapp/*
 !.env.example
 backend/ENV_PRODUCTION_READY_TO_COPY.txt
 
+# 云端配置目录（包含敏感信息，仅本地使用）
+cloud_settings/
+
 # OAuth 凭证（敏感信息）
 *CREDENTIALS_PRIVATE*
 *_SECRET*
