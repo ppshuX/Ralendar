@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
 
 # Import QQ callback handler
 from api.views.oauth.login import oauth_login_callback_qq
@@ -28,6 +29,10 @@ urlpatterns = [
     # QQ回调地址（必须在根路径，因为QQ开放平台只能配置一个回调地址）
     # 统一使用 /qq/callback，同时处理OAuth登录和普通QQ登录
     path('qq/callback', oauth_login_callback_qq, name='qq_callback'),
+    
+    # 法律文档页面
+    path('terms', TemplateView.as_view(template_name='terms.html'), name='terms'),
+    path('privacy', TemplateView.as_view(template_name='privacy.html'), name='privacy'),
     
     # OAuth 2.0 路由（需要在根路径，因为第三方应用可能直接访问 /oauth/authorize）
     path('oauth/', include('api.url_patterns.oauth')),
