@@ -234,6 +234,10 @@
                     {% if client and client.logo_url %}
                     <img src="{{ client.logo_url }}" alt="{{ client.client_name|default:'未知应用' }}"
                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px;">
+                    {% elif client and client.client_name == 'Roamio' %}
+                    <!-- Roamio 专用 Logo（放在站点根目录，例如 /roamio.webp） -->
+                    <img src="/roamio.webp" alt="Roamio"
+                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px;">
                     {% else %}
                     📱
                     {% endif %}

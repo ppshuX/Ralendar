@@ -155,11 +155,8 @@ const handleDateSelected = (dateStr) => {
   
   // 如果当前在节假日标签页，需要立即更新显示
   // 注意：数据已经在 loadHolidaysForSelectedDate 中更新，这里只是确保响应式更新
-  if (activeTab.value === 'holiday') {
-    // 数据已经加载，无需再次加载
-    // 但确保 todayHolidays 已经更新
-    console.log('日期选中，当前在节假日标签页，数据已更新:', todayHolidays.value)
-  }
+  // 如果当前在节假日标签页，数据会自动通过响应式更新
+  // 无需额外日志输出
   
   // 只有登录后才自动切换到日程列表标签
   if (checkLoginStatus()) {
@@ -177,10 +174,8 @@ const loadHolidaysForSelectedDate = async (dateStr) => {
   // 提取日期部分（YYYY-MM-DD），去掉时间和时区
   const dateOnly = dateStr.split('T')[0]
   
-  console.log('加载选中日期的节假日:', dateOnly)
   const holidays = await getHolidaysForDate(dateOnly)
   todayHolidays.value = holidays
-  console.log('节假日数据已更新:', holidays)
   
   // 强制刷新日历显示
   if (fullCalendarRef.value) {
@@ -383,7 +378,6 @@ calendarOptions.value.dayCellDidMount = (arg) => {
       visibility: visible;
     `
     arg.el.appendChild(holidayLabel)
-    console.log('✅ 添加节日标签:', dateStr, holiday.name, holidayLabel)
   }
   
   const count = getEventsCountForDate(dateStr)
@@ -503,8 +497,6 @@ const openAddDialogForSelectedDate = () => {
 const refreshEventDots = () => {
   setTimeout(() => {
     const dayCells = document.querySelectorAll('.fc-daygrid-day')
-    console.log('刷新事件圆点和节日标签，找到', dayCells.length, '个日期单元格')
-    console.log('当前节假日映射:', holidaysMap.value)
     
     dayCells.forEach(cell => {
       // 移除旧圆点
@@ -549,7 +541,6 @@ const refreshEventDots = () => {
               pointer-events: none;
             `
             cell.appendChild(holidayLabel)
-            console.log('刷新时添加节日标签（从fc-date）:', dateStr, holiday.name)
           }
         }
         return
@@ -636,7 +627,6 @@ const refreshEventDots = () => {
           visibility: visible;
         `
         cell.appendChild(holidayLabel)
-        console.log('刷新时添加节日标签:', dateStr, holiday.name)
       }
     })
   }, 100)
@@ -649,8 +639,7 @@ watch(eventsList, () => {
 })
 
 // 监听节假日数据变化，自动更新日历和节日标签
-watch(holidaysMap, (newMap) => {
-  console.log('节假日数据变化，更新日历:', Object.keys(newMap).length, '个节日')
+watch(holidaysMap, () => {
   updateCalendarEvents()
   setTimeout(() => {
     refreshEventDots()  // 刷新时也会更新节日标签
@@ -666,30 +655,27 @@ watch(activeTab, async (newTab) => {
   if (newTab === 'holiday') {
     // 如果有选中的日期，加载该日期的节假日；否则加载今天的
     if (selectedDateForFilter.value) {
-      console.log('切换到节假日标签页，加载选中日期:', selectedDateForFilter.value)
       await loadHolidaysForSelectedDate(selectedDateForFilter.value)
     } else {
-      console.log('切换到节假日标签页，没有选中日期，加载今天')
       await loadTodayHolidays()
     }
   }
 })
 
 // 监听选中日期变化，如果当前在节假日标签页，需要重新加载数据
-watch(selectedDateForFilter, async (newDate, oldDate) => {
-  if (activeTab.value === 'holiday' && newDate) {
-    console.log('选中日期变化，当前在节假日标签页，重新加载:', newDate)
-    await loadHolidaysForSelectedDate(newDate)
+watch(
+  selectedDateForFilter,
+  async (newDate) => {
+    if (activeTab.value === 'holiday' && newDate) {
+      await loadHolidaysForSelectedDate(newDate)
+    }
   }
-})
+)
 
 onMounted(async () => {
   checkLoginStatus()
   await loadHolidays()
   await loadTodayHolidays()
-  
-  console.log('节假日数据已加载:', Object.keys(holidaysMap.value).length, '个节日')
-  console.log('节假日数据:', holidaysMap.value)
   
   // 节假日加载后更新日历
   updateCalendarEvents()
@@ -708,21 +694,13 @@ onMounted(async () => {
   }
 })
 
-function handleLogin() {
-  console.info('login action placeholder')
-}
+function handleLogin() {}
 
-function handleRegister() {
-  console.info('register action placeholder')
-}
+function handleRegister() {}
 
-function handleLogout() {
-  console.info('logout action placeholder')
-}
+function handleLogout() {}
 
-function handleSubscribe() {
-  console.info('subscribe action placeholder')
-}
+function handleSubscribe() {}
 
 // 处理AI创建的日程
 const handleAICreate = async (eventData) => {
