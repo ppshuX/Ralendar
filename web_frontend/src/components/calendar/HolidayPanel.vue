@@ -126,9 +126,20 @@ const allFestivals = computed(() => {
     expectedDate = props.selectedDateIso.split('T')[0]
   }
   
-  // 如果 todayHolidays.date 与期望的日期不匹配，说明数据还没更新，返回空数组
-  if (expectedDate && props.todayHolidays?.date && props.todayHolidays.date !== expectedDate) {
-    return []
+  // 日期验证逻辑：
+  // 1. 如果 expectedDate 存在（有选中日期），必须验证 todayHolidays.date 是否匹配
+  // 2. 如果 todayHolidays.date 不存在，说明数据格式有问题，返回空数组
+  // 3. 如果日期不匹配，说明数据还没更新（可能是旧数据），返回空数组
+  if (expectedDate) {
+    // 有选中日期时，必须验证
+    if (!props.todayHolidays?.date) {
+      // 数据格式不完整，返回空数组
+      return []
+    }
+    if (props.todayHolidays.date !== expectedDate) {
+      // 日期不匹配，可能是旧数据，返回空数组
+      return []
+    }
   }
   
   const festivals = []

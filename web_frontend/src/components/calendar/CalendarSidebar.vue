@@ -20,6 +20,7 @@
       <HolidayPanel 
         :today-holidays="todayHolidays" 
         :selected-date-label="selectedDate"
+        :selected-date-iso="selectedDateIso"
         :holidays-map="holidaysMap"
       />
     </div>
@@ -60,6 +61,10 @@ const props = defineProps({
     default: () => null
   },
   selectedDate: {
+    type: String,
+    default: ''
+  },
+  selectedDateIso: {
     type: String,
     default: ''
   },
