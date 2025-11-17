@@ -2,7 +2,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <bitmap
-            android:src="@drawable/new_logo"
+            android:src="@drawable/logo"
             android:gravity="center" />
     </item>
 </layer-list>
