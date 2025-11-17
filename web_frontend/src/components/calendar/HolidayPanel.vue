@@ -16,8 +16,8 @@
         </p>
       </div>
 
-    <!-- 农历信息卡片：有数据才显示 -->
-    <div v-if="todayHolidays?.lunar" class="holiday-card lunar">
+    <!-- 农历信息卡片：有数据才显示（且不在加载状态） -->
+    <div v-if="todayHolidays && todayHolidays.lunar" class="holiday-card lunar">
       <div class="holiday-icon">🏮</div>
       <div class="holiday-info">
         <div class="holiday-name">农历</div>
@@ -26,9 +26,11 @@
     </div>
 
     <!-- 所有节日统一显示（使用4色循环，法定节假日也在里面） -->
+    <!-- 只在有数据且不在加载状态时显示 -->
     <div
+      v-if="todayHolidays !== null"
       v-for="(festival, index) in allFestivals"
-      :key="`festival-${index}`"
+      :key="`festival-${todayHolidays?.date || 'unknown'}-${index}-${festival.name}`"
       class="holiday-card"
       :class="getFestivalColorClass(index)"
       @click="showFestivalDetail(festival)"
@@ -107,6 +109,11 @@ const displayDateLabel = computed(() => {
 
 // 所有节日（合并API和holidaysMap的数据）
 const allFestivals = computed(() => {
+  // 如果数据正在加载（todayHolidays 为 null），返回空数组
+  if (props.todayHolidays === null) {
+    return []
+  }
+  
   const festivals = []
   
   // 1. 从 API 返回的数据中获取传统节日和国际节日
@@ -125,11 +132,10 @@ const allFestivals = computed(() => {
   }
   
   // 2. 从 holidaysMap 中获取该日期的节日（法定节假日等）
-  if (props.selectedDateLabel && props.holidaysMap) {
-    // 解析选中日期标签，提取日期字符串
-    // 尝试从 todayHolidays 中获取日期
-    const dateStr = props.todayHolidays?.date
-    if (dateStr && props.holidaysMap[dateStr]) {
+  // 只使用 todayHolidays.date 来匹配，确保是当前选中日期的数据
+  if (props.todayHolidays?.date && props.holidaysMap) {
+    const dateStr = props.todayHolidays.date
+    if (props.holidaysMap[dateStr]) {
       const holiday = props.holidaysMap[dateStr]
       // 检查是否已经存在同名节日，避免重复
       const exists = festivals.some(f => f.name === holiday.name)
