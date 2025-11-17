@@ -659,19 +659,34 @@ watch(activeTab, async (newTab) => {
   if (newTab === 'holiday') {
     // 如果有选中的日期，加载该日期的节假日；否则加载今天的
     if (selectedDateForFilter.value) {
-      await loadHolidaysForSelectedDate(selectedDateForFilter.value)
+      const dateOnly = selectedDateForFilter.value.split('T')[0]
+      // 检查是否已经有对应日期的数据，避免重复加载
+      if (!todayHolidays.value || todayHolidays.value.date !== dateOnly) {
+        await loadHolidaysForSelectedDate(selectedDateForFilter.value)
+      }
     } else {
-      await loadTodayHolidays()
+      // 没有选中日期时，检查是否已经有今天的数据
+      const todayStr = new Date().toISOString().split('T')[0]
+      if (!todayHolidays.value || todayHolidays.value.date !== todayStr) {
+        await loadTodayHolidays()
+      }
     }
   }
 })
 
 // 监听选中日期变化，如果当前在节假日标签页，需要重新加载数据
+// 注意：handleDateSelected 已经会调用 loadHolidaysForSelectedDate，这里只处理非直接点击的情况
 watch(
   selectedDateForFilter,
-  async (newDate) => {
-    if (activeTab.value === 'holiday' && newDate) {
-      await loadHolidaysForSelectedDate(newDate)
+  async (newDate, oldDate) => {
+    // 只有当切换到节假日标签页时，且日期确实变化了，才加载
+    // 避免与 handleDateSelected 中的调用重复
+    if (activeTab.value === 'holiday' && newDate && newDate !== oldDate) {
+      // 检查是否已经有对应日期的数据，避免重复加载
+      const dateOnly = newDate.split('T')[0]
+      if (!todayHolidays.value || todayHolidays.value.date !== dateOnly) {
+        await loadHolidaysForSelectedDate(newDate)
+      }
     }
   }
 )
