@@ -19,6 +19,9 @@
         </div>
         <div class="section-content">
           <div v-if="loadingIntro" class="loading-text">AI生成中...</div>
+          <div v-else-if="introError" class="error-text">
+            <p>加载失败，但您仍可以在下方向AI提问！</p>
+          </div>
           <p v-else>{{ festivalIntro }}</p>
         </div>
       </div>
@@ -95,6 +98,7 @@ defineEmits(['close'])
 // 状态
 const festivalIntro = ref('')
 const loadingIntro = ref(false)
+const introError = ref(false)
 const chatHistory = ref([])
 const userInput = ref('')
 const loading = ref(false)
@@ -143,26 +147,36 @@ const getDefaultDescription = (name) => {
 
 // 生成节日介绍（可选：调用AI）
 const generateIntro = async () => {
-  // 先显示默认介绍
-  festivalIntro.value = getDefaultDescription(props.festival.name)
+  introError.value = false
+  loadingIntro.value = false
   
-  // 如果想用AI生成更详细的介绍，取消下面的注释
-  /*
-  loadingIntro.value = true
   try {
-    const systemPrompt = `你是节日知识专家，请简要介绍${props.festival.name}。要求：200字以内，包含历史由来、重要意义。`
-    const response = await aiAPI.chat(`请介绍${props.festival.name}`, {
-      system_prompt: systemPrompt
-    })
-    if (response.success) {
-      festivalIntro.value = response.reply
+    // 先显示默认介绍
+    festivalIntro.value = getDefaultDescription(props.festival.name)
+    
+    // 如果想用AI生成更详细的介绍，取消下面的注释
+    /*
+    loadingIntro.value = true
+    try {
+      const systemPrompt = `你是节日知识专家，请简要介绍${props.festival.name}。要求：200字以内，包含历史由来、重要意义。`
+      const response = await aiAPI.chat(`请介绍${props.festival.name}`, {
+        system_prompt: systemPrompt
+      })
+      if (response.success) {
+        festivalIntro.value = response.reply
+      }
+    } catch (error) {
+      console.error('AI生成介绍失败:', error)
+      introError.value = true
+    } finally {
+      loadingIntro.value = false
     }
+    */
   } catch (error) {
-    console.error('AI生成介绍失败:', error)
-  } finally {
+    console.error('加载节日介绍失败:', error)
+    introError.value = true
     loadingIntro.value = false
   }
-  */
 }
 
 // 询问问题
@@ -207,7 +221,7 @@ const askQuestion = async (question) => {
       })
     }
   } catch (error) {
-    console.error('AI问答失败:', error)
+    // AI问答失败，已在UI中显示错误信息
     chatHistory.value.push({
       role: 'assistant',
       content: '网络错误，请检查连接后重试。'
@@ -320,6 +334,16 @@ onMounted(() => {
   font-size: 13px;
   color: #999;
   font-style: italic;
+}
+
+.error-text {
+  font-size: 13px;
+  color: #e74c3c;
+  line-height: 1.6;
+}
+
+.error-text p {
+  margin: 0;
 }
 
 .quick-questions {

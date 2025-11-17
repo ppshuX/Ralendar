@@ -121,11 +121,6 @@ const allFestivals = computed(() => {
     }
   }
   
-  console.log('节日数据:', props.todayHolidays)
-  console.log('传统节日:', traditional)
-  console.log('国际节日:', international)
-  console.log('所有节日:', festivals)
-  
   return festivals
 })
 
@@ -141,7 +136,6 @@ const showFestivalDetail = (festival) => {
   
   selectedFestival.value = festival
   showingDetail.value = true
-  console.log('显示节日详情:', festival)
 }
 </script>
 

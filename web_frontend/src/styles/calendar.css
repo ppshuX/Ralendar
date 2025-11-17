@@ -67,6 +67,9 @@
   /* 确保内容包裹在卡片内 */
   width: 100%;
   max-width: 100%;
+  /* 确保内容不会溢出容器 */
+  position: relative;
+  contain: layout style;
 }
 
 /* ==================== FullCalendar 基础样式 ==================== */

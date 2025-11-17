@@ -867,13 +867,19 @@ const handleAICreate = async (eventData) => {
     height: 650px;
     max-height: 650px;
     min-height: 650px;
+    /* 确保内容包裹在容器内 */
+    overflow: hidden;
+    position: relative;
   }
 }
 
 .calendar-page .calendar-wrapper {
   width: 100%;
   max-width: 100%;
-  overflow: visible;
+  /* 确保内容不会溢出 */
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
 }
 
 .right-sidebar {

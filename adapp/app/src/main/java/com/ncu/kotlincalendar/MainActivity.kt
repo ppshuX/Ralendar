@@ -485,7 +485,7 @@ class MainActivity : AppCompatActivity() {
                     // 云端模式：从API获取
                     val result = eventRepository.getAllEvents()
                     userEvents = result.getOrElse { emptyList() }
-                } else {
+                    } else {
                     // 本地模式：从数据库获取
                     userEvents = eventDao.getUserEvents()
                 }
@@ -751,9 +751,9 @@ class MainActivity : AppCompatActivity() {
                 try {
                     val subscription = subscriptionDao.getAllSubscriptions().find { it.id == event.subscriptionId }
                     subscriptionName = subscription?.name
-                    
-                    // 获取农历信息
-                    getLunarDate(event.dateTime) { lunar ->
+        
+        // 获取农历信息
+        getLunarDate(event.dateTime) { lunar ->
                         val message = buildString {
                             append("📅 日期：$dateStr\n\n")
                             append("📝 标题：${event.title}\n\n")
@@ -793,28 +793,28 @@ class MainActivity : AppCompatActivity() {
         } else {
             // 用户创建的日程，直接显示
             getLunarDate(event.dateTime) { lunar ->
-                val message = buildString {
-                    append("📅 日期：$dateStr\n\n")
-                    append("📝 标题：${event.title}\n\n")
-                    if (event.description.isNotEmpty()) {
-                        append("💬 描述：${event.description}\n\n")
-                    }
+            val message = buildString {
+                append("📅 日期：$dateStr\n\n")
+                append("📝 标题：${event.title}\n\n")
+                if (event.description.isNotEmpty()) {
+                    append("💬 描述：${event.description}\n\n")
+                }
                     if (lunar.isNotEmpty()) {
                         append("🏮 农历：$lunar")
-                    }
                 }
-                
-                AlertDialog.Builder(this)
-                    .setTitle("📋 日程详情")
-                    .setMessage(message)
-                    .setPositiveButton("编辑") { _, _ ->
-                        showAddEventDialog(event)
-                    }
-                    .setNegativeButton("删除") { _, _ ->
+            }
+            
+            AlertDialog.Builder(this)
+                .setTitle("📋 日程详情")
+                .setMessage(message)
+                .setPositiveButton("编辑") { _, _ ->
+                    showAddEventDialog(event)
+                }
+                .setNegativeButton("删除") { _, _ ->
                         showDeleteConfirmDialog(event)
-                    }
-                    .setNeutralButton("关闭", null)
-                    .show()
+                }
+                .setNeutralButton("关闭", null)
+                .show()
             }
         }
     }
@@ -1459,12 +1459,12 @@ class MainActivity : AppCompatActivity() {
             btnParse.isEnabled = false
             
             // 调用AI接口
-            lifecycleScope.launch(Dispatchers.IO) {
-                try {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
                     val request = com.ncu.kotlincalendar.api.models.ParseEventRequest(userInput)
                     val response = RetrofitClient.api.parseEventFromText(request)
-                    
-                    withContext(Dispatchers.Main) {
+                
+                withContext(Dispatchers.Main) {
                         llLoading.visibility = View.GONE
                         btnParse.isEnabled = true
                         
@@ -1510,8 +1510,8 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
                         llLoading.visibility = View.GONE
                         btnParse.isEnabled = true
                         tvError.text = "网络错误：${e.message}"
