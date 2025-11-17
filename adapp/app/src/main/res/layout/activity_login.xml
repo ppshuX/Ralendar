@@ -49,7 +49,6 @@
             android:background="@drawable/button_qq"
             android:drawableStart="@drawable/logo"
             android:drawablePadding="8dp"
-            android:drawableTint="@android:color/white"
             android:gravity="center"
             android:elevation="4dp" />
 
