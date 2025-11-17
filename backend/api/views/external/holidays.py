@@ -380,12 +380,29 @@ def get_festival_detail(request):
             except ValueError:
                 return Response({'error': '日期格式错误'}, status=400)
         
-        # 如果提供了名称，遍历查找
+        # 如果提供了名称，遍历查找（支持精确匹配和部分匹配）
         if festival_name:
+            # 先尝试精确匹配
             for year_data in festivals_data.values():
                 for date_key, festival_info in year_data.items():
                     if festival_info.get('name') == festival_name:
                         return Response(festival_info)
+            
+            # 如果精确匹配失败，尝试部分匹配（支持"光棍节 / 双11购物节"这样的复合名称）
+            # 将查询名称按"/"分割，尝试匹配每个部分
+            name_parts = [part.strip() for part in festival_name.split('/')]
+            for year_data in festivals_data.values():
+                for date_key, festival_info in year_data.items():
+                    stored_name = festival_info.get('name', '')
+                    # 检查查询名称的任何部分是否在存储的名称中
+                    for part in name_parts:
+                        if part and part in stored_name:
+                            return Response(festival_info)
+                    # 也检查存储名称的任何部分是否在查询名称中
+                    stored_parts = [p.strip() for p in stored_name.split('/')]
+                    for stored_part in stored_parts:
+                        if stored_part and stored_part in festival_name:
+                            return Response(festival_info)
         
         return Response({
             'error': '未找到节日信息',
