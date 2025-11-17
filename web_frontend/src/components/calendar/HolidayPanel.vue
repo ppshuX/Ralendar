@@ -86,6 +86,10 @@ const props = defineProps({
     type: String,
     default: ''
   },
+  selectedDateIso: {
+    type: String,
+    default: ''
+  },
   holidaysMap: {
     type: Object,
     default: () => ({})
@@ -114,6 +118,19 @@ const allFestivals = computed(() => {
     return []
   }
   
+  // 关键修复：验证 todayHolidays.date 是否与当前选中日期匹配
+  // 如果 selectedDateIso 存在，提取日期部分（YYYY-MM-DD）进行匹配
+  let expectedDate = null
+  if (props.selectedDateIso) {
+    // selectedDateIso 可能是 ISO 格式 "2025-11-17T00:00:00"，需要提取日期部分
+    expectedDate = props.selectedDateIso.split('T')[0]
+  }
+  
+  // 如果 todayHolidays.date 与期望的日期不匹配，说明数据还没更新，返回空数组
+  if (expectedDate && props.todayHolidays?.date && props.todayHolidays.date !== expectedDate) {
+    return []
+  }
+  
   const festivals = []
   
   // 1. 从 API 返回的数据中获取传统节日和国际节日
@@ -132,19 +149,23 @@ const allFestivals = computed(() => {
   }
   
   // 2. 从 holidaysMap 中获取该日期的节日（法定节假日等）
-  // 只使用 todayHolidays.date 来匹配，确保是当前选中日期的数据
+  // 使用 todayHolidays.date 来匹配，并再次验证日期一致性
   if (props.todayHolidays?.date && props.holidaysMap) {
     const dateStr = props.todayHolidays.date
-    if (props.holidaysMap[dateStr]) {
-      const holiday = props.holidaysMap[dateStr]
-      // 检查是否已经存在同名节日，避免重复
-      const exists = festivals.some(f => f.name === holiday.name)
-      if (!exists) {
-        festivals.push({
-          name: holiday.name,
-          emoji: holiday.emoji || '🎉',
-          type: holiday.type
-        })
+    
+    // 再次验证：确保日期匹配
+    if (!expectedDate || dateStr === expectedDate) {
+      if (props.holidaysMap[dateStr]) {
+        const holiday = props.holidaysMap[dateStr]
+        // 检查是否已经存在同名节日，避免重复
+        const exists = festivals.some(f => f.name === holiday.name)
+        if (!exists) {
+          festivals.push({
+            name: holiday.name,
+            emoji: holiday.emoji || '🎉',
+            type: holiday.type
+          })
+        }
       }
     }
   }
