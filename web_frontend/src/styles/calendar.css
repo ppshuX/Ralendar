@@ -424,6 +424,11 @@
   .calendar-wrapper .fc-daygrid-day-number {
     font-size: 13px;
     font-weight: 700;
+    /* 移动端居中显示 */
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   /* 确保日历不被遮挡 - 添加顶部间距 */
@@ -508,6 +513,11 @@
   .calendar-wrapper .fc-daygrid-day-number {
     padding: 1px 2px;
     font-size: 11px;
+    /* 移动端居中显示 */
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   /* 确保工具栏不被遮挡 */
@@ -588,9 +598,12 @@
   }
   
   .calendar-wrapper .fc-daygrid-day-number {
-    position: absolute;
-    bottom: 1px;
-    right: 2px;
+    /* 移动端居中显示，不使用绝对定位 */
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
     z-index: 5;
     font-weight: 600;
   }
