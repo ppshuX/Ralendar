@@ -428,16 +428,20 @@
     height: 5px;
   }
   
-  /* 周标题 - 字体稍小 */
+  /* 周标题 - 字体缩小 */
   .calendar-wrapper .fc-col-header-cell {
     padding: 6px 2px;
-    font-size: 11px;
+    font-size: 11px !important;
     font-weight: 600;
   }
   
-  /* 日期数字 - 字体稍小 */
+  .calendar-wrapper .fc-col-header-cell-cushion {
+    font-size: 11px !important;
+  }
+  
+  /* 日期数字 - 字体缩小 */
   .calendar-wrapper .fc-daygrid-day-number {
-    font-size: 13px;
+    font-size: 13px !important;
     font-weight: 700;
     /* 移动端居中显示 */
     text-align: center;
@@ -530,12 +534,16 @@
   
   .calendar-wrapper .fc-col-header-cell {
     padding: 4px 2px;
-    font-size: 10px;
+    font-size: 10px !important;
+  }
+  
+  .calendar-wrapper .fc-col-header-cell-cushion {
+    font-size: 10px !important;
   }
   
   .calendar-wrapper .fc-daygrid-day-number {
     padding: 1px 2px;
-    font-size: 11px;
+    font-size: 11px !important;
     /* 移动端居中显示 */
     text-align: center;
     display: flex;
