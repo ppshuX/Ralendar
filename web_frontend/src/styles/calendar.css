@@ -79,11 +79,18 @@
   margin-bottom: 15px;
 }
 
+/* 工具栏标题（日期显示） */
+.calendar-wrapper .fc-toolbar-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
 /* 按钮样式 */
 .calendar-wrapper .fc-button {
   border-radius: 8px;
   font-weight: 500;
   padding: 6px 12px;
+  font-size: 14px;
   transition: all 0.2s ease;
 }
 
@@ -393,13 +400,21 @@
 
   /* 调整字体大小 - 移动端字体缩小 */
   .calendar-wrapper .fc-toolbar-title {
-    font-size: 12px;
+    font-size: 12px !important;
     font-weight: 700;
   }
 
   .calendar-wrapper .fc-button {
-    font-size: 10px;
+    font-size: 10px !important;
     padding: 4px 6px;
+  }
+  
+  .calendar-wrapper .fc-button-group .fc-button {
+    font-size: 10px !important;
+  }
+  
+  .calendar-wrapper .fc-today-button {
+    font-size: 10px !important;
   }
 
   /* 节假日文字 */
@@ -497,12 +512,20 @@
   }
   
   .calendar-wrapper .fc-toolbar-title {
-    font-size: 11px;
+    font-size: 11px !important;
   }
   
   .calendar-wrapper .fc-button {
-    font-size: 9px;
+    font-size: 9px !important;
     padding: 2px 4px;
+  }
+  
+  .calendar-wrapper .fc-button-group .fc-button {
+    font-size: 9px !important;
+  }
+  
+  .calendar-wrapper .fc-today-button {
+    font-size: 9px !important;
   }
   
   .calendar-wrapper .fc-col-header-cell {
