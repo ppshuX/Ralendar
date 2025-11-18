@@ -1406,9 +1406,11 @@ class MainActivity : AppCompatActivity() {
     
     /**
      * 显示添加日程对话框（传统方式）
+     * 调用可复用的对话框组件
      */
     private fun showAddEventDialog() {
-        Toast.makeText(this, "传统添加日程功能（待实现）", Toast.LENGTH_SHORT).show()
+        // 使用可复用的对话框组件，传入null表示新建日程
+        showAddEventDialog(null)
     }
     
     /**
