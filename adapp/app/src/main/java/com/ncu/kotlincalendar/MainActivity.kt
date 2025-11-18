@@ -556,8 +556,18 @@ class MainActivity : AppCompatActivity() {
                 val allEvents = userEvents + subscriptionEvents
                 
                 withContext(Dispatchers.Main) {
+                    // 更新事件列表（只保留当前日期的事件）
                     eventsList.clear()
                     eventsList.addAll(allEvents)
+                    // 同步更新datesWithEvents以便日历标记正确显示
+                    allEvents.forEach { event ->
+                        val eventDate = Instant.ofEpochMilli(event.dateTime)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                        if (event.subscriptionId == null) {
+                            datesWithEvents.add(eventDate)
+                        }
+                    }
                     updateEventsList()
                 }
             } catch (e: Exception) {
@@ -614,12 +624,42 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 
-                // 重新加载数据
+                // 重新加载数据（确保在同一个协程中顺序执行）
                 selectedDate?.let { 
                     val millis = it.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                    loadEventsForSelectedDate(millis)
+                    // 先加载当前日期的事件（等待完成）
+                    val userEvents: List<Event>
+                    if (PreferenceManager.isCloudMode(this@MainActivity) && PreferenceManager.isLoggedIn(this@MainActivity)) {
+                        val result = eventRepository.getEventsForDate(millis)
+                        userEvents = result.getOrElse { emptyList() }
+                    } else {
+                        userEvents = eventDao.getEventsForDate(millis)
+                            .filter { it.subscriptionId == null }
+                    }
+                    
+                    val subscriptionEvents = subscriptionManager.getVisibleEvents(millis)
+                        .filter { it.subscriptionId != null }
+                    
+                    val allEvents = userEvents + subscriptionEvents
+                    
+                    withContext(Dispatchers.Main) {
+                        eventsList.clear()
+                        eventsList.addAll(allEvents)
+                        // 同步更新datesWithEvents以便日历标记正确显示
+                        allEvents.forEach { event ->
+                            val eventDate = Instant.ofEpochMilli(event.dateTime)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                            if (event.subscriptionId == null) {
+                                datesWithEvents.add(eventDate)
+                            }
+                        }
+                        updateEventsList()
+                    }
                 }
-                updateCalendarDots()  // 更新日历标记
+                
+                // 更新日历标记（加载所有事件以便更新标记点）
+                updateCalendarDots()
                 
                 withContext(Dispatchers.Main) {
                     // 刷新周视图
