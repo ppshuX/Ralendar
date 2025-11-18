@@ -400,21 +400,21 @@
 
   /* 调整字体大小 - 移动端字体缩小 */
   .calendar-wrapper .fc-toolbar-title {
-    font-size: 12px !important;
+    font-size: 12px;
     font-weight: 700;
   }
 
   .calendar-wrapper .fc-button {
-    font-size: 10px !important;
+    font-size: 10px;
     padding: 4px 6px;
   }
   
   .calendar-wrapper .fc-button-group .fc-button {
-    font-size: 10px !important;
+    font-size: 10px;
   }
   
   .calendar-wrapper .fc-today-button {
-    font-size: 10px !important;
+    font-size: 10px;
   }
 
   /* 节假日文字 */
@@ -431,17 +431,17 @@
   /* 周标题 - 字体缩小 */
   .calendar-wrapper .fc-col-header-cell {
     padding: 6px 2px;
-    font-size: 11px !important;
+    font-size: 11px;
     font-weight: 600;
   }
   
   .calendar-wrapper .fc-col-header-cell-cushion {
-    font-size: 11px !important;
+    font-size: 11px;
   }
   
   /* 日期数字 - 字体缩小 */
   .calendar-wrapper .fc-daygrid-day-number {
-    font-size: 13px !important;
+    font-size: 13px;
     font-weight: 700;
     /* 移动端居中显示 */
     text-align: center;
@@ -516,34 +516,34 @@
   }
   
   .calendar-wrapper .fc-toolbar-title {
-    font-size: 11px !important;
+    font-size: 11px;
   }
   
   .calendar-wrapper .fc-button {
-    font-size: 9px !important;
+    font-size: 9px;
     padding: 2px 4px;
   }
   
   .calendar-wrapper .fc-button-group .fc-button {
-    font-size: 9px !important;
+    font-size: 9px;
   }
   
   .calendar-wrapper .fc-today-button {
-    font-size: 9px !important;
+    font-size: 9px;
   }
   
   .calendar-wrapper .fc-col-header-cell {
     padding: 4px 2px;
-    font-size: 10px !important;
+    font-size: 10px;
   }
   
   .calendar-wrapper .fc-col-header-cell-cushion {
-    font-size: 10px !important;
+    font-size: 10px;
   }
   
   .calendar-wrapper .fc-daygrid-day-number {
     padding: 1px 2px;
-    font-size: 11px !important;
+    font-size: 11px;
     /* 移动端居中显示 */
     text-align: center;
     display: flex;
@@ -644,14 +644,7 @@
     margin-bottom: 0.3em;
   }
   
-  .calendar-wrapper .fc-toolbar-title {
-    font-size: 13px;
-  }
-  
-  .calendar-wrapper .fc-button {
-    padding: 0.2em 0.4em;
-    font-size: 9px;
-  }
+  /* 注意：fc-toolbar-title 和 fc-button 的字体大小已在上面定义，此处不再重复定义 */
 }
 
 /* ==================== 周视图和日视图事件样式优化 ==================== */
