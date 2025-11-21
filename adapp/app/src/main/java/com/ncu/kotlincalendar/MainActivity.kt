@@ -391,6 +391,9 @@ class MainActivity : AppCompatActivity() {
             loadHolidayInfo(millis)
         }
         
+        // 更新日历上的节日标记（确保订阅的节日在日历上显示）
+        updateCalendarDots()
+        
         // 月份导航按钮（仅在月视图展开时使用）
         btnPreviousMonth.setOnClickListener {
             currentMonth = currentMonth.minusMonths(1)
@@ -1346,6 +1349,9 @@ class MainActivity : AppCompatActivity() {
         // ✅ 使用 HolidayManager 处理节日信息加载
         // 注意：HolidayManager内部会使用subscriptionManager.getVisibleEvents()来获取有效订阅事件
         holidayManager.loadHolidayInfo(date, lifecycleScope)
+        
+        // 更新日历上的节日标记（确保订阅的节日在日历上显示）
+        updateCalendarDots()
     }
     
     // ✅ loadWeather() 已被 WeatherManager 替代，位于 ui/managers/WeatherManager.kt
@@ -1688,6 +1694,10 @@ class MainActivity : AppCompatActivity() {
                 val festivalEvents = subscriptionManager.getVisibleEvents()
                     .filter { it.subscriptionId != null }
                 
+                // 获取已订阅的节日（从FestivalSubscriptionManager）
+                val festivalSubscriptionManager = com.ncu.kotlincalendar.data.managers.FestivalSubscriptionManager(this@MainActivity)
+                val subscribedFestivalNames = festivalSubscriptionManager.getSubscribedFestivals()
+                
                 // 转换为 LocalDate 集合
                 val newDatesWithEvents = userEvents.map { event ->
                     Instant.ofEpochMilli(event.dateTime)
@@ -1695,15 +1705,60 @@ class MainActivity : AppCompatActivity() {
                         .toLocalDate()
                 }.toSet()
                 
-                // 转换为 Map<LocalDate, 节日名称>
-                val newDatesWithFestivals = festivalEvents.associate { event ->
+                // 1. 从订阅的公共日历事件中获取节日日期
+                val festivalDatesFromEvents = festivalEvents.associate { event ->
                     val date = Instant.ofEpochMilli(event.dateTime)
                         .atZone(ZoneId.systemDefault())
                         .toLocalDate()
-                    // 提取节日名称（去掉emoji）
-                    val name = event.title.replace(Regex("[^\\p{L}\\p{N}]+"), "").take(4) // 最多4个字
-                    date to name
+                    // 提取节日名称（保留emoji）
+                    val title = event.title.trim()
+                    val emojiMatch = Regex("[\\u{1F300}-\\u{1F9FF}]|[\\u{2600}-\\u{26FF}]|[\\u{2700}-\\u{27BF}]|\\p{So}").find(title)
+                    val emoji = emojiMatch?.value ?: ""
+                    val nameWithoutEmoji = title.replace(Regex("[\\u{1F300}-\\u{1F9FF}]|[\\u{2600}-\\u{26FF}]|[\\u{2700}-\\u{27BF}]|\\p{So}"), "").trim()
+                    val displayName = if (nameWithoutEmoji.length > 4) nameWithoutEmoji.take(4) else nameWithoutEmoji
+                    val finalName = if (emoji.isNotEmpty()) "$emoji $displayName" else displayName
+                    date to finalName
+                }.toMutableMap()
+                
+                // 2. 从当前可见月份前后各1个月查询API，获取已订阅节日的日期
+                val visibleMonth = this@MainActivity.currentMonth  // 使用当前日历显示的月份
+                val monthsToCheck = (-1..1).map { visibleMonth.plusMonths(it.toLong()) }
+                
+                monthsToCheck.forEach { yearMonth ->
+                    try {
+                        val year = yearMonth.year
+                        val month = yearMonth.monthValue
+                        // 查询这个月的每一天，检查是否有已订阅的节日
+                        val daysInMonth = yearMonth.lengthOfMonth()
+                        for (day in 1..daysInMonth) {
+                            try {
+                                val dateStr = String.format("%04d-%02d-%02d", year, month, day)
+                                val holidayResponse = RetrofitClient.api.checkHoliday(dateStr)
+                                
+                                // 检查API返回的节日是否已订阅
+                                holidayResponse.festivals?.forEach { festival ->
+                                    if (subscribedFestivalNames.any { subscribedName ->
+                                        festival.name == subscribedName ||
+                                        festival.name.contains(subscribedName, ignoreCase = true) ||
+                                        subscribedName.contains(festival.name, ignoreCase = true) ||
+                                        festival.name.split("/")[0].trim() == subscribedName.split("/")[0].trim()
+                                    }) {
+                                        val festivalDate = LocalDate.of(year, month, day)
+                                        val displayName = if (festival.name.length > 4) festival.name.take(4) else festival.name
+                                        val finalName = "${festival.emoji} $displayName"
+                                        festivalDatesFromEvents[festivalDate] = finalName
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                // 忽略单日查询失败，继续查询其他日期
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // 忽略单月查询失败，继续查询其他月份
+                    }
                 }
+                
+                val newDatesWithFestivals = festivalDatesFromEvents
                 
                 festivalEvents.forEach { event ->
                     val date = Instant.ofEpochMilli(event.dateTime)
