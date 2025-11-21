@@ -48,6 +48,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -118,6 +120,12 @@ class MainActivity : AppCompatActivity() {
     private val datesWithFestivals = mutableMapOf<LocalDate, String>()  // 有节日的日期集合 -> 节日名称
     private var currentTab: Int = 0  // 0=日程 1=节日 2=运势
     private var viewMode: Int = 0  // 0=月视图（默认） 1=周视图 2=日视图
+    
+    // 加载操作的Job（用于避免竞态条件）
+    private var loadEventsJob: Job? = null
+    
+    // Tab监听器（用于在onDestroy时清理）
+    private var tabListener: com.google.android.material.tabs.TabLayout.OnTabSelectedListener? = null
     
     // 日程编辑对话框助手（可复用组件）
     private lateinit var eventEditDialogHelper: EventEditDialogHelper
@@ -263,18 +271,64 @@ class MainActivity : AppCompatActivity() {
         tabLayout.addTab(tabLayout.newTab().setText("🔮 今日运势"))
         
         // Tab 切换监听
-        tabLayout.addOnTabSelectedListener(object : com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
+        tabListener = object : com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab?) {
                 currentTab = tab?.position ?: 0
-                switchContent(currentTab)
-                // 注意：节日数据已在selectDate()中预加载，这里主要处理日程数据
-                // 但为了确保数据一致性，仍然调用loadDataForDate()
-                selectedDate?.let { loadDataForDate(it) }
+                selectedDate?.let { date ->
+                    val millis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    when (currentTab) {
+                        0 -> {
+                            // 切换到日程 Tab
+                            switchContent(0)
+                            
+                            // **取消之前的加载操作（避免竞态条件）**
+                            loadEventsJob?.cancel()
+                            
+                            // **立即刷新列表显示（从现有 eventsList 中过滤，确保不显示空列表）**
+                            updateEventsList()
+                            
+                            // **异步加载数据（不阻塞UI，但保证列表始终有内容）**
+                            // 如果列表为空，先加载所有事件；否则只加载当前日期的事件
+                            loadEventsJob = lifecycleScope.launch(Dispatchers.IO) {
+                                try {
+                                    if (eventsList.isEmpty()) {
+                                        // 列表为空：先加载所有事件
+                                        loadAllEventsSync()
+                                        // loadAllEventsSync 内部已经调用了 updateEventsList()
+                                    } else {
+                                        // 列表不为空：只加载当前日期的最新数据（确保数据最新）
+                                        // loadEventsForSelectedDate 内部已经调用了 updateEventsList()
+                                        loadEventsForSelectedDate(millis)
+                                    }
+                                } catch (e: Exception) {
+                                    // 加载失败，至少保证列表显示正常（使用已有数据）
+                                    withContext(Dispatchers.Main) {
+                                        updateEventsList()
+                                    }
+                                }
+                            }
+                        }
+                        1 -> {
+                            // 切换到节日 Tab
+                            switchContent(1)
+                            loadHolidayInfo(millis)
+                        }
+                        2 -> {
+                            // 切换到运势 Tab
+                            switchContent(2)
+                            fortuneManager.loadFortune(
+                                weatherManager.currentWeather,
+                                weatherManager.currentTemperature
+                            )
+                        }
+                    }
+                }
             }
             
             override fun onTabUnselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
             override fun onTabReselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
-        })
+        }
+        tabLayout.addOnTabSelectedListener(tabListener)
         
         // 初始化日程编辑对话框助手（可复用组件）
         eventEditDialogHelper = EventEditDialogHelper(this, object : EventEditDialogHelper.OnEventSaveCallback {
@@ -327,6 +381,9 @@ class MainActivity : AppCompatActivity() {
         
         // 加载数据库中的日程
         loadAllEvents()
+        
+        // 初始化节日订阅管理器，确保所有默认节日在首次启动时被订阅
+        com.ncu.kotlincalendar.data.managers.FestivalSubscriptionManager(this).initDefaultFestivals()
         
         // 初始化加载当前日期的节日信息（修复首次不显示问题）
         selectedDate?.let { date ->
@@ -388,6 +445,64 @@ class MainActivity : AppCompatActivity() {
         
         // 请求通知权限（Android 13+）
         requestNotificationPermission()
+        
+        // 处理从通知跳转过来的情况
+        handleNotificationIntent()
+    }
+    
+    /**
+     * 处理从通知跳转过来的情况
+     * 如果是点击通知跳转过来的，自动选中对应的事件并显示详情
+     */
+    private fun handleNotificationIntent() {
+        val fromNotification = intent.getBooleanExtra("fromNotification", false)
+        if (fromNotification) {
+            val eventId = intent.getLongExtra("eventId", -1)
+            if (eventId > 0) {
+                // 延迟一下，确保UI和数据都已加载完成
+                lifecycleScope.launch {
+                    delay(500)
+                    // 从数据库/云端查找对应的事件
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val event: Event? = if (PreferenceManager.isCloudMode(this@MainActivity) && PreferenceManager.isLoggedIn(this@MainActivity)) {
+                                // 云端模式：从API获取
+                                val result = eventRepository.getAllEvents()
+                                result.getOrNull()?.find { it.id == eventId }
+                            } else {
+                                // 本地模式：从数据库获取
+                                eventDao.getAllEvents().find { it.id == eventId }
+                            }
+                            
+                            event?.let {
+                                withContext(Dispatchers.Main) {
+                                    // 切换到事件日期
+                                    val eventDate = Instant.ofEpochMilli(it.dateTime)
+                                        .atZone(ZoneId.systemDefault())
+                                        .toLocalDate()
+                                    
+                                    selectedDate = eventDate
+                                    updateDateDisplay(eventDate)
+                                    calendarView.notifyCalendarChanged()
+                                    weekCalendarView.scrollToWeek(eventDate)
+                                    
+                                    // 刷新事件列表
+                                    loadAllEvents()
+                                    val eventDateMillis = eventDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                                    loadEventsForSelectedDate(eventDateMillis)
+                                    
+                                    // 延迟显示详情对话框（确保列表已刷新）
+                                    delay(300)
+                                    showEventDetails(it)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            // 如果找不到事件，至少切换到通知中的日期
+                        }
+                    }
+                }
+            }
+        }
     }
     
     /**
@@ -402,11 +517,49 @@ class MainActivity : AppCompatActivity() {
         selectedDate?.let { date ->
             val millis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             loadHolidayInfo(millis)
-            // 只加载当前日期的事件，而不是所有事件
-            loadEventsForSelectedDate(millis)
+            // 刷新当前日期的事件列表（不重新加载，只更新UI）
+            // 如果 eventsList 为空，说明需要重新加载
+            if (eventsList.isEmpty()) {
+                loadAllEvents()
+                loadEventsForSelectedDate(millis)
+            } else {
+                // 如果列表不为空，只刷新当前日期的显示
+                updateEventsList()
+            }
         }
         // 刷新天气信息（使用WeatherManager）
         weatherManager.loadWeather(lifecycleScope)
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        
+        // 1. 取消所有协程任务（避免内存泄漏）
+        loadEventsJob?.cancel()
+        loadEventsJob = null
+        
+        // 2. 清理Tab监听器（避免内存泄漏）
+        tabListener?.let { listener ->
+            try {
+                tabLayout.removeOnTabSelectedListener(listener)
+            } catch (e: Exception) {
+                // 如果已经清理过，忽略错误
+                Log.w("MainActivity", "清理Tab监听器失败", e)
+            }
+        }
+        tabListener = null
+        
+        // 3. 清理事件列表（避免持有过多数据）
+        // Activity销毁时清理所有列表数据，释放内存
+        eventsList.clear()
+        datesWithEvents.clear()
+        datesWithFestivals.clear()
+        
+        // 4. 清理Manager引用（虽然它们使用Context，但显式清理更安全）
+        // Manager类使用Context，会在Activity销毁时自动清理，这里不需要额外操作
+        
+        // 5. 清理View引用（帮助GC回收）
+        // View引用会在Activity销毁时自动清理，这里只是确保
     }
     
     // 请求通知权限
@@ -477,60 +630,89 @@ class MainActivity : AppCompatActivity() {
     
     // 从数据库/云端加载所有日程（根据模式自动切换）
     private fun loadAllEvents() {
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val userEvents: List<Event>
+        // 取消之前的加载操作（避免竞态条件）
+        loadEventsJob?.cancel()
+        loadEventsJob = lifecycleScope.launch(Dispatchers.IO) {
+            loadAllEventsSync()
+        }
+    }
+    
+    // 同步加载所有日程（内部方法，不创建新的Job）
+    private suspend fun loadAllEventsSync() {
+        try {
+            val userEvents: List<Event>
+            
+            // 根据模式获取用户自己的事件
+            if (PreferenceManager.isCloudMode(this@MainActivity) && PreferenceManager.isLoggedIn(this@MainActivity)) {
+                // 云端模式：从API获取
+                val result = eventRepository.getAllEvents()
+                userEvents = result.getOrElse { emptyList() }
+            } else {
+                // 本地模式：从数据库获取
+                userEvents = eventDao.getUserEvents()
+            }
+            
+            // 获取订阅的日历事件（订阅始终是本地存储的）
+            val subscriptionEvents = subscriptionManager.getVisibleEvents()
+                .filter { it.subscriptionId != null } // 只要订阅的事件
+            
+            // 合并用户事件和订阅事件
+            val allEvents = userEvents + subscriptionEvents
+            
+            withContext(Dispatchers.Main) {
+                // 先构建新列表（在内存中，不直接操作 eventsList）
+                val newEventsList = allEvents.toMutableList()
                 
-                // 根据模式获取用户自己的事件
-                if (PreferenceManager.isCloudMode(this@MainActivity) && PreferenceManager.isLoggedIn(this@MainActivity)) {
-                    // 云端模式：从API获取
-                    val result = eventRepository.getAllEvents()
-                    userEvents = result.getOrElse { emptyList() }
-                    } else {
-                    // 本地模式：从数据库获取
-                    userEvents = eventDao.getUserEvents()
+                // **原子替换：先保存当前选中日期的事件，避免列表闪烁**
+                val currentSelectedDate = selectedDate
+                val currentDateEvents = if (currentSelectedDate != null) {
+                    eventsList.filter { event ->
+                        val eventDate = Instant.ofEpochMilli(event.dateTime)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                        eventDate == currentSelectedDate && event.subscriptionId == null
+                    }
+                } else {
+                    emptyList()
                 }
                 
-                // 获取订阅的日历事件（订阅始终是本地存储的）
-                val subscriptionEvents = subscriptionManager.getVisibleEvents()
-                    .filter { it.subscriptionId != null } // 只要订阅的事件
+                // 一次性替换整个列表（原子操作，避免列表短暂为空）
+                eventsList.clear()
+                eventsList.addAll(newEventsList)
                 
-                // 合并用户事件和订阅事件
-                val allEvents = userEvents + subscriptionEvents
+                updateCalendarDots()  // 更新日历标记
                 
-                withContext(Dispatchers.Main) {
-                    eventsList.clear()
-                    eventsList.addAll(allEvents)
-                    updateCalendarDots()  // 更新日历标记
-                    
-                    // 根据当前视图模式更新显示
-                    when (viewMode) {
-                        0 -> {
-                            // 月视图：更新事件列表
+                // **立即使用新数据更新列表显示（确保不显示空列表）**
+                // 根据当前视图模式更新显示
+                when (viewMode) {
+                    0 -> {
+                        // 月视图：如果当前是日程Tab，立即刷新列表显示
+                        if (currentTab == 0) {
                             updateEventsList()
                         }
-                        1 -> {
-                            // 周视图：更新时间线
-                            updateWeekView()
-                        }
-                        2 -> {
-                            // 日视图：更新时间线
-                            updateDayView()
-                        }
                     }
-                    
-                    // 刷新周视图日历
-                    weekCalendarView.notifyCalendarChanged()
+                    1 -> {
+                        // 周视图：更新时间线
+                        updateWeekView()
+                    }
+                    2 -> {
+                        // 日视图：更新时间线
+                        updateDayView()
+                    }
                 }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "加载失败: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+                
+                // 刷新周视图日历
+                weekCalendarView.notifyCalendarChanged()
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@MainActivity, "加载失败: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
     
     // 加载指定日期的日程（根据模式自动切换）
+    // 注意：这个方法只更新列表显示，不改变 eventsList（用于日历标记）
     private fun loadEventsForSelectedDate(date: Long) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -555,9 +737,59 @@ class MainActivity : AppCompatActivity() {
                 val allEvents = userEvents + subscriptionEvents
                 
                 withContext(Dispatchers.Main) {
-                    // 更新事件列表（只保留当前日期的事件）
+                    // 确保 eventsList 中包含所有事件（用于日历标记）
+                    // 只更新当前日期的事件，不影响其他日期的事件
+                    val selected = selectedDate ?: return@withContext
+                    
+                    // **原子更新：先构建包含新事件的完整列表，再一次性替换（避免闪烁）**
+                    // 获取新事件中已有的ID集合（用于去重）
+                    val newEventIds = allEvents.map { it.id }.toSet()
+                    
+                    // **关键修复：先保留当前日期的事件（避免切换日期时列表消失）**
+                    // 如果加载的数据为空，但 eventsList 中有当前日期的事件，保留它们
+                    val currentDateEventsInList = eventsList.filter { event ->
+                        val eventDate = Instant.ofEpochMilli(event.dateTime)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                        eventDate == selected && event.subscriptionId == null
+                    }
+                    
+                    // 构建新的完整列表（先合并，再替换）
+                    val updatedEventsList = eventsList.toMutableList().apply {
+                        // **如果加载的数据为空，保留当前日期的事件，不进行任何更新**
+                        if (allEvents.isEmpty()) {
+                            // 加载的数据为空，保留现有事件（可能是加载失败或确实没有数据）
+                            // 不做任何修改，保持当前状态
+                        } else {
+                            // 加载的数据不为空，进行更新
+                            // 先更新已存在的事件（如果有相同ID的新数据，优先使用新数据）
+                            allEvents.forEach { newEvent ->
+                                val existingIndex = indexOfFirst { it.id == newEvent.id }
+                                if (existingIndex >= 0) {
+                                    this[existingIndex] = newEvent
+                                }
+                            }
+                            
+                            // 移除当前日期的旧事件（只移除不在新事件列表中的）
+                            removeAll { event ->
+                                val eventDate = Instant.ofEpochMilli(event.dateTime)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate()
+                                eventDate == selected && !newEventIds.contains(event.id)
+                            }
+                            
+                            // 添加新事件（只添加不存在的事件，避免重复）
+                            val eventsToAdd = allEvents.filter { newEvent ->
+                                !any { existingEvent -> existingEvent.id == newEvent.id }
+                            }
+                            addAll(eventsToAdd)
+                        }
+                    }
+                    
+                    // **原子替换：一次性更新整个列表（避免中间状态导致列表闪烁）**
                     eventsList.clear()
-                    eventsList.addAll(allEvents)
+                    eventsList.addAll(updatedEventsList)
+                    
                     // 同步更新datesWithEvents以便日历标记正确显示
                     allEvents.forEach { event ->
                         val eventDate = Instant.ofEpochMilli(event.dateTime)
@@ -567,9 +799,15 @@ class MainActivity : AppCompatActivity() {
                             datesWithEvents.add(eventDate)
                         }
                     }
+                    
+                    // **立即更新列表显示（确保不显示空列表）**
                     updateEventsList()
                 }
             } catch (e: Exception) {
+                // 如果加载失败，至少保证列表不消失
+                withContext(Dispatchers.Main) {
+                    // 不更新列表，保持现有显示
+                }
             }
         }
     }
@@ -609,57 +847,53 @@ class MainActivity : AppCompatActivity() {
                 // 设置提醒
                 if (reminderMinutes > 0) {
                     withContext(Dispatchers.Main) {
-                        reminderManager.setReminder(savedEvent)
-                        
-                        // 计算提醒时间并显示
                         val reminderTime = dateTime - (reminderMinutes * 60 * 1000)
-                        val df = SimpleDateFormat("HH:mm", Locale.getDefault())
-                        Toast.makeText(
-                            this@MainActivity,
-                            "⏰ 将在 ${df.format(Date(reminderTime))} 提醒您",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-                
-                // 重新加载数据（确保在同一个协程中顺序执行）
-                selectedDate?.let { 
-                    val millis = it.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                    // 先加载当前日期的事件（等待完成）
-                    val userEvents: List<Event>
-                    if (PreferenceManager.isCloudMode(this@MainActivity) && PreferenceManager.isLoggedIn(this@MainActivity)) {
-                        val result = eventRepository.getEventsForDate(millis)
-                        userEvents = result.getOrElse { emptyList() }
-                    } else {
-                        userEvents = eventDao.getEventsForDate(millis)
-                            .filter { it.subscriptionId == null }
-                    }
-                    
-                    val subscriptionEvents = subscriptionManager.getVisibleEvents(millis)
-                        .filter { it.subscriptionId != null }
-                    
-                    val allEvents = userEvents + subscriptionEvents
-                    
-                withContext(Dispatchers.Main) {
-                    eventsList.clear()
-                        eventsList.addAll(allEvents)
-                        // 同步更新datesWithEvents以便日历标记正确显示
-                        allEvents.forEach { event ->
-                            val eventDate = Instant.ofEpochMilli(event.dateTime)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
-                            if (event.subscriptionId == null) {
-                                datesWithEvents.add(eventDate)
-                            }
+                        val currentTime = System.currentTimeMillis()
+                        
+                        if (reminderTime > currentTime) {
+                            // 提醒时间未过，设置提醒并显示
+                            reminderManager.setReminder(savedEvent)
+                            val df = SimpleDateFormat("HH:mm", Locale.getDefault())
+                            Toast.makeText(
+                                this@MainActivity,
+                                "⏰ 将在 ${df.format(Date(reminderTime))} 提醒您",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            // 提醒时间已过，不设置提醒
+                            Toast.makeText(
+                                this@MainActivity,
+                                "⚠️ 提醒时间已过，无法设置提醒",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
-                    updateEventsList()
                     }
                 }
                 
-                // 更新日历标记（加载所有事件以便更新标记点）
-                updateCalendarDots()
+                // 根据事件的日期加载对应日期的事件，如果事件日期与选中日期不同，则切换到事件日期
+                val eventDate = Instant.ofEpochMilli(dateTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                
+                val eventDateMillis = eventDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                
+                // 重新加载所有事件（确保新添加的事件能够显示）
+                loadAllEvents()
+                
+                // 加载事件日期的事件
+                loadEventsForSelectedDate(eventDateMillis)
                 
                 withContext(Dispatchers.Main) {
+                    // 如果事件日期与选中日期不同，切换到事件日期
+                    if (selectedDate != eventDate) {
+                        selectedDate = eventDate
+                        updateDateDisplay(eventDate)
+                        calendarView.notifyCalendarChanged()
+                    }
+                    
+                    // 更新日历标记（加载所有事件以便更新标记点）
+                    updateCalendarDots()
+                    
                     // 刷新周视图
                     weekCalendarView.notifyCalendarChanged()
                     Toast.makeText(this@MainActivity, "✅ 添加成功！", Toast.LENGTH_SHORT).show()
@@ -709,7 +943,7 @@ class MainActivity : AppCompatActivity() {
                     return@launch
                 }
                 
-                // 先取消旧提醒
+                // 先取消旧提醒（无论新提醒是否设置）
                 withContext(Dispatchers.Main) {
                     reminderManager.cancelReminder(id)
                 }
@@ -735,25 +969,73 @@ class MainActivity : AppCompatActivity() {
                     return@launch
                 }
                 
-                // 设置新提醒
+                // 设置新提醒（如果设置了提醒且提醒时间未过）
                 if (reminderMinutes > 0) {
                     withContext(Dispatchers.Main) {
-                        reminderManager.setReminder(event)
+                        val reminderTime = dateTime - (reminderMinutes * 60 * 1000)
+                        val currentTime = System.currentTimeMillis()
+                        
+                        if (reminderTime > currentTime) {
+                            // 提醒时间未过，设置提醒并显示
+                            reminderManager.setReminder(event)
+                            val df = SimpleDateFormat("HH:mm", Locale.getDefault())
+                            Toast.makeText(
+                                this@MainActivity,
+                                "⏰ 将在 ${df.format(Date(reminderTime))} 提醒您",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            // 提醒时间已过，不设置提醒（已取消旧提醒）
+                        }
                     }
                 }
+                // 如果 reminderMinutes == 0，说明不需要提醒，已经取消了旧提醒
                 
-                // 重新加载数据
-                selectedDate?.let { 
-                    val millis = it.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                    loadEventsForSelectedDate(millis)
-                }
-                updateCalendarDots()  // 更新日历标记
+                // 根据事件的日期加载对应日期的事件
+                val eventDate = Instant.ofEpochMilli(dateTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
                 
+                // **立即更新 eventsList 中的事件（避免闪烁）**
                 withContext(Dispatchers.Main) {
+                    // 更新 eventsList 中的对应事件
+                    val index = eventsList.indexOfFirst { it.id == event.id }
+                    if (index >= 0) {
+                        eventsList[index] = event
+                    } else {
+                        // 如果不在列表中，添加进去
+                        eventsList.add(event)
+                    }
+                    
+                    // 更新日历标记点
+                    val oldDate = existingEvent.dateTime.let {
+                        Instant.ofEpochMilli(it)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                    }
+                    datesWithEvents.remove(oldDate)
+                    datesWithEvents.add(eventDate)
+                    
+                    // 如果事件日期与选中日期不同，切换到事件日期
+                    if (selectedDate != eventDate) {
+                        selectedDate = eventDate
+                        updateDateDisplay(eventDate)
+                        calendarView.notifyCalendarChanged()
+                    }
+                    
+                    // 立即刷新列表显示（确保显示更新后的数据）
+                    updateEventsList()
+                    
+                    // 更新日历标记
+                    updateCalendarDots()
+                    
                     // 刷新周视图
                     weekCalendarView.notifyCalendarChanged()
                     Toast.makeText(this@MainActivity, "✅ 更新成功！", Toast.LENGTH_SHORT).show()
                 }
+                
+                // 异步重新加载所有事件（确保数据同步）
+                loadAllEvents()
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "更新失败: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -1013,7 +1295,8 @@ class MainActivity : AppCompatActivity() {
     private fun switchContent(tabIndex: Int) {
         when (tabIndex) {
             0 -> {
-                // 日程安排
+                // 日程安排：只切换显示，不在这里刷新列表
+                // 列表刷新由 Tab 切换逻辑统一处理，避免重复调用
                 recyclerView.visibility = android.view.View.VISIBLE
                 scrollViewHoliday.visibility = android.view.View.GONE
                 scrollViewFortune.visibility = android.view.View.GONE
@@ -1310,6 +1593,9 @@ class MainActivity : AppCompatActivity() {
             // 更新显示
             updateDateDisplay(date)
             
+            // **立即使用已有数据更新列表显示**（避免切换时列表为空）
+            updateEventsList()
+            
             // 转换日期为毫秒
             val millis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             
@@ -1479,9 +1765,9 @@ class MainActivity : AppCompatActivity() {
      */
     private fun openFestivalDetail(name: String, emoji: String, date: String) {
         val intent = android.content.Intent(this, FestivalDetailActivity::class.java).apply {
-            putExtra("festivalName", name)
-            putExtra("festivalEmoji", emoji)
-            putExtra("festivalDate", date)
+            putExtra("festival_name", name)
+            putExtra("festival_emoji", emoji)
+            putExtra("date", date)
         }
         startActivity(intent)
     }
@@ -1567,12 +1853,8 @@ class MainActivity : AppCompatActivity() {
                                 llParsedTime.visibility = View.GONE
                             }
                             
-                            if (!event.description.isNullOrEmpty()) {
-                                tvParsedDesc.text = event.description
-                                llParsedDesc.visibility = View.VISIBLE
-                            } else {
-                                llParsedDesc.visibility = View.GONE
-                            }
+                            // AI解析不需要显示描述
+                            llParsedDesc.visibility = View.GONE
                             
                             // 显示解析结果
                             llParsedResult.visibility = View.VISIBLE
@@ -1613,43 +1895,109 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             
-            // 构建事件数据
-            val title = eventData.title
-            val date = eventData.date
-            val time = eventData.time
-            val description = eventData.description ?: ""
+            // 禁用按钮，防止重复点击
+            btnConfirm.isEnabled = false
             
-            // 组装日期时间
-            val dateTime = if (time != null) {
-                "${date}T${time}:00"
-            } else {
-                "${date}T09:00:00"  // 默认早上9点
-            }
-            
-            // 创建Event对象
-            val event = Event(
-                id = 0,  // 新事件ID为0
-                title = title,
-                description = description,
-                dateTime = Instant.parse(dateTime).toEpochMilli(),
-                reminderMinutes = eventData.reminder_minutes ?: 15,
-                subscriptionId = null,  // 用户创建的日程
-                locationName = "",
-                latitude = 0.0,
-                longitude = 0.0
-            )
-            
-            // 保存到数据库
             lifecycleScope.launch(Dispatchers.IO) {
-                eventDao.insert(event)
-                
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "✅ 日程创建成功！", Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
+                try {
+                    // 构建事件数据（只使用标题、日期和时间）
+                    val title = eventData.title
+                    val date = eventData.date
+                    val time = eventData.time
                     
-                    // 刷新界面
+                    // 解析日期时间（本地时区）
+                    val dateTimeMillis = try {
+                        // 解析日期 YYYY-MM-DD
+                        val dateParts = date.split("-")
+                        if (dateParts.size != 3) {
+                            throw IllegalArgumentException("日期格式错误: $date")
+                        }
+                        val year = dateParts[0].toInt()
+                        val month = dateParts[1].toInt()
+                        val day = dateParts[2].toInt()
+                        
+                        // 解析时间 HH:MM（如果没有时间，默认9点）
+                        val hour: Int
+                        val minute: Int
+                        if (time != null && time.matches(Regex("\\d{2}:\\d{2}"))) {
+                            val timeParts = time.split(":")
+                            hour = timeParts[0].toInt()
+                            minute = timeParts[1].toInt()
+                        } else {
+                            hour = 9
+                            minute = 0
+                        }
+                        
+                        // 使用LocalDateTime转换为时间戳
+                        val localDateTime = java.time.LocalDateTime.of(year, month, day, hour, minute)
+                        localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            btnConfirm.isEnabled = true
+                            Log.e("MainActivity", "日期时间解析失败", e)
+                            Toast.makeText(
+                                this@MainActivity, 
+                                "日期时间格式错误：${e.message}", 
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        return@launch
+                    }
+                    
+                    // 创建Event对象（不需要描述和提醒）
+                    val event = Event(
+                        id = 0,  // 新事件ID为0
+                        title = title,
+                        description = "",  // AI解析不需要描述
+                        dateTime = dateTimeMillis,
+                        reminderMinutes = 0,  // AI解析不需要提醒
+                        subscriptionId = null,  // 用户创建的日程
+                        locationName = "",
+                        latitude = 0.0,
+                        longitude = 0.0
+                    )
+                    
+                    // 保存到本地数据库
+                    val eventId = eventDao.insert(event)
+                    val savedEvent = event.copy(id = eventId)
+                    
+                    // AI解析不需要设置提醒
+                    withContext(Dispatchers.Main) {
+                        
+                        // 立即将新事件添加到 eventsList（用于立即显示）
+                        eventsList.add(savedEvent)
+                        
+                        // 更新日历标记点
+                        val eventDate = Instant.ofEpochMilli(savedEvent.dateTime)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                        datesWithEvents.add(eventDate)
+                        
+                        // 立即刷新列表显示（如果创建的是当前选中日期的事件）
+                        val selected = selectedDate
+                        if (selected != null && eventDate == selected) {
+                            updateEventsList()
+                        }
+                        
+                        // 更新日历标记
+                        updateCalendarDots()
+                        
+                        Toast.makeText(this@MainActivity, "✅ 日程创建成功！", Toast.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    }
+                    
+                    // 异步重新加载所有事件（确保数据同步）
                     loadAllEvents()
-                    updateCalendarDots()
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        btnConfirm.isEnabled = true
+                        Log.e("MainActivity", "AI创建日程失败", e)
+                        Toast.makeText(
+                            this@MainActivity, 
+                            "创建失败：${e.message ?: "未知错误"}", 
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
             }
         }

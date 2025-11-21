@@ -10,6 +10,7 @@ import com.google.android.material.card.MaterialCardView
 import com.ncu.kotlincalendar.FestivalDetailActivity
 import com.ncu.kotlincalendar.api.client.RetrofitClient
 import com.ncu.kotlincalendar.data.managers.SubscriptionManager
+import com.ncu.kotlincalendar.data.managers.FestivalSubscriptionManager
 import com.ncu.kotlincalendar.data.models.Event
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,6 +42,9 @@ class HolidayManager(
     private val subscriptionManager: SubscriptionManager
 ) {
     
+    // 节日订阅管理器
+    private val festivalSubscriptionManager = FestivalSubscriptionManager(context)
+    
     /**
      * 加载节日信息
      */
@@ -58,17 +62,20 @@ class HolidayManager(
                 
                 // 2. 从SubscriptionManager获取该日期的有效订阅节日事件
                 // 使用 getVisibleEvents 确保只获取有效且启用的订阅事件
-                val allVisibleEvents = subscriptionManager.getVisibleEvents(date)
+                // 注意：传入date参数会按日期过滤，但为了确保准确性，我们传入null获取所有事件，然后手动过滤
                 val selectedDate = Instant.ofEpochMilli(date)
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate()
+                
+                // 获取所有可见的订阅事件（不过滤日期，因为我们需要检查所有订阅事件）
+                val allVisibleEvents = subscriptionManager.getVisibleEvents(null)
                 
                 // 过滤出该日期的订阅节日事件（subscriptionId != null）
                 val subscribedEvents = allVisibleEvents.filter { event ->
                     val eventDate = Instant.ofEpochMilli(event.dateTime)
                         .atZone(ZoneId.systemDefault())
                         .toLocalDate()
-                    // 只获取订阅的事件（subscriptionId != null），且订阅必须是有效且启用的
+                    // 只获取订阅的事件（subscriptionId != null），且日期匹配
                     eventDate == selectedDate && event.subscriptionId != null
                 }
                 
@@ -106,21 +113,51 @@ class HolidayManager(
                         )
                     }
                     
-                    // 只显示订阅的节日，不显示API返回的节日（除非用户订阅了相关日历）
-                    // 如果用户想要显示API返回的节日，需要订阅相应的日历
-                    subscribedEvents.forEach { event ->
-                        // 提取emoji和名称
-                        val emoji = event.title.takeWhile { !it.isLetter() }.trim()
-                        val name = event.title.dropWhile { !it.isLetter() }.trim()
+                    // 1. 处理API返回的节日列表（方案A：作为默认订阅）
+                    if (!response.festivals.isNullOrEmpty()) {
+                        // 首次使用时，自动订阅所有API返回的节日
+                        if (festivalSubscriptionManager.isFirstInit()) {
+                            val festivalNames = response.festivals.map { it.name }
+                            festivalSubscriptionManager.subscribeAll(festivalNames)
+                            festivalSubscriptionManager.markFirstInitCompleted()
+                        }
                         
-                        // 添加订阅的节日
-                        allFestivals.add(
-                            FestivalItem(name, emoji, "subscribed")
-                        )
+                        // 只显示已订阅的节日
+                        response.festivals.forEach { festival ->
+                            if (festivalSubscriptionManager.isSubscribed(festival.name)) {
+                                allFestivals.add(
+                                    FestivalItem(festival.name, festival.emoji, "api")
+                                )
+                            }
+                        }
                     }
                     
-                    // 注意：API返回的节日不再自动显示，只有订阅的节日才会显示
-                    // 这样可以确保用户只看到他们订阅的日历内容
+                    // 2. 添加订阅的节日（但排除已经在API节日列表中的，避免重复）
+                    subscribedEvents.forEach { event ->
+                        // 提取emoji和名称（支持中文）
+                        val (emoji, name) = extractEmojiAndName(event.title)
+                        
+                        // 检查是否已经在API节日列表中（避免重复）
+                        val isInApiFestivals = response.festivals?.any { festival ->
+                            val festivalNamePart = festival.name.split("/").firstOrNull()?.trim() ?: festival.name
+                            val eventNamePart = name.split("/")[0].trim()
+                            // 精确匹配或部分匹配
+                            festival.name.equals(name, ignoreCase = true) ||
+                            festival.name.contains(name, ignoreCase = true) ||
+                            name.contains(festivalNamePart, ignoreCase = true) ||
+                            festivalNamePart.equals(eventNamePart, ignoreCase = true)
+                        } ?: false
+                        
+                        // 如果不在API节日列表中，且用户订阅了，则添加订阅的节日
+                        // 这样可以显示那些API没有返回但用户订阅了的节日
+                        if (!isInApiFestivals && festivalSubscriptionManager.isSubscribed(name)) {
+                            allFestivals.add(
+                                FestivalItem(name, emoji, "subscribed")
+                            )
+                        }
+                    }
+                    
+                    // 注意：现在只显示已订阅的节日（方案A：API节日作为默认订阅，支持个性化控制）
                     
                     // 为每个节日创建独立的小卡片（使用不同颜色区分）
                     if (allFestivals.isNotEmpty()) {
@@ -257,6 +294,33 @@ class HolidayManager(
         }
         
         festivalCardsContainer.addView(cardView)
+    }
+    
+    /**
+     * 从事件标题中提取emoji和名称（支持中文）
+     */
+    private fun extractEmojiAndName(title: String): Pair<String, String> {
+        // 尝试提取emoji（通常是开头的特殊字符）
+        val emojiRegex = Regex("""[\p{So}\p{Cn}\p{Emoji}]+""")
+        val emojiMatch = emojiRegex.find(title)
+        val emoji = emojiMatch?.value?.trim() ?: "🎊"
+        
+        // 提取名称（去掉emoji后的部分）
+        val name = if (emojiMatch != null) {
+            title.removeRange(emojiMatch.range).trim()
+        } else {
+            title.trim()
+        }
+        
+        return Pair(emoji, name.ifEmpty { title })
+    }
+    
+    /**
+     * 从事件标题中提取节日名称（用于去重）
+     */
+    private fun extractFestivalNameFromTitle(title: String): String {
+        val (_, name) = extractEmojiAndName(title)
+        return name
     }
     
 }
