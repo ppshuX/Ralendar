@@ -516,20 +516,20 @@
   }
   
   .calendar-wrapper .fc-toolbar-title {
-    font-size: 11px;
+    font-size: 7px;
   }
   
   .calendar-wrapper .fc-button {
-    font-size: 9px;
-    padding: 2px 4px;
+    font-size: 6px;
+    padding: 1px 2px;
   }
   
   .calendar-wrapper .fc-button-group .fc-button {
-    font-size: 9px;
+    font-size: 6px;
   }
   
   .calendar-wrapper .fc-today-button {
-    font-size: 9px;
+    font-size: 6px;
   }
   
   .calendar-wrapper .fc-col-header-cell {
