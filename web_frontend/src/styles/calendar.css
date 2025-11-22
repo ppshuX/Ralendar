@@ -354,7 +354,7 @@
     margin-bottom: 16px;
     width: 100%;
   }
-  
+
   /* 移动端日历卡片样式 */
   .calendar-wrapper .fc {
     width: 100%;
@@ -366,24 +366,24 @@
     overflow-y: visible;
     box-sizing: border-box;
   }
-  
+
   .calendar-wrapper .fc-view-harness {
     height: auto;
   }
-  
+
   .calendar-wrapper .fc .fc-scroller {
     overflow: visible;
     height: auto;
   }
-  
+
   .calendar-wrapper .fc-daygrid-body {
     height: auto;
   }
-  
+
   .calendar-wrapper .fc-scrollgrid {
     height: auto;
   }
-  
+
   .calendar-wrapper .fc-scrollgrid-sync-table {
     height: auto;
   }
@@ -392,7 +392,7 @@
   .calendar-wrapper .fc-daygrid-day {
     min-height: 65px;
   }
-  
+
   .calendar-wrapper .fc-daygrid-day-frame {
     min-height: 65px;
     overflow: visible;
@@ -408,11 +408,11 @@
     font-size: 10px;
     padding: 4px 6px;
   }
-  
+
   .calendar-wrapper .fc-button-group .fc-button {
     font-size: 10px;
   }
-  
+
   .calendar-wrapper .fc-today-button {
     font-size: 10px;
   }
@@ -427,18 +427,18 @@
     width: 5px;
     height: 5px;
   }
-  
+
   /* 周标题 - 字体缩小 */
   .calendar-wrapper .fc-col-header-cell {
     padding: 6px 2px;
     font-size: 11px;
     font-weight: 600;
   }
-  
+
   .calendar-wrapper .fc-col-header-cell-cushion {
     font-size: 11px;
   }
-  
+
   /* 日期数字 - 字体缩小 */
   .calendar-wrapper .fc-daygrid-day-number {
     font-size: 13px;
@@ -449,16 +449,16 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   /* 确保日历不被遮挡 - 添加顶部间距 */
   .calendar-page {
     padding-top: 0;
   }
-  
+
   .calendar-wrapper {
     margin-top: 8px;
   }
-  
+
   /* 确保工具栏不被遮挡 */
   .calendar-wrapper .fc-header-toolbar {
     margin-top: 0;
@@ -466,20 +466,20 @@
     position: relative;
     z-index: 10;
   }
-  
+
   /* 移动端周视图优化 */
   .calendar-wrapper .fc-timeGridWeek-view .fc-col-header-cell {
     padding: 8px 2px;
   }
-  
+
   .calendar-wrapper .fc-timeGridWeek-view .fc-col-header-cell-cushion {
     font-size: 12px;
   }
-  
+
   .calendar-wrapper .fc-timeGridWeek-view .fc-timegrid-slot {
     height: 35px;
   }
-  
+
   .calendar-wrapper .fc-timeGridWeek-view .fc-timegrid-slot-label {
     font-size: 11px;
   }
@@ -495,10 +495,10 @@
     width: 100%;
     margin: 8px 0 12px 0;
   }
-  
+
   .calendar-wrapper .fc {
     height: auto;
-    padding: 10px;
+    padding: 8px;
     border-radius: 12px;
     width: 100%;
     max-width: 100%;
@@ -506,26 +506,32 @@
     overflow-y: visible;
     box-sizing: border-box;
   }
-  
+
   .calendar-wrapper .fc-daygrid-day {
     min-height: 50px;
   }
-  
+
   .calendar-wrapper .fc-daygrid-day-frame {
     min-height: 50px;
   }
-  
-  /* 工具栏 - 缩小间距，防止换行 */
+
+  /* 工具栏 - 缩小间距，防止换行和溢出 */
   .calendar-wrapper .fc-header-toolbar {
     margin-top: 0;
     padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
     margin-bottom: 4px;
     position: relative;
     z-index: 10;
     display: flex;
     flex-wrap: nowrap;
-    gap: 2px;
+    gap: 1px;
     white-space: nowrap;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
   }
   
   /* 工具栏各个部分缩小间距 */
@@ -534,59 +540,92 @@
     padding: 0;
     display: flex;
     flex-wrap: nowrap;
-    gap: 2px;
+    gap: 1px;
     align-items: center;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+  
+  /* 左侧按钮组 - 更紧凑 */
+  .calendar-wrapper .fc-header-toolbar .fc-toolbar-chunk:first-child {
+    flex-shrink: 0;
+  }
+  
+  /* 中间标题 - 缩小并允许收缩 */
+  .calendar-wrapper .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+  }
+  
+  /* 右侧按钮组 - 更紧凑 */
+  .calendar-wrapper .fc-header-toolbar .fc-toolbar-chunk:last-child {
+    flex-shrink: 0;
   }
   
   .calendar-wrapper .fc-toolbar-title {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     white-space: nowrap;
-    margin: 0 4px;
+    margin: 0 2px;
+    padding: 0;
     line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
   .calendar-wrapper .fc-button {
-    font-size: 8px;
-    padding: 2px 4px;
+    font-size: 7px;
+    padding: 1px 3px;
     margin: 0;
     white-space: nowrap;
-    line-height: 1.2;
+    line-height: 1.1;
     min-width: auto;
-    border-radius: 4px;
+    border-radius: 3px;
+    flex-shrink: 0;
   }
   
   .calendar-wrapper .fc-button-group {
     display: flex;
     flex-wrap: nowrap;
-    gap: 1px;
+    gap: 0;
     margin: 0;
+    padding: 0;
   }
   
   .calendar-wrapper .fc-button-group .fc-button {
-    font-size: 8px;
-    padding: 2px 4px;
+    font-size: 7px;
+    padding: 1px 3px;
     margin: 0;
     white-space: nowrap;
+    border-radius: 0;
+  }
+  
+  .calendar-wrapper .fc-button-group .fc-button:first-child {
+    border-radius: 3px 0 0 3px;
+  }
+  
+  .calendar-wrapper .fc-button-group .fc-button:last-child {
+    border-radius: 0 3px 3px 0;
   }
   
   .calendar-wrapper .fc-today-button {
-    font-size: 8px;
-    padding: 2px 4px;
+    font-size: 7px;
+    padding: 1px 3px;
     white-space: nowrap;
     margin: 0;
   }
-  
+
   .calendar-wrapper .fc-col-header-cell {
     padding: 3px 1px;
     font-size: 9px;
   }
-  
+
   .calendar-wrapper .fc-col-header-cell-cushion {
     font-size: 9px;
     white-space: nowrap;
   }
-  
+
   .calendar-wrapper .fc-daygrid-day-number {
     padding: 1px 2px;
     font-size: 10px;
@@ -597,39 +636,39 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   /* 移动端事件显示优化 */
   .calendar-wrapper .fc-daygrid-day {
     position: relative;
     overflow: visible;
   }
-  
+
   .calendar-wrapper .fc-daygrid-day-frame {
     position: relative;
     overflow: visible;
   }
-  
+
   /* 移动端月视图：隐藏事件和节日，只显示日期数字 */
   .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .fc-daygrid-event {
     display: none !important;
   }
-  
+
   .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .fc-daygrid-event-frame {
     display: none !important;
   }
-  
+
   .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .fc-daygrid-day-events {
     display: none !important;
   }
-  
+
   .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .holiday-label {
     display: none !important;
   }
-  
+
   .calendar-wrapper .fc.fc-dayGridMonth-view .fc-daygrid-day .fc-bg-event {
     display: none !important;
   }
-  
+
   .calendar-wrapper .fc-bg-event .fc-event-title {
     font-size: 8px;
     line-height: 1.1;
@@ -643,7 +682,7 @@
     left: 2px;
     color: #e74c3c;
     font-weight: 700;
-    text-shadow: 
+    text-shadow:
       0 0 3px rgba(255, 255, 255, 1),
       0 0 3px rgba(255, 255, 255, 1),
       1px 1px 0 rgba(255, 255, 255, 0.9);
@@ -652,11 +691,11 @@
     border-radius: 2px;
     max-width: calc(100% - 4px);
   }
-  
+
   .calendar-wrapper .fc-bg-event.holiday-event .fc-event-title {
     color: #e74c3c;
   }
-  
+
   .calendar-wrapper .fc-daygrid-day-top {
     flex-direction: row;
     align-items: flex-start;
@@ -665,7 +704,7 @@
     min-height: 14px;
     margin-bottom: 2px;
   }
-  
+
   .calendar-wrapper .fc-daygrid-day-number {
     /* 移动端居中显示，不使用绝对定位 */
     text-align: center;
@@ -676,7 +715,7 @@
     z-index: 5;
     font-weight: 600;
   }
-  
+
 }
 
 /* ==================== 周视图和日视图事件样式优化 ==================== */
@@ -705,10 +744,9 @@
 
 /* 今天的列高亮 - 安卓风格渐变 */
 .fc-day-today .fc-timegrid-col-frame {
-  background: linear-gradient(to bottom, 
-    rgba(102, 126, 234, 0.05), 
-    rgba(102, 126, 234, 0.02)
-  );
+  background: linear-gradient(to bottom,
+      rgba(102, 126, 234, 0.05),
+      rgba(102, 126, 234, 0.02));
 }
 
 /* 时间网格头部样式 */
@@ -830,9 +868,12 @@
 
 /* 圆形背景脉冲动画 */
 @keyframes pulse-circle {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 3px 12px rgba(102, 126, 234, 0.5);
   }
+
   50% {
     box-shadow: 0 3px 16px rgba(102, 126, 234, 0.7);
   }
@@ -850,46 +891,46 @@
     border-radius: 6px;
     border-left-width: 3px;
   }
-  
+
   .fc-timegrid-event .fc-event-title {
     font-size: 12px;
   }
-  
+
   .fc-timegrid-event .fc-event-time {
     font-size: 11px;
   }
-  
+
   .fc-timeGridDay-view .fc-timegrid-event {
     margin: 0 4px;
     padding: 8px 10px;
   }
-  
+
   /* 移动端周视图日期头部 */
   .fc-col-header-cell {
     font-size: 13px;
     padding: 10px 4px;
   }
-  
+
   /* 移动端今天的圆形高亮 */
   .fc-timeGridWeek-view .fc-col-header-cell.fc-day-today .custom-day-header::before {
     width: 36px;
     height: 36px;
   }
-  
+
   /* 移动端自定义头部字体 */
   .custom-day-header .weekday {
     font-size: 11px;
   }
-  
+
   .custom-day-header .day-number {
     font-size: 16px;
   }
-  
+
   /* 移动端周视图容器 */
   .fc-timeGridWeek-view {
     border-radius: 12px;
   }
-  
+
   /* 移动端时间标签 */
   .fc-timeGridWeek-view .fc-timegrid-slot-label {
     font-size: 11px;
