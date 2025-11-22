@@ -515,7 +515,7 @@
     min-height: 50px;
   }
 
-  /* 工具栏 - 缩小间距，防止换行和溢出 */
+  /* 工具栏 - 移动端允许换行，日期标题单独占一行 */
   .calendar-wrapper .fc-header-toolbar {
     margin-top: 0;
     padding-top: 0;
@@ -525,63 +525,66 @@
     position: relative;
     z-index: 10;
     display: flex;
-    flex-wrap: nowrap;
-    gap: 1px;
-    white-space: nowrap;
+    flex-wrap: wrap;
+    gap: 4px;
     width: 100%;
     max-width: 100%;
     overflow: hidden;
     box-sizing: border-box;
   }
   
-  /* 工具栏各个部分缩小间距 */
+  /* 工具栏各个部分 */
   .calendar-wrapper .fc-header-toolbar .fc-toolbar-chunk {
     margin: 0;
     padding: 0;
     display: flex;
     flex-wrap: nowrap;
-    gap: 1px;
+    gap: 2px;
     align-items: center;
-    flex-shrink: 1;
-    min-width: 0;
   }
   
-  /* 左侧按钮组 - 更紧凑 */
+  /* 左侧按钮组 - 第一行左侧 */
   .calendar-wrapper .fc-header-toolbar .fc-toolbar-chunk:first-child {
     flex-shrink: 0;
+    order: 1;
   }
   
-  /* 中间标题 - 缩小并允许收缩 */
+  /* 中间标题 - 单独占第二行，居中显示 */
   .calendar-wrapper .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
-    flex: 1 1 auto;
-    min-width: 0;
+    width: 100%;
     justify-content: center;
+    order: 3;
+    margin-top: 4px;
+    margin-bottom: 2px;
   }
   
-  /* 右侧按钮组 - 更紧凑 */
+  /* 右侧按钮组 - 第一行右侧 */
   .calendar-wrapper .fc-header-toolbar .fc-toolbar-chunk:last-child {
     flex-shrink: 0;
+    order: 2;
+    margin-left: auto;
   }
   
+  /* 日期标题 - 单独一行，字体更大 */
   .calendar-wrapper .fc-toolbar-title {
-    font-size: 9px;
+    font-size: 14px;
     font-weight: 700;
     white-space: nowrap;
-    margin: 0 2px;
+    margin: 0;
     padding: 0;
-    line-height: 1.2;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.4;
+    text-align: center;
+    width: 100%;
   }
-  
+
   .calendar-wrapper .fc-button {
-    font-size: 7px;
-    padding: 1px 3px;
+    font-size: 10px;
+    padding: 4px 6px;
     margin: 0;
     white-space: nowrap;
-    line-height: 1.1;
+    line-height: 1.2;
     min-width: auto;
-    border-radius: 3px;
+    border-radius: 4px;
     flex-shrink: 0;
   }
   
@@ -594,24 +597,24 @@
   }
   
   .calendar-wrapper .fc-button-group .fc-button {
-    font-size: 7px;
-    padding: 1px 3px;
+    font-size: 10px;
+    padding: 4px 6px;
     margin: 0;
     white-space: nowrap;
     border-radius: 0;
   }
   
   .calendar-wrapper .fc-button-group .fc-button:first-child {
-    border-radius: 3px 0 0 3px;
+    border-radius: 4px 0 0 4px;
   }
   
   .calendar-wrapper .fc-button-group .fc-button:last-child {
-    border-radius: 0 3px 3px 0;
+    border-radius: 0 4px 4px 0;
   }
   
   .calendar-wrapper .fc-today-button {
-    font-size: 7px;
-    padding: 1px 3px;
+    font-size: 10px;
+    padding: 4px 6px;
     white-space: nowrap;
     margin: 0;
   }
