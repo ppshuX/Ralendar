@@ -162,11 +162,8 @@ def oauth_login_callback_qq(request):
     if not code:
         return HttpResponse('缺少授权码', status=400)
     
-    # 获取存储的 next_url（OAuth流程会在session中存储）
-    # 如果没有，尝试从 state 参数或 referer 中恢复
     next_url = request.session.pop('oauth_next_url', None)
     
-    # 检查 referer，如果包含 /oauth/authorize，强制标记为 OAuth 流程
     referer = request.META.get('HTTP_REFERER', '')
     is_oauth_flow = next_url is not None or (referer and 'oauth/authorize' in referer)
     
