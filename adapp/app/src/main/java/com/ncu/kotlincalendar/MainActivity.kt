@@ -377,7 +377,6 @@ class MainActivity : AppCompatActivity() {
         if (fromNotification) {
             val eventId = intent.getLongExtra("eventId", -1)
             if (eventId > 0) {
-                // 延迟一下，确保UI和数据都已加载完成
                 lifecycleScope.launch {
                     delay(500)
                     withContext(Dispatchers.IO) {
@@ -449,17 +448,9 @@ class MainActivity : AppCompatActivity() {
         }
         tabListener = null
         
-        // 3. 清理事件列表（避免持有过多数据）
-        // Activity销毁时清理所有列表数据，释放内存
         eventsList.clear()
         datesWithEvents.clear()
         datesWithFestivals.clear()
-        
-        // 4. 清理Manager引用（虽然它们使用Context，但显式清理更安全）
-        // Manager类使用Context，会在Activity销毁时自动清理，这里不需要额外操作
-        
-        // 5. 清理View引用（帮助GC回收）
-        // View引用会在Activity销毁时自动清理，这里只是确保
     }
     
     // 请求通知权限
