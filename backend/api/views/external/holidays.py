@@ -132,7 +132,6 @@ def check_holiday(request):
     date_str = request.GET.get('date')
     
     if not date_str:
-        # 如果没有提供日期，使用今天
         target_date = date.today()
     else:
         try:
@@ -140,13 +139,8 @@ def check_holiday(request):
         except ValueError:
             return Response({'error': '日期格式错误，请使用 YYYY-MM-DD 格式'}, status=400)
     
-    # 获取法定节假日信息
     holiday_info = get_holiday_info(target_date)
-    
-    # 检查国际节日和传统节日
     month_day = target_date.strftime('%m-%d')
-    
-    # 国际节日字典（带Emoji）
     international_festivals_dict = {
         '01-01': {'name': '元旦', 'emoji': '🎊'},
         '02-14': {'name': '情人节', 'emoji': '💕'},
@@ -166,7 +160,6 @@ def check_holiday(request):
         '12-25': {'name': '圣诞节', 'emoji': '🎅'}
     }
     
-    # 传统节日（农历，2025年对应的公历日期）
     traditional_festivals_dict = {
         '01-28': {'name': '除夕', 'emoji': '🏮'},
         '01-29': {'name': '春节', 'emoji': '🧨'},
@@ -176,12 +169,9 @@ def check_holiday(request):
         '10-29': {'name': '重阳节', 'emoji': '🍵'}
     }
     
-    # 合并所有节日到一个列表（前端期望的格式）
     festivals_list = []
     
-    # 如果是法定节假日，也要添加到festivals列表（带emoji）
     if holiday_info and holiday_info['is_holiday']:
-        # 为法定节假日匹配emoji
         holiday_emoji = '🎉'
         for key, festival in international_festivals_dict.items():
             if festival['name'] in holiday_info['holiday_name']:
@@ -194,10 +184,8 @@ def check_holiday(request):
             'type': 'legal'
         })
     
-    # 添加国际节日（避免与已添加的法定节假日重复）
     if month_day in international_festivals_dict:
         festival = international_festivals_dict[month_day]
-        # 检查是否已经作为法定节假日添加过
         if not any(f['name'] == festival['name'] for f in festivals_list):
             festivals_list.append({
                 'name': festival['name'],
@@ -205,10 +193,8 @@ def check_holiday(request):
                 'type': 'international'
             })
     
-    # 添加传统节日（避免重复）
     if month_day in traditional_festivals_dict:
         festival = traditional_festivals_dict[month_day]
-        # 检查是否已经添加过
         if not any(f['name'] == festival['name'] for f in festivals_list):
             festivals_list.append({
                 'name': festival['name'],
@@ -216,7 +202,6 @@ def check_holiday(request):
                 'type': 'traditional'
             })
     
-    # 获取农历信息
     lunar_str = None
     try:
         from lunarcalendar import Converter, Solar

@@ -97,40 +97,26 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvHolidayHint: TextView
     private lateinit var tvFortuneContent: TextView
     
-    // 数据库
     private lateinit var database: AppDatabase
     private lateinit var eventDao: EventDao
     private lateinit var subscriptionDao: SubscriptionDao
-    
-    // Repository（统一本地/云端数据访问）
     private lateinit var eventRepository: EventRepository
     private lateinit var reminderManager: ReminderManager
     private lateinit var subscriptionManager: SubscriptionManager
     private val eventsList = mutableListOf<Event>()
-    
-    // UI管理器
     private lateinit var weatherManager: WeatherManager
     private lateinit var holidayManager: HolidayManager
     private lateinit var fortuneManager: FortuneManager
-    
-    // 日历相关
     private var selectedDate: LocalDate? = LocalDate.now()
     private var currentMonth: YearMonth = YearMonth.now()
-    private val datesWithEvents = mutableSetOf<LocalDate>()  // 有日程的日期集合（用户创建）
-    private val datesWithFestivals = mutableMapOf<LocalDate, String>()  // 有节日的日期集合 -> 节日名称
-    private var currentTab: Int = 0  // 0=日程 1=节日 2=运势
-    private var viewMode: Int = 0  // 0=月视图（默认） 1=周视图 2=日视图
-    
-    // 加载操作的Job（用于避免竞态条件）
+    private val datesWithEvents = mutableSetOf<LocalDate>()
+    private val datesWithFestivals = mutableMapOf<LocalDate, String>()
+    private var currentTab: Int = 0
+    private var viewMode: Int = 0
     private var loadEventsJob: Job? = null
-    
-    // Tab监听器（用于在onDestroy时清理）
     private var tabListener: com.google.android.material.tabs.TabLayout.OnTabSelectedListener? = null
-    
-    // 日程编辑对话框助手（可复用组件）
     private lateinit var eventEditDialogHelper: EventEditDialogHelper
     
-    // 月视图 DayViewContainer
     inner class DayViewContainer(view: View) : ViewContainer(view) {
         val textView: TextView = view.findViewById(R.id.calendarDayText)
         val dotView: View = view.findViewById(R.id.calendarDayDot)
@@ -147,7 +133,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    // 周视图 DayViewContainer
     inner class WeekDayViewContainer(view: View) : ViewContainer(view) {
         val dayText: TextView = view.findViewById(R.id.weekDayText)
         val numberText: TextView = view.findViewById(R.id.weekDayNumber)
@@ -167,14 +152,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         
-        // Toolbar已使用自定义布局（包含logo和标题），无需设置ActionBar
-        
-        // 初始化数据库和提醒管理器
         database = AppDatabase.getDatabase(this)
         eventDao = database.eventDao()
         subscriptionDao = database.subscriptionDao()
-        
-        // 初始化Repository
         eventRepository = EventRepository(this)
         reminderManager = ReminderManager(this)
         subscriptionManager = SubscriptionManager(
@@ -182,8 +162,6 @@ class MainActivity : AppCompatActivity() {
             eventDao,
             RetrofitClient.api
         )
-        
-        // 初始化视图
         calendarView = findViewById(R.id.calendarView)
         weekCalendarView = findViewById(R.id.weekCalendarView)
         weekTimelineRecycler = findViewById(R.id.weekTimelineRecycler)
@@ -216,36 +194,21 @@ class MainActivity : AppCompatActivity() {
         tvHolidayHint = findViewById(R.id.tvHolidayHint)
         tvFortuneContent = findViewById(R.id.tvFortuneContent)
         
-        // 初始化WeatherManager
         weatherManager = WeatherManager(
             this, weatherCard, tvWeatherLocation, tvTemperature,
             tvWeatherDesc, tvFeelsLike, tvHumidity, tvWind
         )
-        
-        // 初始化HolidayManager
         holidayManager = HolidayManager(
             festivalCardsContainer, tvHolidayHint, this, subscriptionManager
         )
-        
-        // 初始化FortuneManager
         fortuneManager = FortuneManager(this, tvFortuneContent)
-        
-        // 设置日程列表 RecyclerView
         adapter = EventAdapter(
             events = emptyList(),
-            onItemClick = { event ->
-                // 点击日程 - 显示详情
-                showEventDetails(event)
-            },
-            onItemLongClick = { event ->
-                // 长按日程 - 删除
-                showDeleteConfirmDialog(event)
-            }
+            onItemClick = { event -> showEventDetails(event) },
+            onItemLongClick = { event -> showDeleteConfirmDialog(event) }
         )
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
-        
-        // 设置周视图时间线 RecyclerView
         weekTimelineAdapter = TimeSlotAdapter(
             events = emptyList(),
             onEventClick = { event ->
@@ -254,23 +217,15 @@ class MainActivity : AppCompatActivity() {
         )
         weekTimelineRecycler.layoutManager = LinearLayoutManager(this)
         weekTimelineRecycler.adapter = weekTimelineAdapter
-        
-        // 设置日视图时间线 RecyclerView
         dayViewAdapter = TimeSlotAdapter(
             events = emptyList(),
-            onEventClick = { event ->
-                showEventDetails(event)
-            }
+            onEventClick = { event -> showEventDetails(event) }
         )
         dayViewRecycler.layoutManager = LinearLayoutManager(this)
         dayViewRecycler.adapter = dayViewAdapter
-        
-        // 初始化 Tab
         tabLayout.addTab(tabLayout.newTab().setText("📅 日程安排"))
         tabLayout.addTab(tabLayout.newTab().setText("🎊 今日节日"))
         tabLayout.addTab(tabLayout.newTab().setText("🔮 今日运势"))
-        
-        // Tab 切换监听
         tabListener = object : com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab?) {
                 currentTab = tab?.position ?: 0
@@ -278,30 +233,17 @@ class MainActivity : AppCompatActivity() {
                     val millis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
                     when (currentTab) {
                         0 -> {
-                            // 切换到日程 Tab
                             switchContent(0)
-                            
-                            // **取消之前的加载操作（避免竞态条件）**
                             loadEventsJob?.cancel()
-                            
-                            // **立即刷新列表显示（从现有 eventsList 中过滤，确保不显示空列表）**
                             updateEventsList()
-                            
-                            // **异步加载数据（不阻塞UI，但保证列表始终有内容）**
-                            // 如果列表为空，先加载所有事件；否则只加载当前日期的事件
                             loadEventsJob = lifecycleScope.launch(Dispatchers.IO) {
                                 try {
                                     if (eventsList.isEmpty()) {
-                                        // 列表为空：先加载所有事件
                                         loadAllEventsSync()
-                                        // loadAllEventsSync 内部已经调用了 updateEventsList()
                                     } else {
-                                        // 列表不为空：只加载当前日期的最新数据（确保数据最新）
-                                        // loadEventsForSelectedDate 内部已经调用了 updateEventsList()
                                         loadEventsForSelectedDate(millis)
                                     }
                                 } catch (e: Exception) {
-                                    // 加载失败，至少保证列表显示正常（使用已有数据）
                                     withContext(Dispatchers.Main) {
                                         updateEventsList()
                                     }
@@ -314,7 +256,6 @@ class MainActivity : AppCompatActivity() {
                             loadHolidayInfo(millis)
                         }
                         2 -> {
-                            // 切换到运势 Tab
                             switchContent(2)
                             fortuneManager.loadFortune(
                                 weatherManager.currentWeather,
@@ -330,7 +271,6 @@ class MainActivity : AppCompatActivity() {
         }
         tabLayout.addOnTabSelectedListener(tabListener)
         
-        // 初始化日程编辑对话框助手（可复用组件）
         eventEditDialogHelper = EventEditDialogHelper(this, object : EventEditDialogHelper.OnEventSaveCallback {
             override fun onSave(
                 event: Event?,
@@ -343,7 +283,6 @@ class MainActivity : AppCompatActivity() {
                 longitude: Double
             ) {
                 if (event != null) {
-                    // 编辑模式：更新现有日程
                     updateEvent(
                         event.id,
                         title,
@@ -355,7 +294,6 @@ class MainActivity : AppCompatActivity() {
                         longitude
                     )
                 } else {
-                    // 新增模式：添加新日程
                     addEvent(
                         title,
                         description,
@@ -369,32 +307,17 @@ class MainActivity : AppCompatActivity() {
             }
         })
         
-        // 设置日历
         setupCalendar()
         setupWeekCalendar()
-        
-        // 默认显示今天的日期
         updateDateDisplay(selectedDate!!)
-        
-        // 初始化列表
         updateEventsList()
-        
-        // 加载数据库中的日程
         loadAllEvents()
-        
-        // 初始化节日订阅管理器，确保所有默认节日在首次启动时被订阅
         com.ncu.kotlincalendar.data.managers.FestivalSubscriptionManager(this).initDefaultFestivals()
-        
-        // 初始化加载当前日期的节日信息（修复首次不显示问题）
         selectedDate?.let { date ->
             val millis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             loadHolidayInfo(millis)
         }
-        
-        // 更新日历上的节日标记（确保订阅的节日在日历上显示）
         updateCalendarDots()
-        
-        // 月份导航按钮（仅在月视图展开时使用）
         btnPreviousMonth.setOnClickListener {
             currentMonth = currentMonth.minusMonths(1)
             calendarView.scrollToMonth(currentMonth)
