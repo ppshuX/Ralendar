@@ -491,10 +491,8 @@ class MainActivity : AppCompatActivity() {
                 eventEditDialogHelper.handleLocationResult(locationName, locationAddress, latitude, longitude)
             }
         } else if (requestCode == REQUEST_SETTINGS && resultCode == RESULT_OK) {
-            // 从设置页或登录页返回，重新加载所有事件（可能切换了模式）
             updateCloudModeButton()
             
-            // 如果登录成功，自动切换到云端模式
             if (PreferenceManager.isLoggedIn(this) && !PreferenceManager.isCloudMode(this)) {
                 PreferenceManager.setCloudMode(this, true)
                 Toast.makeText(this, "已自动切换到云端模式", Toast.LENGTH_SHORT).show()
