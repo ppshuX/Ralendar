@@ -275,7 +275,6 @@ def oauth_login_callback_qq(request):
         
         access_token = access_token_match.group(1)
         
-        # 获取 openid 和 unionid
         openid_url = f"https://graph.qq.com/oauth2.0/me?access_token={access_token}&unionid=1"
         openid_response = requests.get(openid_url, timeout=10)
         openid_text = openid_response.text
@@ -286,7 +285,6 @@ def oauth_login_callback_qq(request):
         openid = openid_data.get('openid')
         unionid = openid_data.get('unionid', '')
         
-        # 获取用户信息
         userinfo_url = (
             f"https://graph.qq.com/user/get_user_info"
             f"?access_token={access_token}&oauth_consumer_key={QQ_APPID}&openid={openid}"
@@ -301,13 +299,11 @@ def oauth_login_callback_qq(request):
         nickname = userinfo_data.get('nickname', 'QQ用户')
         avatar = userinfo_data.get('figureurl_qq_2', '')
         
-        # 查找或创建用户
         qq_user = QQUser.objects.filter(openid=openid).first()
         
         if qq_user:
             user = qq_user.user
         else:
-            # 创建新用户
             base_username = nickname
             username = base_username
             counter = 1
@@ -324,7 +320,6 @@ def oauth_login_callback_qq(request):
                 avatar=avatar
             )
         
-        # 使用Django的login函数设置session
         django_login(request, user)
         logger.info(f"[QQ Callback] User {user.id} logged in via QQ, is_oauth_flow: {is_oauth_flow}, next_url: {next_url}"            )
         
@@ -337,29 +332,19 @@ def oauth_login_callback_qq(request):
                     next_url = f"{parsed.path}?{parsed.query}" if parsed.query else parsed.path
                     logger.info(f"[QQ Callback] Recovered next_url from referer in final check")
                 else:
-                    # 如果确实无法恢复，使用默认值
                     next_url = '/oauth/authorize'
                     logger.warning(f"[QQ Callback] Using default next_url")
             
             if not next_url.startswith('/'):
                 next_url = '/' + next_url
             
-            # 如果 next_url 不包含查询参数，尝试从其他来源恢复参数
-            # 但这通常不太可能，因为我们之前已经尝试从 referer 恢复了
             if '?' not in next_url:
                 logger.warning(f"[QQ Callback] next_url does not contain query parameters: {next_url}")
-                # 即使没有参数，也重定向，让授权页面显示错误信息（这比停留在主界面好）
             
             logger.info(f"[QQ Callback] User {user.id} logged in via QQ, redirecting to authorization page")
-            
-            # 使用 HttpResponseRedirect 确保重定向执行
             return HttpResponseRedirect(next_url)
         else:
-            # 如果不是OAuth流程，或者无法恢复 next_url
-            # 显示一个提示页面，让用户手动返回授权页面
             logger.warning(f"[QQ Callback] OAuth flow not detected or next_url missing")
-            
-            # 尝试从 referer 获取原始授权页面（最后一次尝试）
             referer = request.META.get('HTTP_REFERER', '')
             redirect_url = '/oauth/authorize'  # 默认值
             

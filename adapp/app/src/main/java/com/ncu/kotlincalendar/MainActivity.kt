@@ -251,7 +251,6 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                         1 -> {
-                            // 切换到节日 Tab
                             switchContent(1)
                             loadHolidayInfo(millis)
                         }
@@ -334,38 +333,31 @@ class MainActivity : AppCompatActivity() {
             switchViewMode(viewMode)
         }
         
-        // 初始化为月视图
         switchViewMode(0)
         
-        // 点击"添加日程"按钮
         btnAddEvent.setOnClickListener {
             showAddEventDialog()
         }
         
-        // 点击"AI创建日程"按钮
         btnAICreate.setOnClickListener {
             showAIEventDialog()
         }
         
-        // 点击"订阅网络日历"按钮 - 打开订阅管理界面
         btnSubscribe.setOnClickListener {
             val intent = android.content.Intent(this, SubscriptionsActivity::class.java)
             startActivity(intent)
         }
         
-        // 点击"云端模式"按钮
         btnCloudMode.setOnClickListener {
             toggleCloudMode()
         }
         
-        // 初始化云端模式按钮状态
         updateCloudModeButton()
         
         Toast.makeText(this, "📅 日历已加载，数据会自动保存", Toast.LENGTH_SHORT).show()
         
-        // 加载天气信息（使用WeatherManager）- 延迟加载确保UI已初始化
         lifecycleScope.launch {
-            delay(200) // 等待UI完全初始化
+            delay(200)
             weatherManager.loadWeather(lifecycleScope)
         }
         
@@ -388,21 +380,17 @@ class MainActivity : AppCompatActivity() {
                 // 延迟一下，确保UI和数据都已加载完成
                 lifecycleScope.launch {
                     delay(500)
-                    // 从数据库/云端查找对应的事件
                     withContext(Dispatchers.IO) {
                         try {
                             val event: Event? = if (PreferenceManager.isCloudMode(this@MainActivity) && PreferenceManager.isLoggedIn(this@MainActivity)) {
-                                // 云端模式：从API获取
                                 val result = eventRepository.getAllEvents()
                                 result.getOrNull()?.find { it.id == eventId }
                             } else {
-                                // 本地模式：从数据库获取
                                 eventDao.getAllEvents().find { it.id == eventId }
                             }
                             
                             event?.let {
                                 withContext(Dispatchers.Main) {
-                                    // 切换到事件日期
                                     val eventDate = Instant.ofEpochMilli(it.dateTime)
                                         .atZone(ZoneId.systemDefault())
                                         .toLocalDate()
@@ -412,18 +400,15 @@ class MainActivity : AppCompatActivity() {
                                     calendarView.notifyCalendarChanged()
                                     weekCalendarView.scrollToWeek(eventDate)
                                     
-                                    // 刷新事件列表
                                     loadAllEvents()
                                     val eventDateMillis = eventDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
                                     loadEventsForSelectedDate(eventDateMillis)
                                     
-                                    // 延迟显示详情对话框（确保列表已刷新）
                                     delay(300)
                                     showEventDetails(it)
                                 }
                             }
                         } catch (e: Exception) {
-                            // 如果找不到事件，至少切换到通知中的日期
                         }
                     }
                 }
@@ -436,40 +421,29 @@ class MainActivity : AppCompatActivity() {
      */
     override fun onResume() {
         super.onResume()
-        // 优化：只刷新当前日期的数据，不重新加载所有事件
-        // 如果需要全量刷新（如从设置页返回），会在onActivityResult中处理
-        updateCalendarDots()  // 刷新日历标记（轻量操作）
-        // 刷新当前日期的节日信息
+        updateCalendarDots()
         selectedDate?.let { date ->
             val millis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             loadHolidayInfo(millis)
-            // 刷新当前日期的事件列表（不重新加载，只更新UI）
-            // 如果 eventsList 为空，说明需要重新加载
             if (eventsList.isEmpty()) {
                 loadAllEvents()
                 loadEventsForSelectedDate(millis)
             } else {
-                // 如果列表不为空，只刷新当前日期的显示
                 updateEventsList()
             }
         }
-        // 刷新天气信息（使用WeatherManager）
         weatherManager.loadWeather(lifecycleScope)
     }
     
     override fun onDestroy() {
         super.onDestroy()
         
-        // 1. 取消所有协程任务（避免内存泄漏）
         loadEventsJob?.cancel()
         loadEventsJob = null
-        
-        // 2. 清理Tab监听器（避免内存泄漏）
         tabListener?.let { listener ->
             try {
                 tabLayout.removeOnTabSelectedListener(listener)
             } catch (e: Exception) {
-                // 如果已经清理过，忽略错误
                 Log.w("MainActivity", "清理Tab监听器失败", e)
             }
         }
