@@ -524,7 +524,7 @@ Ralendar/
 
 ## 🌏 关于 Roamio 生态
 
-**Ralendar** 是 [Roamio](https://github.com/yourusername/roamio) 生态系统的重要组成部分：
+**Ralendar** 是 [Roamio](https://github.com/ppshuX/roamio/) 生态系统的重要组成部分：
 
 - **Roamio** 🗺️ - 旅行规划与内容分享平台
 - **Ralendar** 📅 - 智能日历与时间管理（本项目）
@@ -612,4 +612,4 @@ Copyright (c) 2025 Ralendar Team (Part of Roamio Ecosystem)
 
 ---
 
-**🔗 相关项目**: [Roamio - 旅行规划平台](https://github.com/yourusername/roamio)
+**🔗 相关项目**: [Roamio - 旅行规划平台](https://github.com/ppshuX/roamio/)
