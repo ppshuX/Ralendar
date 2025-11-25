@@ -212,7 +212,7 @@ pip install -r requirements.txt
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env 文件，填入你的配置（数据库、OAuth、API密钥等）
+# 编辑 .env 文件，填入你的配置（见下方环境变量说明）
 
 # 数据库迁移
 python manage.py migrate
@@ -225,6 +225,67 @@ python manage.py runserver
 ```
 
 后端将运行在 http://localhost:8000
+
+#### 环境变量配置 (.env)
+
+```bash
+# ==================== Django 基础配置 ====================
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+ENVIRONMENT=development  # development 或 production
+
+# ==================== 数据库配置 ====================
+# 开发环境使用 SQLite（默认），生产环境使用 MySQL
+DB_ENGINE=mysql  # 或 sqlite3
+DB_NAME=ralendar_db
+DB_USER=ralendar_user
+DB_PASSWORD=your-password
+DB_HOST=localhost
+DB_PORT=3306
+
+# ==================== OAuth 配置 ====================
+# AcWing OAuth
+ACWING_APPID=7626
+ACWING_SECRET=your-acwing-secret
+
+# QQ OAuth
+QQ_APPID=your-qq-appid
+QQ_APPKEY=your-qq-appkey
+
+# ==================== Celery 配置 ====================
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+
+# ==================== 邮件配置 ====================
+EMAIL_HOST=smtp.qq.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@qq.com
+EMAIL_HOST_PASSWORD=your-smtp-password
+DEFAULT_FROM_EMAIL=Ralendar <your-email@qq.com>
+
+# ==================== 第三方服务 API Key ====================
+# 百度地图
+BAIDU_MAP_AK=your-baidu-map-api-key
+
+# 高德地图（天气服务）
+AMAP_API_KEY=your-amap-api-key
+
+# 阿里云通义千问（AI 助手）
+QWEN_API_KEY=your-qwen-api-key
+```
+
+#### 启动 Celery（邮件提醒需要）
+
+```bash
+# 启动 Celery Worker（处理异步任务）
+celery -A calendar_backend worker --loglevel=info
+
+# 启动 Celery Beat（定时任务调度）
+celery -A calendar_backend beat --loglevel=info
+```
+
+**注意**：邮件提醒功能需要 Celery 服务运行。
 
 ### 3. Web 前端设置
 
@@ -308,42 +369,88 @@ Ralendar/
 ├── backend/                  # Django 后端
 │   ├── api/                  # API 应用
 │   │   ├── models/          # 数据模型
-│   │   ├── views/           # 视图层
-│   │   │   ├── auth/        # 认证相关
-│   │   │   ├── calendar/   # 日历核心
-│   │   │   ├── external/   # 外部服务（农历、节假日、天气）
-│   │   │   ├── ai/         # AI 助手
-│   │   │   ├── integration/# 第三方集成（Roamio）
-│   │   │   └── oauth/      # OAuth 2.0 服务器
-│   │   ├── url_patterns/   # URL 路由
-│   │   ├── serializers.py  # 序列化器
-│   │   └── tasks.py        # Celery 异步任务
+│   │   │   ├── event.py     # Event 模型（日程事件）
+│   │   │   ├── user.py      # User 扩展模型（AcWingUser, QQUser, UserMapping）
+│   │   │   └── calendar_data.py  # 节假日、黄历、运势模型
+│   │   ├── views/           # 视图层（按功能模块组织）
+│   │   │   ├── auth/        # 认证相关（注册、登录、OAuth）
+│   │   │   ├── calendar/    # 日历核心（Events, Calendars）
+│   │   │   ├── external/    # 外部服务（农历、节假日、天气、运势）
+│   │   │   ├── ai/          # AI 助手（通义千问集成）
+│   │   │   ├── integration/ # 第三方集成（Roamio Fusion API）
+│   │   │   └── oauth/       # OAuth 2.0 服务器（授权、令牌、用户信息）
+│   │   ├── url_patterns/    # URL 路由（模块化）
+│   │   │   ├── auth.py      # 认证路由
+│   │   │   ├── user.py      # 用户中心路由
+│   │   │   ├── fusion.py    # 融合功能路由
+│   │   │   ├── oauth.py     # OAuth 路由
+│   │   │   └── utils.py     # 工具类路由
+│   │   ├── serializers.py   # 序列化器
+│   │   ├── tasks.py         # Celery 异步任务（邮件提醒）
+│   │   ├── middleware/      # 中间件
+│   │   └── utils/           # 工具模块
 │   ├── calendar_backend/    # Django 项目配置
-│   │   ├── settings.py     # 配置文件
-│   │   ├── urls.py         # 主路由
-│   │   └── celery.py       # Celery 配置
-│   └── requirements.txt    # Python 依赖
+│   │   ├── settings.py      # 配置文件
+│   │   ├── urls.py          # 主路由
+│   │   ├── celery.py        # Celery 配置
+│   │   ├── wsgi.py          # WSGI 配置
+│   │   └── asgi.py          # ASGI 配置
+│   ├── templates/           # 模板文件（OAuth 回调页面等）
+│   ├── static/              # 静态文件（collectstatic 生成）
+│   ├── requirements.txt     # Python 依赖
+│   ├── manage.py            # Django 管理脚本
+│   ├── uwsgi.ini            # uWSGI 配置
+│   ├── nginx.conf            # Nginx 配置示例
+│   └── start_celery.sh      # Celery 启动脚本
 │
 ├── web_frontend/            # Web 前端
 │   ├── src/
-│   │   ├── components/     # Vue 组件
-│   │   ├── views/          # 页面视图
-│   │   ├── router/         # 路由配置
-│   │   └── api/            # API 调用
-│   └── package.json
+│   │   ├── components/      # Vue 组件（按功能分类）
+│   │   │   ├── auth/        # 认证组件（LoginForm, RegisterForm, OAuthButtons）
+│   │   │   ├── profile/     # 个人中心组件（UserHeader, UserStats, AccountBindings）
+│   │   │   ├── calendar/    # 日历组件（Toolbar, EventDialog, EventDetail）
+│   │   │   ├── NavBar.vue   # 导航栏
+│   │   │   └── ContentField.vue  # 内容容器
+│   │   ├── views/           # 页面视图
+│   │   │   ├── account/     # 账号相关（LoginView, ProfileView, OAuth 回调）
+│   │   │   └── CalendarView.vue  # 日历主页
+│   │   ├── router/          # 路由配置
+│   │   ├── api/             # API 调用封装
+│   │   ├── store/           # Pinia 状态管理
+│   │   └── main.js          # 入口文件
+│   ├── package.json
+│   └── vite.config.js       # Vite 构建配置
 │
 ├── acapp_frontend/          # AcApp 前端
 │   ├── src/
-│   │   ├── components/     # Vue 组件
-│   │   ├── views/          # 页面视图
-│   │   └── store/          # Vuex 状态管理
-│   └── package.json
+│   │   ├── components/      # Vue 组件
+│   │   ├── views/           # 页面视图
+│   │   ├── store/           # Vuex 状态管理
+│   │   └── App.vue          # 根组件
+│   ├── package.json
+│   └── vue.config.js        # Vue CLI 配置
 │
-└── docs/                    # 项目文档
-    ├── api/                # API 文档
-    ├── guides/             # 开发指南
-    ├── architecture/       # 架构文档
-    └── integration/        # 集成文档
+├── docs/                    # 项目文档
+│   ├── api/                 # API 文档
+│   │   └── ROAMIO_ECOSYSTEM_API_DOCUMENTATION.md  # 完整 API 文档
+│   ├── guides/              # 开发指南
+│   │   ├── QUICK_START.md   # 快速开始
+│   │   ├── DEPLOYMENT_GUIDE.md  # 部署指南
+│   │   ├── ACWING_LOGIN_GUIDE.md  # AcWing 登录指南
+│   │   ├── BAIDU_MAP_SETUP.md  # 百度地图配置
+│   │   └── EMAIL_REMINDER_GUIDE.md  # 邮件提醒配置
+│   ├── architecture/        # 架构文档
+│   │   ├── ARCHITECTURE.md  # 系统架构
+│   │   └── Component_Structure.md  # 组件结构
+│   ├── integration/         # 集成文档
+│   │   ├── ROAMIO_INTEGRATION_GUIDE.md  # Roamio 集成指南
+│   │   └── ROAMIO_QUICKSTART.md  # 快速集成
+│   ├── features/            # 功能文档
+│   │   ├── HOLIDAY_SYNC_GUIDE.md  # 节假日同步
+│   │   └── DJANGO_ADMIN_GUIDE.md  # Django Admin 使用
+│   └── INDEX.md             # 文档索引
+│
+└── README.md                # 项目说明（本文档）
 ```
 
 ---
@@ -354,36 +461,169 @@ Ralendar/
 
 #### 认证相关
 - `POST /api/auth/register/` - 用户注册
+  - 请求体: `{username, password, email?}`
+  - 响应: `{id, username, email, access, refresh}`
 - `POST /api/auth/login/` - 用户登录
+  - 请求体: `{username, password}`
+  - 响应: `{access, refresh, user}`
 - `POST /api/auth/refresh/` - 刷新 Token
-- `GET /api/auth/me/` - 获取当前用户信息
-- `GET /api/auth/acwing/login/` - 获取 AcWing 登录 URL
-- `GET /api/auth/qq/login/` - 获取 QQ 登录 URL
+  - 请求体: `{refresh}`
+  - 响应: `{access}`
+- `GET /api/auth/me/` - 获取当前用户信息（需要认证）
+- `POST /api/auth/acwing/login/` - AcWing OAuth 登录
+  - 请求体: `{code, state?}`
+- `POST /api/auth/qq/login/` - QQ OAuth 登录
+  - 请求体: `{code, state?}`
+  - 支持 UnionID 跨应用识别
 
 #### 日程管理
 - `GET /api/events/` - 获取日程列表
+  - 查询参数: `start_date?`, `end_date?`, `page?`, `page_size?`
+  - 响应: `[{id, title, start_time, end_time, location, ...}]`
 - `POST /api/events/` - 创建日程
+  - 请求体: `{title, start_time, end_time?, description?, location?, latitude?, longitude?, reminder_minutes?, email_reminder?}`
+  - 响应: `{id, title, start_time, ...}`
 - `GET /api/events/{id}/` - 获取日程详情
-- `PUT /api/events/{id}/` - 更新日程
+- `PUT /api/events/{id}/` - 更新日程（完整更新）
+- `PATCH /api/events/{id}/` - 更新日程（部分更新）
 - `DELETE /api/events/{id}/` - 删除日程
+
+#### 用户中心
+- `GET /api/user/stats/` - 获取用户统计（需要认证）
+  - 响应: `{total_events, today_events, upcoming_events}`
+- `GET /api/user/bindings/` - 获取账号绑定状态
+  - 响应: `{has_acwing, has_qq, has_password, ...}`
+- `PATCH /api/user/profile/` - 更新个人信息
+- `POST /api/user/change-password/` - 修改密码
+- `DELETE /api/user/unbind/acwing/` - 解绑 AcWing
+- `DELETE /api/user/unbind/qq/` - 解绑 QQ
 
 #### AI 助手
 - `POST /api/ai/parse-event/` - 自然语言解析日程
+  - 请求体: `{text: "明天下午3点开会"}`
+  - 响应: `{title, start_time, location?, ...}`
 - `POST /api/ai/summarize/` - 智能总结日程
+  - 请求体: `{start_date?, end_date?}`
+  - 响应: `{summary, suggestions}`
 - `POST /api/ai/chat/` - AI 对话
+  - 请求体: `{message, context?}`
 
 #### 外部服务
 - `GET /api/lunar/` - 获取农历信息
+  - 查询参数: `year, month, day` 或 `date=YYYY-MM-DD`
+  - 响应: `{lunarDate, year, month, day, isleap}`
 - `GET /api/holidays/check/` - 检查节假日
+  - 查询参数: `date=YYYY-MM-DD` 或 `year=YYYY`
 - `GET /api/fortune/` - 获取每日运势
+  - 查询参数: `date?`（可选，默认为今天）
 - `GET /api/weather/` - 获取天气信息
+  - 查询参数: `city?`, `latitude?`, `longitude?`
 
 #### 融合功能 (Roamio)
-- `POST /api/fusion/events/batch/` - 批量创建日程
+- `POST /api/fusion/events/batch/` - 批量创建日程（用于 Roamio 同步）
+  - 请求体: `{source_app: "roamio", source_id, related_trip_slug, events: [...]}`
+  - 支持跨应用 Token 认证（通过 UnionID 匹配用户）
 - `GET /api/fusion/events/by-trip/{slug}/` - 按旅行查询日程
+  - 响应: `{count, trip_slug, events: [...]}`
 - `POST /api/fusion/sync/from-roamio/` - 从 Roamio 同步
+  - 请求体: `{trip_slug, activities: [...]}`
+
+#### OAuth 2.0 服务器端点
+- `GET /api/oauth2/receive_code/` - AcWing OAuth 回调（特殊端点）
+  - 返回纯 JSON（不是 HTML），供 AcWingOS API 调用
+
+### API 认证方式
+
+所有需要认证的端点使用 **JWT Bearer Token**：
+
+```http
+Authorization: Bearer <access_token>
+```
+
+**Token 生命周期**：
+- Access Token: 5 分钟（短期，安全）
+- Refresh Token: 15 天（长期，便利）
+
+### API 响应格式
+
+**成功响应**：
+```json
+{
+  "id": 1,
+  "title": "会议",
+  "start_time": "2025-11-07T14:00:00Z",
+  ...
+}
+```
+
+**错误响应**：
+```json
+{
+  "error": "错误描述",
+  "error_code": "ERROR_CODE",
+  "details": {...}
+}
+```
 
 完整 API 文档请查看：[API 文档](./docs/api/ROAMIO_ECOSYSTEM_API_DOCUMENTATION.md)
+
+---
+
+## 🗄️ 数据模型
+
+### Event（日程事件）
+
+核心字段：
+- `user` - 所属用户（ForeignKey）
+- `title` - 标题（CharField, max_length=200）
+- `description` - 描述（TextField）
+- `start_time` - 开始时间（DateTimeField）
+- `end_time` - 结束时间（DateTimeField, 可选）
+- `location` - 地点名称（CharField）
+- `latitude` / `longitude` - 经纬度坐标（FloatField）
+- `map_provider` - 地图服务商（baidu/amap/tencent）
+- `reminder_minutes` - 提前提醒分钟数（IntegerField, 默认15）
+- `email_reminder` - 是否邮件提醒（BooleanField）
+- `notification_sent` - 提醒已发送标记（BooleanField）
+
+**Roamio 融合字段**：
+- `source_app` - 来源应用（ralendar/roamio）
+- `source_id` - 来源对象ID（用于追踪原始数据）
+- `related_trip_slug` - 关联旅行计划Slug
+
+**属性方法**：
+- `map_url` - 生成地图导航链接（根据 map_provider）
+- `has_location` - 是否有地理位置
+- `is_from_roamio` - 是否来自 Roamio
+
+### User（用户）
+
+Django 内置 User 模型，扩展：
+
+**AcWingUser**（一对一）：
+- `openid` - AcWing OpenID（唯一）
+- `access_token` / `refresh_token` - OAuth 令牌
+- `photo_url` - 头像URL
+
+**QQUser**（一对一）：
+- `openid` - QQ OpenID（唯一）
+- `unionid` - QQ UnionID（跨应用识别，已索引）
+- `nickname` - QQ昵称
+- `photo_url` - 头像URL
+
+**UserMapping**（用户映射表，用于 Roamio 融合）：
+- `ralendar_user` - Ralendar 用户（一对一）
+- `roamio_user_id` - Roamio 用户ID
+- `qq_unionid` - QQ UnionID（统一标识）
+- `sync_enabled` - 是否启用同步
+
+### 数据库索引
+
+优化查询性能的索引：
+- `event_user_start_idx` - (user, start_time)
+- `event_source_idx` - (source_app, source_id)
+- `event_trip_idx` - (related_trip_slug)
+- `qquser_unionid_idx` - (unionid)
 
 ---
 
@@ -399,9 +639,10 @@ Ralendar/
   - 用途: Django 后端服务、Nginx 反向代理
 
 ### 云数据库
-- **SQLite** - 本地数据库（开发/测试环境）
-- **PostgreSQL** - 云端数据库（生产环境，可选）
+- **SQLite** - 本地数据库（开发/测试环境，当前生产环境使用）
+- **MySQL** - 云端数据库（生产环境，可选）
   - 支持数据持久化和高并发访问
+  - 可配置为与 Roamio 共享数据库（深度集成方案）
 
 ### 云存储
 - **腾讯云 COS** - 对象存储服务（可选）
@@ -414,13 +655,17 @@ Ralendar/
 
 ### 第三方服务
 - **阿里云通义千问** - AI 智能助手服务
+  - 自然语言解析、日程总结、对话功能
 - **百度地图 / 高德地图** - 地图定位和导航服务
-- **OpenWeatherMap / 高德天气** - 天气查询服务
+  - 地点搜索、坐标转换、导航链接生成
+- **高德天气 API** - 天气查询服务
+  - 实时天气、体感温度、未来预报
 
 ### 数据同步策略
 - **本地优先** - Android 端使用 Room 数据库本地存储
 - **云端备份** - 通过 REST API 同步到云端服务器
 - **离线支持** - 本地数据可离线访问，联网时自动同步
+- **冲突解决** - 以服务器数据为准（可扩展为时间戳比较）
 
 ---
 
@@ -491,7 +736,43 @@ Ralendar/
 ### 进行中 🚧
 
 - 🚧 Roamio 生态融合（部分完成）
+  - ✅ Fusion API 已实现（批量创建、按旅行查询）
+  - ✅ UnionID 跨应用用户识别
+  - 🚧 共享数据库方案（待 Roamio 团队提供配置）
 - 🚧 ICS 格式导入导出（规划中）
+- 🚧 黄历功能（待实现）
+- 🚧 每日运势（待实现）
+
+### 技术特性
+
+#### 认证系统
+- **JWT Token 认证**：Access Token（5分钟）+ Refresh Token（15天）
+- **OAuth 2.0 支持**：AcWing、QQ 一键登录
+- **UnionID 跨应用识别**：QQ 登录支持 UnionID，实现 Roamio 和 Ralendar 账号互通
+- **账号绑定管理**：支持绑定/解绑多个第三方账号
+
+#### 异步任务系统
+- **Celery + Redis**：处理邮件提醒等异步任务
+- **定时任务**：Celery Beat 调度，支持事件提前提醒
+- **任务队列**：Redis 作为消息代理和结果后端
+
+#### 邮件提醒系统
+- **SMTP 配置**：支持 QQ 邮箱、Gmail 等
+- **提前提醒**：可配置提前时间（5分钟/15分钟/30分钟/1小时/1天）
+- **异步发送**：Celery 异步处理，不阻塞主流程
+- **提醒标记**：`notification_sent` 字段防止重复发送
+
+#### 地图集成
+- **多地图服务商支持**：百度地图、高德地图、腾讯地图
+- **地点搜索**：支持地点名称搜索和坐标定位
+- **导航链接生成**：自动生成各平台导航链接
+- **坐标存储**：存储经纬度，支持离线查看
+
+#### AI 助手
+- **通义千问集成**：阿里云通义千问 API
+- **自然语言解析**：将自然语言转换为结构化日程
+- **智能总结**：分析日程安排，提供时间管理建议
+- **对话式交互**：支持与 AI 对话查询和创建日程
 
 ---
 
@@ -540,6 +821,219 @@ Ralendar/
 
 ---
 
+## 🧪 测试
+
+### 后端测试
+
+```bash
+cd backend
+
+# 运行所有测试
+python manage.py test
+
+# 运行特定应用的测试
+python manage.py test api
+
+# 运行特定测试类
+python manage.py test api.tests.test_events
+
+# 带覆盖率报告
+coverage run --source='.' manage.py test
+coverage report
+```
+
+### 前端测试
+
+```bash
+# Web 前端
+cd web_frontend
+npm run test
+
+# AcApp 前端
+cd acapp_frontend
+npm run test
+```
+
+### API 测试
+
+使用 Postman 或 curl 测试 API：
+
+```bash
+# 获取 Token
+curl -X POST https://app7626.acapp.acwing.com.cn/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "test", "password": "test123"}'
+
+# 创建日程
+curl -X POST https://app7626.acapp.acwing.com.cn/api/events/ \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "测试日程",
+    "start_time": "2025-11-10T14:00:00Z",
+    "location": "测试地点"
+  }'
+```
+
+---
+
+## 🔧 故障排查
+
+### 常见问题
+
+#### 1. 后端启动失败
+
+**问题**：`ModuleNotFoundError` 或依赖安装失败
+
+**解决**：
+```bash
+# 确保虚拟环境已激活
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+
+# 重新安装依赖
+pip install -r requirements.txt --upgrade
+```
+
+#### 2. 数据库迁移错误
+
+**问题**：`django.db.utils.OperationalError`
+
+**解决**：
+```bash
+# 检查数据库连接
+python manage.py dbshell
+
+# 重置迁移（开发环境）
+python manage.py migrate --fake-initial
+python manage.py migrate
+```
+
+#### 3. Celery 任务不执行
+
+**问题**：邮件提醒未发送
+
+**解决**：
+```bash
+# 检查 Celery Worker 是否运行
+ps aux | grep celery
+
+# 检查 Redis 连接
+redis-cli ping
+
+# 重启 Celery
+celery -A calendar_backend worker --loglevel=info
+celery -A calendar_backend beat --loglevel=info
+```
+
+#### 4. CORS 跨域错误
+
+**问题**：前端请求被浏览器阻止
+
+**解决**：
+- 检查 `settings.py` 中的 `CORS_ALLOWED_ORIGINS`
+- 确保前端地址在允许列表中
+- 开发环境可使用 `CORS_ALLOW_ALL_ORIGINS = True`（仅开发）
+
+#### 5. OAuth 登录失败
+
+**问题**：AcWing/QQ 登录返回错误
+
+**解决**：
+- 检查 `.env` 中的 `ACWING_APPID`、`ACWING_SECRET`、`QQ_APPID`、`QQ_APPKEY`
+- 确认回调 URL 配置正确
+- 查看服务器日志：`tail -f /var/log/uwsgi/app.log`
+
+#### 6. 邮件发送失败
+
+**问题**：邮件提醒未收到
+
+**解决**：
+```bash
+# 检查邮件配置
+python manage.py shell
+>>> from django.core.mail import send_mail
+>>> send_mail('Test', 'Test message', 'from@example.com', ['to@example.com'])
+
+# 检查 Celery 任务日志
+celery -A calendar_backend worker --loglevel=debug
+```
+
+### 日志查看
+
+```bash
+# Django 日志
+tail -f backend/logs/django.log
+
+# uWSGI 日志
+tail -f /var/log/uwsgi/app.log
+
+# Nginx 日志
+tail -f /var/log/nginx/access.log
+tail -f /var/log/nginx/error.log
+
+# Celery 日志
+tail -f backend/logs/celery.log
+```
+
+---
+
+## ⚡ 性能优化
+
+### 数据库优化
+
+- **索引**：已为常用查询字段添加索引（见数据模型章节）
+- **查询优化**：使用 `select_related` 和 `prefetch_related` 减少数据库查询
+- **分页**：所有列表接口支持分页，默认 20 条/页
+
+### 缓存策略
+
+- **Redis 缓存**：热点数据缓存（可扩展）
+- **静态文件**：Nginx 缓存静态资源
+- **CDN 加速**：AcWing 平台提供 CDN
+
+### 前端优化
+
+- **代码分割**：Vite 自动代码分割
+- **懒加载**：路由和组件懒加载
+- **资源压缩**：生产环境自动压缩 JS/CSS
+
+### API 优化
+
+- **分页**：所有列表接口必须分页
+- **字段过滤**：支持 `fields` 参数选择返回字段
+- **批量操作**：提供批量创建接口（Fusion API）
+
+---
+
+## 🔒 安全考虑
+
+### 认证安全
+
+- **JWT Token**：短期 Access Token（5分钟），长期 Refresh Token（15天）
+- **Token 刷新**：自动刷新机制，防止 Token 泄露风险
+- **密码加密**：Django 默认使用 PBKDF2 加密
+
+### 数据安全
+
+- **SQL 注入防护**：使用 Django ORM，自动转义
+- **XSS 防护**：前端自动转义，后端验证输入
+- **CSRF 防护**：Django CSRF 中间件
+
+### API 安全
+
+- **CORS 配置**：仅允许指定域名访问
+- **频率限制**：可配置 API 请求频率限制（待实现）
+- **输入验证**：DRF Serializer 自动验证
+
+### 部署安全
+
+- **HTTPS**：生产环境强制 HTTPS
+- **环境变量**：敏感信息存储在 `.env`，不提交到 Git
+- **DEBUG 模式**：生产环境关闭 DEBUG
+
+---
+
 ## 🤝 贡献指南
 
 欢迎提交 Issue 和 Pull Request！
@@ -573,6 +1067,104 @@ Ralendar/
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 开启 Pull Request
 
+### 代码审查
+
+- 所有 PR 需要至少一个维护者审查
+- 确保代码通过测试
+- 更新相关文档
+- 遵循项目代码风格
+
+---
+
+## 📝 开发工作流
+
+### 本地开发
+
+1. **克隆项目**
+   ```bash
+   git clone https://github.com/ppshuX/Ralendar.git
+   cd Ralendar
+   ```
+
+2. **后端开发**
+   ```bash
+   cd backend
+   python -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   cp .env.example .env  # 配置环境变量
+   python manage.py migrate
+   python manage.py runserver
+   ```
+
+3. **前端开发**
+   ```bash
+   cd web_frontend
+   npm install
+   npm run dev
+   ```
+
+4. **Celery 开发**（邮件提醒需要）
+   ```bash
+   # 终端1：启动 Redis
+   redis-server
+
+   # 终端2：启动 Celery Worker
+   cd backend
+   celery -A calendar_backend worker --loglevel=info
+
+   # 终端3：启动 Celery Beat
+   celery -A calendar_backend beat --loglevel=info
+   ```
+
+### 部署流程
+
+1. **代码推送**
+   ```bash
+   git add .
+   git commit -m "feat: 新功能"
+   git push origin main
+   ```
+
+2. **服务器更新**
+   ```bash
+   ssh user@47.121.137.60
+   cd ~/Ralendar
+   git pull
+   cd backend
+   source venv/bin/activate
+   pip install -r requirements.txt
+   python manage.py migrate
+   python manage.py collectstatic --noinput
+   ```
+
+3. **重启服务**
+   ```bash
+   # 重启 uWSGI
+   sudo systemctl restart uwsgi
+
+   # 重启 Celery
+   sudo systemctl restart celery
+   sudo systemctl restart celerybeat
+
+   # 检查 Nginx
+   sudo nginx -t
+   sudo systemctl reload nginx
+   ```
+
+### 数据库迁移
+
+```bash
+# 创建迁移
+python manage.py makemigrations
+
+# 应用迁移
+python manage.py migrate
+
+# 查看迁移状态
+python manage.py showmigrations
+```
+
 ---
 
 ## 📞 联系方式
@@ -580,6 +1172,36 @@ Ralendar/
 - **GitHub**: https://github.com/ppshuX/Ralendar
 - **问题反馈**: [GitHub Issues](https://github.com/ppshuX/Ralendar/issues)
 - **邮箱**: 2064747320@qq.com
+- **在线演示**: https://app7626.acapp.acwing.com.cn
+
+---
+
+## 📈 项目统计
+
+### 代码规模
+
+- **总代码行数**: ~15,000+ 行
+- **Python 代码**: ~5,000 行（Django 后端）
+- **JavaScript/Vue 代码**: ~6,000 行（前端）
+- **Kotlin 代码**: ~2,000 行（Android）
+- **配置文件**: ~1,000 行
+- **文档**: ~10,000+ 行
+
+### 功能模块
+
+- **API 端点**: 30+ 个
+- **数据模型**: 6+ 个
+- **前端组件**: 20+ 个
+- **视图页面**: 10+ 个
+
+### 技术栈统计
+
+- **后端框架**: Django 4.2 + DRF 3.15
+- **前端框架**: Vue 3 (Composition API)
+- **移动端**: Kotlin + Android SDK
+- **数据库**: SQLite / MySQL
+- **任务队列**: Celery + Redis
+- **部署**: Docker + Nginx + uWSGI
 
 ---
 
@@ -587,14 +1209,23 @@ Ralendar/
 
 感谢以下平台和开源项目的支持：
 
+### 平台服务
 - [AcWing](https://www.acwing.com) - 平台和授权服务
 - [腾讯 QQ 互联](https://connect.qq.com) - OAuth 登录支持
+- [阿里云](https://www.aliyun.com) - 云服务器和 AI 服务
+- [百度地图](https://lbsyun.baidu.com) - 地图定位服务
+- [高德地图](https://lbs.amap.com) - 地图和天气服务
+
+### 开源框架
 - [Django](https://www.djangoproject.com/) - 强大的 Web 框架
+- [Django REST Framework](https://www.django-rest-framework.org/) - RESTful API 框架
 - [Vue.js](https://vuejs.org/) - 渐进式前端框架
 - [Element Plus](https://element-plus.org/) - 优秀的 UI 组件库
 - [FullCalendar](https://fullcalendar.io/) - 专业的日历组件
 - [Room](https://developer.android.com/training/data-storage/room) - Android 数据库框架
 - [Retrofit](https://square.github.io/retrofit/) - 类型安全的 HTTP 客户端
+- [Celery](https://docs.celeryproject.org/) - 分布式任务队列
+- [Redis](https://redis.io/) - 内存数据库和消息代理
 
 ---
 
