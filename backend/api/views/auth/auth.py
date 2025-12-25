@@ -385,10 +385,25 @@ def get_acwing_login_url(request):
 def get_qq_login_url(request):
     """获取 QQ 登录授权 URL（支持 UnionID）"""
     QQ_APPID = getattr(settings, 'QQ_APPID', '')
+    
+    # 验证配置
+    if not QQ_APPID:
+        return Response({
+            'error': 'QQ登录未配置，请联系管理员'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
     REDIRECT_URI = 'https://app7626.acapp.acwing.com.cn/qq/callback'
     
+    # 确保 URL 参数正确编码
+    import urllib.parse
+    encoded_redirect_uri = urllib.parse.quote(REDIRECT_URI, safe='')
+    
     # 构建授权 URL（添加 unionid=1）
-    apply_code_url = f"https://graph.qq.com/oauth2.0/authorize?response_type=code&client_id={QQ_APPID}&redirect_uri={REDIRECT_URI}&state=qq&unionid=1"
+    apply_code_url = (
+        f"https://graph.qq.com/oauth2.0/authorize"
+        f"?response_type=code&client_id={QQ_APPID}&redirect_uri={encoded_redirect_uri}"
+        f"&state=qq&unionid=1"
+    )
     
     return Response({
         'apply_code_url': apply_code_url

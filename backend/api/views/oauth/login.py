@@ -76,6 +76,12 @@ def oauth_web_login(request):
     
     elif provider == 'qq':
         QQ_APPID = getattr(settings, 'QQ_APPID', '')
+        
+        # 验证 QQ_APPID 是否配置
+        if not QQ_APPID:
+            logger.error(f"[OAuth Login] QQ_APPID is not configured")
+            return HttpResponse('QQ登录未配置，请联系管理员', status=500)
+        
         REDIRECT_URI = f"{request.scheme}://{request.get_host()}/qq/callback"
         
         request.session['oauth_next_url'] = next_url
@@ -85,10 +91,14 @@ def oauth_web_login(request):
         encoded_next_url = base64.urlsafe_b64encode(next_url.encode('utf-8')).decode('utf-8')
         state_param = f"qq_oauth_{encoded_next_url}"
         
+        # 确保 URL 参数正确编码
+        encoded_redirect_uri = urllib.parse.quote(REDIRECT_URI, safe='')
+        encoded_state = urllib.parse.quote(state_param, safe='')
+        
         auth_url = (
             f"https://graph.qq.com/oauth2.0/authorize"
-            f"?response_type=code&client_id={QQ_APPID}&redirect_uri={REDIRECT_URI}"
-            f"&state={state_param}&unionid=1"
+            f"?response_type=code&client_id={QQ_APPID}&redirect_uri={encoded_redirect_uri}"
+            f"&state={encoded_state}&unionid=1"
         )
         logger.info(f"[OAuth Login] Redirecting to QQ auth: {auth_url}")
         return redirect(auth_url)
@@ -244,13 +254,22 @@ def oauth_login_callback_qq(request):
     QQ_APPID = getattr(settings, 'QQ_APPID', '')
     QQ_APPKEY = getattr(settings, 'QQ_APPKEY', '')
     
+    # 验证配置
+    if not QQ_APPID or not QQ_APPKEY:
+        logger.error(f"[QQ Callback] QQ_APPID or QQ_APPKEY is not configured")
+        return HttpResponse('QQ登录未配置，请联系管理员', status=500)
+    
     try:
         REDIRECT_URI = f"{request.scheme}://{request.get_host()}/qq/callback"
+        import urllib.parse
+        encoded_redirect_uri = urllib.parse.quote(REDIRECT_URI, safe='')
+        encoded_code = urllib.parse.quote(code, safe='')
+        
         token_url = (
             f"https://graph.qq.com/oauth2.0/token"
             f"?grant_type=authorization_code&client_id={QQ_APPID}"
-            f"&client_secret={QQ_APPKEY}&code={code}"
-            f"&redirect_uri={REDIRECT_URI}"
+            f"&client_secret={QQ_APPKEY}&code={encoded_code}"
+            f"&redirect_uri={encoded_redirect_uri}"
         )
         token_response = requests.get(token_url, timeout=10)
         token_text = token_response.text
@@ -277,10 +296,16 @@ def oauth_login_callback_qq(request):
         openid = openid_data.get('openid')
         unionid = openid_data.get('unionid', '')
         
+        # 确保参数正确编码
+        import urllib.parse
+        encoded_access_token = urllib.parse.quote(access_token, safe='')
+        encoded_openid = urllib.parse.quote(openid, safe='')
+        
         userinfo_url = (
             f"https://graph.qq.com/user/get_user_info"
-            f"?access_token={access_token}&oauth_consumer_key={QQ_APPID}&openid={openid}"
+            f"?access_token={encoded_access_token}&oauth_consumer_key={QQ_APPID}&openid={encoded_openid}"
         )
+        logger.info(f"[QQ Callback] Requesting user info from: {userinfo_url.split('?')[0]}...")
         userinfo_response = requests.get(userinfo_url, timeout=10)
         userinfo_data = userinfo_response.json()
         
