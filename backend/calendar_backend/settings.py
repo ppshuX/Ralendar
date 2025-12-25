@@ -226,8 +226,15 @@ CELERY_ENABLE_UTC = False
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False') == 'True'
+# EMAIL_USE_TLS 和 EMAIL_USE_SSL 互斥，优先使用 TLS
+email_use_tls = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+email_use_ssl = os.environ.get('EMAIL_USE_SSL', 'False').lower() == 'true'
+if email_use_ssl:
+    EMAIL_USE_SSL = True
+    EMAIL_USE_TLS = False
+else:
+    EMAIL_USE_SSL = False
+    EMAIL_USE_TLS = email_use_tls
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 # 发件人显示名称：默认为 "Ralendar <邮箱地址>"
