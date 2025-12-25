@@ -35,7 +35,14 @@ def oauth_authorize(request):
     
     # 参数验证
     if not all([client_id, redirect_uri, response_type]):
-        logger.warning(f"[OAuth] Missing required parameters")
+        missing_params = []
+        if not client_id:
+            missing_params.append('client_id')
+        if not redirect_uri:
+            missing_params.append('redirect_uri')
+        if not response_type:
+            missing_params.append('response_type')
+        logger.warning(f"[OAuth] Missing required parameters: {', '.join(missing_params)}. GET params: {dict(request.GET)}, POST params: {dict(request.POST)}")
         # 对于普通用户显示友好的错误页；对第三方应用返回标准 400
         if request.META.get('HTTP_ACCEPT', '').startswith('text/html'):
             return render(
@@ -44,11 +51,11 @@ def oauth_authorize(request):
                 {
                     'title': '授权请求无效',
                     'message': '当前授权链接缺少必要参数，无法继续。',
-                    'detail': '缺少必需参数：client_id、redirect_uri、response_type。'
+                    'detail': f'缺少必需参数：{", ".join(missing_params)}。'
                 },
                 status=400,
             )
-        return HttpResponse('invalid_request: missing client_id / redirect_uri / response_type', status=400)
+        return HttpResponse(f'invalid_request: missing {", ".join(missing_params)}', status=400)
     
     if response_type != 'code':
         logger.warning(f"[OAuth] Unsupported response_type: {response_type}")
