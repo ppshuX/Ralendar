@@ -33,6 +33,33 @@ def oauth_web_login(request):
     provider = request.GET.get('provider', 'acwing')  # acwing 或 qq
     next_url = request.GET.get('next', '/oauth/authorize')
     
+    # 如果 next_url 是相对路径，尝试从 session 恢复完整 URL
+    if next_url == '/oauth/authorize' or not next_url.startswith('http'):
+        saved_full_url = request.session.get('oauth_authorize_full_url')
+        if saved_full_url:
+            # 如果是相对路径，构建完整 URL
+            if saved_full_url.startswith('/'):
+                next_url = f"{request.scheme}://{request.get_host()}{saved_full_url}"
+            else:
+                next_url = saved_full_url
+            logger.info(f"[OAuth Login] Recovered full next_url from session: {next_url}")
+        else:
+            # 如果 session 中没有，尝试从参数构建
+            saved_params = request.session.get('oauth_authorize_params', {})
+            if saved_params:
+                from urllib.parse import urlencode
+                params = {
+                    'client_id': saved_params.get('client_id'),
+                    'redirect_uri': saved_params.get('redirect_uri'),
+                    'response_type': saved_params.get('response_type', 'code'),
+                }
+                if saved_params.get('state'):
+                    params['state'] = saved_params.get('state')
+                if saved_params.get('scope'):
+                    params['scope'] = saved_params.get('scope')
+                next_url = f"{request.scheme}://{request.get_host()}/oauth/authorize?{urlencode(params)}"
+                logger.info(f"[OAuth Login] Reconstructed next_url from session params: {next_url}")
+    
     if provider == 'acwing':
         # AcWing登录：重定向到AcWing授权页面
         ACWING_APPID = getattr(settings, 'ACWING_APPID', '7626')
@@ -318,27 +345,56 @@ def oauth_login_callback_qq(request):
             )
         
         django_login(request, user)
-        logger.info(f"[QQ Callback] User {user.id} logged in via QQ, is_oauth_flow: {is_oauth_flow}, next_url: {next_url}"            )
+        logger.info(f"[QQ Callback] User {user.id} logged in via QQ, is_oauth_flow: {is_oauth_flow}, next_url: {next_url}")
         
         if is_oauth_flow:
             if not next_url:
-                referer = request.META.get('HTTP_REFERER', '')
-                if referer and 'oauth/authorize' in referer:
-                    from urllib.parse import urlparse
-                    parsed = urlparse(referer)
-                    next_url = f"{parsed.path}?{parsed.query}" if parsed.query else parsed.path
-                    logger.info(f"[QQ Callback] Recovered next_url from referer in final check")
+                # 优先从 session 恢复完整 URL
+                saved_full_url = request.session.get('oauth_authorize_full_url')
+                if saved_full_url:
+                    if saved_full_url.startswith('/'):
+                        next_url = f"{request.scheme}://{request.get_host()}{saved_full_url}"
+                    else:
+                        next_url = saved_full_url
+                    logger.info(f"[QQ Callback] Recovered full next_url from session: {next_url}")
                 else:
-                    next_url = '/oauth/authorize'
-                    logger.warning(f"[QQ Callback] Using default next_url")
+                    # 尝试从 referer 恢复
+                    referer = request.META.get('HTTP_REFERER', '')
+                    if referer and 'oauth/authorize' in referer:
+                        from urllib.parse import urlparse
+                        parsed = urlparse(referer)
+                        next_url = f"{parsed.path}?{parsed.query}" if parsed.query else parsed.path
+                        if not next_url.startswith('http'):
+                            next_url = f"{request.scheme}://{request.get_host()}{next_url}"
+                        logger.info(f"[QQ Callback] Recovered next_url from referer: {next_url}")
+                    else:
+                        # 尝试从 session 恢复授权参数
+                        saved_params = request.session.get('oauth_authorize_params', {})
+                        if saved_params:
+                            from urllib.parse import urlencode
+                            params = {
+                                'client_id': saved_params.get('client_id'),
+                                'redirect_uri': saved_params.get('redirect_uri'),
+                                'response_type': saved_params.get('response_type', 'code'),
+                            }
+                            if saved_params.get('state'):
+                                params['state'] = saved_params.get('state')
+                            if saved_params.get('scope'):
+                                params['scope'] = saved_params.get('scope')
+                            next_url = f"{request.scheme}://{request.get_host()}/oauth/authorize?{urlencode(params)}"
+                            logger.info(f"[QQ Callback] Recovered next_url from session params: {next_url}")
+                        else:
+                            next_url = f"{request.scheme}://{request.get_host()}/oauth/authorize"
+                            logger.warning(f"[QQ Callback] Using default next_url (no session params found)")
             
-            if not next_url.startswith('/'):
-                next_url = '/' + next_url
+            # 确保 next_url 是完整 URL
+            if next_url.startswith('/'):
+                next_url = f"{request.scheme}://{request.get_host()}{next_url}"
             
             if '?' not in next_url:
                 logger.warning(f"[QQ Callback] next_url does not contain query parameters: {next_url}")
             
-            logger.info(f"[QQ Callback] User {user.id} logged in via QQ, redirecting to authorization page")
+            logger.info(f"[QQ Callback] User {user.id} logged in via QQ, redirecting to authorization page: {next_url}")
             return HttpResponseRedirect(next_url)
         else:
             logger.warning(f"[QQ Callback] OAuth flow not detected or next_url missing")

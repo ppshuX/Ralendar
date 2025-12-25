@@ -38,29 +38,68 @@ def oauth_authorize(request):
     state = request.GET.get('state') or request.POST.get('state', '')
     scope = request.GET.get('scope') or request.POST.get('scope', 'calendar:read user:read')
     
-    # 参数验证
+    # 如果 GET 请求有完整参数，立即保存完整 URL 到 session（用于登录后恢复）
+    if request.method == 'GET' and all([client_id, redirect_uri, response_type]):
+        full_url = request.get_full_path()
+        request.session['oauth_authorize_full_url'] = full_url
+        request.session['oauth_authorize_params'] = {
+            'client_id': client_id,
+            'redirect_uri': redirect_uri,
+            'response_type': response_type,
+            'state': state,
+            'scope': scope,
+        }
+        logger.info(f"[OAuth] Saved full authorize URL to session: {full_url}")
+    
+    # 参数验证（如果参数缺失，尝试从 session 恢复）
     if not all([client_id, redirect_uri, response_type]):
-        missing_params = []
-        if not client_id:
-            missing_params.append('client_id')
-        if not redirect_uri:
-            missing_params.append('redirect_uri')
-        if not response_type:
-            missing_params.append('response_type')
-        logger.warning(f"[OAuth] Missing required parameters: {', '.join(missing_params)}. GET params: {dict(request.GET)}, POST params: {dict(request.POST)}")
-        # 对于普通用户显示友好的错误页；对第三方应用返回标准 400
-        if request.META.get('HTTP_ACCEPT', '').startswith('text/html'):
-            return render(
-                request,
-                'oauth/error.html',
-                {
-                    'title': '授权请求无效',
-                    'message': '当前授权链接缺少必要参数，无法继续。',
-                    'detail': f'缺少必需参数：{", ".join(missing_params)}。'
-                },
-                status=400,
-            )
-        return HttpResponse(f'invalid_request: missing {", ".join(missing_params)}', status=400)
+        # 优先尝试从 session 恢复完整 URL（最可靠）
+        saved_full_url = request.session.get('oauth_authorize_full_url')
+        if saved_full_url:
+            logger.info(f"[OAuth] Recovering full URL from session: {saved_full_url}")
+            # 解析完整 URL 获取参数
+            parsed = urlparse(saved_full_url)
+            query_params = parse_qs(parsed.query)
+            client_id = client_id or (query_params.get('client_id', [None])[0])
+            redirect_uri = redirect_uri or (query_params.get('redirect_uri', [None])[0])
+            response_type = response_type or (query_params.get('response_type', [None])[0] or 'code')
+            state = state or (query_params.get('state', [''])[0])
+            scope = scope or (query_params.get('scope', ['calendar:read user:read'])[0])
+        
+        # 如果完整 URL 恢复失败，尝试从 session 恢复参数
+        if not all([client_id, redirect_uri, response_type]):
+            saved_params = request.session.get('oauth_authorize_params', {})
+            if saved_params:
+                logger.info(f"[OAuth] Recovering parameters from session: {saved_params}")
+                client_id = client_id or saved_params.get('client_id')
+                redirect_uri = redirect_uri or saved_params.get('redirect_uri')
+                response_type = response_type or saved_params.get('response_type', 'code')
+                state = state or saved_params.get('state', '')
+                scope = scope or saved_params.get('scope', 'calendar:read user:read')
+        
+        # 再次验证参数
+        if not all([client_id, redirect_uri, response_type]):
+            missing_params = []
+            if not client_id:
+                missing_params.append('client_id')
+            if not redirect_uri:
+                missing_params.append('redirect_uri')
+            if not response_type:
+                missing_params.append('response_type')
+            logger.warning(f"[OAuth] Missing required parameters: {', '.join(missing_params)}. GET params: {dict(request.GET)}, POST params: {dict(request.POST)}")
+            # 对于普通用户显示友好的错误页；对第三方应用返回标准 400
+            if request.META.get('HTTP_ACCEPT', '').startswith('text/html'):
+                return render(
+                    request,
+                    'oauth/error.html',
+                    {
+                        'title': '授权请求无效',
+                        'message': '当前授权链接缺少必要参数，无法继续。',
+                        'detail': f'缺少必需参数：{", ".join(missing_params)}。'
+                    },
+                    status=400,
+                )
+            return HttpResponse(f'invalid_request: missing {", ".join(missing_params)}', status=400)
     
     if response_type != 'code':
         logger.warning(f"[OAuth] Unsupported response_type: {response_type}")
@@ -130,6 +169,8 @@ def oauth_authorize(request):
     # GET 请求：显示授权页面
     if request.method == 'GET':
         from ...models import get_scope_description
+
+        # 参数已在函数开始时保存到 session，这里不需要重复保存
 
         # 安全地获取 scope_descriptions
         try:
@@ -203,6 +244,10 @@ def oauth_authorize(request):
         if action == 'authorize':
             # 用户同意授权
             logger.info(f"[OAuth] User {request.user.id} authorized client {client.client_name}")
+            
+            # 清除 session 中的参数（授权完成后不再需要）
+            if 'oauth_authorize_params' in request.session:
+                del request.session['oauth_authorize_params']
             
             # 生成授权码
             auth_code = AuthorizationCode.create_code(
