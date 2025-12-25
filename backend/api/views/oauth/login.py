@@ -100,8 +100,21 @@ def oauth_web_login(request):
             f"?response_type=code&client_id={QQ_APPID}&redirect_uri={encoded_redirect_uri}"
             f"&state={encoded_state}&unionid=1"
         )
-        logger.info(f"[OAuth Login] Redirecting to QQ auth: {auth_url}")
-        return redirect(auth_url)
+        
+        # 验证 URL 格式
+        if not auth_url.startswith('https://graph.qq.com/oauth2.0/authorize'):
+            logger.error(f"[OAuth Login] Invalid QQ auth URL format: {auth_url}")
+            return HttpResponse('QQ登录URL生成失败', status=500)
+        
+        if 'client_id=' not in auth_url or not QQ_APPID:
+            logger.error(f"[OAuth Login] Missing client_id in URL: {auth_url}")
+            return HttpResponse('QQ登录配置错误：缺少 client_id', status=500)
+        
+        logger.info(f"[OAuth Login] Redirecting to QQ auth (length: {len(auth_url)}): {auth_url[:100]}...")
+        logger.info(f"[OAuth Login] Full QQ auth URL: {auth_url}")
+        
+        # 使用 HttpResponseRedirect 确保重定向执行
+        return HttpResponseRedirect(auth_url)
     
     else:
         return HttpResponse(f'不支持的登录方式: {provider}', status=400)
