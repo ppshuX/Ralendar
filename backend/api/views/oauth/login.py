@@ -189,43 +189,44 @@ def oauth_login_callback_qq(request):
     if not code:
         return HttpResponse('缺少授权码', status=400)
     
-    next_url = request.session.pop('oauth_next_url', None)
+    # 获取 state 参数（优先判断，因为这是最可靠的标识）
+    state = request.GET.get('state', '')
     
-    referer = request.META.get('HTTP_REFERER', '')
-    is_oauth_flow = next_url is not None or (referer and 'oauth/authorize' in referer)
+    # 判断是否是 OAuth 授权流程：
+    # 1. state 参数明确包含 qq_oauth_ 前缀（最可靠）
+    # 2. session 中有 oauth_next_url（从 OAuth 授权页面跳转过来的）
+    # 注意：不能仅凭 referer 判断，因为普通登录也可能有 referer
+    is_oauth_flow = False
+    next_url = None
     
-    if not is_oauth_flow:
-        state = request.GET.get('state', '')
-        
-        if state and state.startswith('qq_oauth_'):
-            try:
-                import base64
-                encoded_next_url = state.replace('qq_oauth_', '')
-                decoded_next_url = base64.urlsafe_b64decode(encoded_next_url.encode('utf-8')).decode('utf-8')
-                next_url = decoded_next_url
+    if state and state.startswith('qq_oauth_'):
+        # 明确是 OAuth 流程（从 state 参数判断）
+        try:
+            import base64
+            encoded_next_url = state.replace('qq_oauth_', '')
+            decoded_next_url = base64.urlsafe_b64decode(encoded_next_url.encode('utf-8')).decode('utf-8')
+            next_url = decoded_next_url
+            is_oauth_flow = True
+            logger.info(f"[QQ Callback] OAuth flow detected from state parameter, next_url: {next_url}")
+        except Exception as e:
+            logger.error(f"[QQ Callback] Failed to decode next_url from state: {str(e)}")
+            # 如果解码失败，尝试从 session 恢复
+            next_url = request.session.pop('oauth_next_url', None)
+            if next_url:
                 is_oauth_flow = True
-                logger.info(f"[QQ Callback] Recovered next_url from state parameter")
-            except Exception as e:
-                logger.error(f"[QQ Callback] Failed to decode next_url from state: {str(e)}")
-                referer = request.META.get('HTTP_REFERER', '')
-                if referer and 'oauth/authorize' in referer:
-                    from urllib.parse import urlparse, parse_qs
-                    parsed = urlparse(referer)
-                    query_params = parse_qs(parsed.query)
-                    if query_params:
-                        from urllib.parse import urlencode
-                        query_string = urlencode(query_params, doseq=True)
-                        next_url = f"{parsed.path}?{query_string}"
-                    else:
-                        next_url = parsed.path
-                    is_oauth_flow = True
-                    logger.info(f"[QQ Callback] Recovered next_url from referer")
-                else:
-                    next_url = None
-                    logger.warning(f"[QQ Callback] Could not recover next_url from state or referer")
-        
+                logger.info(f"[QQ Callback] Recovered next_url from session after state decode failed")
+    else:
+        # 检查 session 中是否有 oauth_next_url（从 OAuth 授权页面跳转过来的）
+        next_url = request.session.pop('oauth_next_url', None)
+        if next_url:
+            is_oauth_flow = True
+            logger.info(f"[QQ Callback] OAuth flow detected from session, next_url: {next_url}")
         elif state == 'qq':
-            logger.info(f"[QQ Callback] QQ default state 'qq' detected, might be normal QQ login")
+            # state=qq 且没有 session，认为是普通登录
+            is_oauth_flow = False
+            logger.info(f"[QQ Callback] Normal QQ login detected (state=qq, no session)")
+        else:
+            # 没有 state 或 state 为空，检查 referer（仅作为最后手段）
             referer = request.META.get('HTTP_REFERER', '')
             if referer and 'oauth/authorize' in referer:
                 from urllib.parse import urlparse, parse_qs
@@ -238,40 +239,7 @@ def oauth_login_callback_qq(request):
                 else:
                     next_url = parsed.path
                 is_oauth_flow = True
-                logger.info(f"[QQ Callback] Recovered next_url from referer (state=qq)")
-        
-        if not is_oauth_flow or not next_url:
-            referer = request.META.get('HTTP_REFERER', '')
-            if referer and 'oauth/authorize' in referer:
-                from urllib.parse import urlparse, parse_qs
-                parsed = urlparse(referer)
-                query_params = parse_qs(parsed.query)
-                if query_params:
-                    from urllib.parse import urlencode
-                    query_string = urlencode(query_params, doseq=True)
-                    next_url = f"{parsed.path}?{query_string}"
-                else:
-                    next_url = parsed.path
-                is_oauth_flow = True
-                logger.info(f"[QQ Callback] Recovered next_url from referer (fallback)")
-        
-        if not next_url:
-            referer = request.META.get('HTTP_REFERER', '')
-            if referer and 'oauth/authorize' in referer:
-                from urllib.parse import urlparse, parse_qs
-                parsed = urlparse(referer)
-                query_params = parse_qs(parsed.query)
-                if query_params:
-                    from urllib.parse import urlencode
-                    query_string = urlencode(query_params, doseq=True)
-                    next_url = f"{parsed.path}?{query_string}"
-                else:
-                    next_url = parsed.path
-                is_oauth_flow = True
-                logger.info(f"[QQ Callback] Recovered next_url from referer (last attempt)")
-            elif is_oauth_flow:
-                logger.warning(f"[QQ Callback] Could not recover next_url, but is_oauth_flow=True, will redirect to default authorization page")
-                next_url = '/oauth/authorize'
+                logger.info(f"[QQ Callback] OAuth flow detected from referer (fallback): {next_url}")
     
     QQ_APPID = getattr(settings, 'QQ_APPID', '')
     QQ_APPKEY = getattr(settings, 'QQ_APPKEY', '')
@@ -348,8 +316,9 @@ def oauth_login_callback_qq(request):
         logger.info(f"[QQ Callback] User {user.id} logged in via QQ, is_oauth_flow: {is_oauth_flow}, next_url: {next_url}")
         
         if is_oauth_flow:
+            # OAuth 授权流程：需要返回授权页面
             if not next_url:
-                # 优先从 session 恢复完整 URL
+                # 如果 next_url 丢失，尝试从 session 恢复
                 saved_full_url = request.session.get('oauth_authorize_full_url')
                 if saved_full_url:
                     if saved_full_url.startswith('/'):
@@ -358,55 +327,52 @@ def oauth_login_callback_qq(request):
                         next_url = saved_full_url
                     logger.info(f"[QQ Callback] Recovered full next_url from session: {next_url}")
                 else:
-                    # 尝试从 referer 恢复
-                    referer = request.META.get('HTTP_REFERER', '')
-                    if referer and 'oauth/authorize' in referer:
-                        from urllib.parse import urlparse
-                        parsed = urlparse(referer)
-                        next_url = f"{parsed.path}?{parsed.query}" if parsed.query else parsed.path
-                        if not next_url.startswith('http'):
-                            next_url = f"{request.scheme}://{request.get_host()}{next_url}"
-                        logger.info(f"[QQ Callback] Recovered next_url from referer: {next_url}")
+                    # 尝试从 session 恢复授权参数
+                    saved_params = request.session.get('oauth_authorize_params', {})
+                    if saved_params:
+                        from urllib.parse import urlencode
+                        params = {
+                            'client_id': saved_params.get('client_id'),
+                            'redirect_uri': saved_params.get('redirect_uri'),
+                            'response_type': saved_params.get('response_type', 'code'),
+                        }
+                        if saved_params.get('state'):
+                            params['state'] = saved_params.get('state')
+                        if saved_params.get('scope'):
+                            params['scope'] = saved_params.get('scope')
+                        next_url = f"{request.scheme}://{request.get_host()}/oauth/authorize?{urlencode(params)}"
+                        logger.info(f"[QQ Callback] Recovered next_url from session params: {next_url}")
                     else:
-                        # 尝试从 session 恢复授权参数
-                        saved_params = request.session.get('oauth_authorize_params', {})
-                        if saved_params:
-                            from urllib.parse import urlencode
-                            params = {
-                                'client_id': saved_params.get('client_id'),
-                                'redirect_uri': saved_params.get('redirect_uri'),
-                                'response_type': saved_params.get('response_type', 'code'),
-                            }
-                            if saved_params.get('state'):
-                                params['state'] = saved_params.get('state')
-                            if saved_params.get('scope'):
-                                params['scope'] = saved_params.get('scope')
-                            next_url = f"{request.scheme}://{request.get_host()}/oauth/authorize?{urlencode(params)}"
-                            logger.info(f"[QQ Callback] Recovered next_url from session params: {next_url}")
-                        else:
-                            next_url = f"{request.scheme}://{request.get_host()}/oauth/authorize"
-                            logger.warning(f"[QQ Callback] Using default next_url (no session params found)")
+                        next_url = f"{request.scheme}://{request.get_host()}/oauth/authorize"
+                        logger.warning(f"[QQ Callback] Using default next_url (no session params found)")
             
             # 确保 next_url 是完整 URL
             if next_url.startswith('/'):
                 next_url = f"{request.scheme}://{request.get_host()}{next_url}"
             
-            if '?' not in next_url:
-                logger.warning(f"[QQ Callback] next_url does not contain query parameters: {next_url}")
-            
-            logger.info(f"[QQ Callback] User {user.id} logged in via QQ, redirecting to authorization page: {next_url}")
+            logger.info(f"[QQ Callback] User {user.id} logged in via QQ (OAuth flow), redirecting to: {next_url}")
             return HttpResponseRedirect(next_url)
         else:
-            logger.warning(f"[QQ Callback] OAuth flow not detected or next_url missing")
+            # 普通登录流程：跳转到 Ralendar 主页或之前访问的页面
+            # 注意：不应该跳转到 oauth/authorize，因为这不是 OAuth 授权流程
             referer = request.META.get('HTTP_REFERER', '')
-            redirect_url = '/oauth/authorize'  # 默认值
             
-            if referer and 'oauth/authorize' in referer:
-                # 从 referer 提取完整的授权URL
+            # 如果 referer 是 Ralendar 的页面（不是 oauth/authorize），使用它
+            if referer:
                 from urllib.parse import urlparse
                 parsed = urlparse(referer)
-                redirect_url = f"{parsed.path}?{parsed.query}" if parsed.query else parsed.path
-                logger.info(f"[QQ Callback] Using referer as redirect URL")
+                # 排除 oauth/authorize 页面
+                if 'oauth/authorize' not in parsed.path:
+                    redirect_url = referer
+                    logger.info(f"[QQ Callback] Normal login, redirecting to referer: {redirect_url}")
+                else:
+                    # referer 是授权页面，但这不是 OAuth 流程，跳转到主页
+                    redirect_url = f"{request.scheme}://{request.get_host()}/"
+                    logger.info(f"[QQ Callback] Normal login, referer is oauth page, redirecting to home: {redirect_url}")
+            else:
+                # 没有 referer，跳转到主页
+                redirect_url = f"{request.scheme}://{request.get_host()}/"
+                logger.info(f"[QQ Callback] Normal login, no referer, redirecting to home: {redirect_url}")
             
             # 显示提示页面，自动重定向
             return HttpResponse(
@@ -415,17 +381,17 @@ def oauth_login_callback_qq(request):
                 <html>
                 <head>
                     <meta charset="UTF-8">
-                    <title>QQ登录成功 - 正在返回授权页面</title>
+                    <title>QQ登录成功</title>
                     <meta http-equiv="refresh" content="2;url={redirect_url}">
                 </head>
                 <body style="font-family: Arial, sans-serif; padding: 30px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0;">
                     <div style="background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); max-width: 500px;">
                         <h1 style="color: #28a745; font-size: 28px; margin-bottom: 20px;">✅ QQ登录成功！</h1>
-                        <p style="font-size: 16px; color: #606266; margin-bottom: 20px;">您已成功登录，正在返回授权页面...</p>
+                        <p style="font-size: 16px; color: #606266; margin-bottom: 20px;">您已成功登录，正在跳转...</p>
                         <p style="font-size: 14px; color: #909399;">
                             如果没有自动跳转，请
                             <a href="{redirect_url}" style="color: #667eea; text-decoration: none;">点击这里</a>
-                            返回授权页面。
+                            继续。
                         </p>
                     </div>
                     <script>
