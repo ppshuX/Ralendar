@@ -246,3 +246,11 @@ QWEN_API_KEY = os.environ.get('QWEN_API_KEY', '')  # 通义千问 API Key
 QWEATHER_API_KEY = os.environ.get('QWEATHER_API_KEY', '')  # 和风天气 API Key (已弃用)
 OPENWEATHER_API_KEY = os.environ.get('OPENWEATHER_API_KEY', '')  # OpenWeatherMap API Key (已弃用)
 AMAP_API_KEY = os.environ.get('AMAP_API_KEY', '')  # 高德地图 API Key (当前使用)
+
+# ==================== Session 配置 ====================
+# 确保跨域时Session能正常工作（QQ OAuth回调需要）
+SESSION_COOKIE_SECURE = True  # HTTPS环境下启用
+SESSION_COOKIE_HTTPONLY = True  # 防止XSS攻击
+SESSION_COOKIE_SAMESITE = 'Lax'  # 允许跨站请求携带Cookie（QQ授权需要）
+SESSION_COOKIE_AGE = 86400  # Session有效期24小时
+SESSION_SAVE_EVERY_REQUEST = True  # 每次请求都保存Session（确保不丢失）
