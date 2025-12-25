@@ -42,7 +42,7 @@ if old_client and new_client:
     print("\n当前建议：")
     print("如果 Roamio 可以更新配置，建议使用新的客户端 ID")
     print("Client ID: ralendar_client_D5Dc11zm0eeCcWHb3UlswA")
-    print("Client Secret: 4i3TggBbCD1B8H959hwX12ifen218VfYRaEjiT8S7UY")
+    print("⚠️  Client Secret 请从数据库或管理命令输出中获取，不要硬编码在代码中！")
     
     # 询问是否删除旧的
     print("\n是否删除旧的客户端 (ralendar_client_CJjjv6N9prR6JpDGmWijgA)?")
