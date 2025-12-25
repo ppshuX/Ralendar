@@ -294,7 +294,7 @@ def oauth_login_callback_qq(request):
             return HttpResponse('获取用户信息失败', status=400)
         
         nickname = userinfo_data.get('nickname', 'QQ用户')
-        avatar = userinfo_data.get('figureurl_qq_2', '')
+        photo_url = userinfo_data.get('figureurl_qq_2', '')
         
         qq_user = QQUser.objects.filter(openid=openid).first()
         
@@ -314,7 +314,7 @@ def oauth_login_callback_qq(request):
                 openid=openid,
                 unionid=unionid,
                 nickname=nickname,
-                avatar=avatar
+                photo_url=photo_url
             )
         
         django_login(request, user)
