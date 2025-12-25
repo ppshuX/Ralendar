@@ -25,6 +25,11 @@ def oauth_authorize(request):
     
     URL: /oauth/authorize?client_id=xxx&redirect_uri=xxx&response_type=code&state=xxx&scope=xxx
     """
+    # 记录请求信息（用于调试）
+    logger.info(f"[OAuth Authorize] {request.method} request from {request.META.get('REMOTE_ADDR', 'unknown')}")
+    logger.info(f"[OAuth Authorize] GET params: {dict(request.GET)}")
+    logger.info(f"[OAuth Authorize] POST params: {dict(request.POST)}")
+    logger.info(f"[OAuth Authorize] Full path: {request.get_full_path()}")
     
     # 获取参数
     client_id = request.GET.get('client_id') or request.POST.get('client_id')
