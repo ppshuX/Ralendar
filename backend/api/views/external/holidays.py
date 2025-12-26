@@ -18,20 +18,53 @@ HOLIDAYS_DATA_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data')
 
 
 def load_holidays_data(year):
-    """加载节假日数据"""
+    """加载节假日数据（优先从数据库，回退到JSON文件）"""
     cache_key = f'holidays_{year}'
     holidays = cache.get(cache_key)
     
     if holidays is None:
-        file_path = os.path.join(HOLIDAYS_DATA_DIR, f'holidays_{year}.json')
+        # 优先从数据库加载
+        from api.models import Holiday
+        from datetime import date
         
-        if os.path.exists(file_path):
-            with open(file_path, 'r', encoding='utf-8') as f:
-                holidays = json.load(f)
+        db_holidays = Holiday.objects.filter(date__year=year)
+        
+        if db_holidays.exists():
+            # 从数据库构建JSON格式的数据结构
+            holidays = {str(year): {}}
+            
+            for holiday in db_holidays.order_by('date'):
+                date_str = holiday.date.strftime('%Y-%m-%d')
+                
+                if holiday.type == 'major':
+                    # 主要节日：单个日期
+                    holidays[str(year)][holiday.name] = date_str
+                elif holiday.type == 'vacation' and holiday.holiday_group:
+                    # 假期：添加到假期组
+                    group_name = holiday.holiday_group
+                    if group_name not in holidays[str(year)]:
+                        holidays[str(year)][group_name] = []
+                    if date_str not in holidays[str(year)][group_name]:
+                        holidays[str(year)][group_name].append(date_str)
+            
+            # 对假期日期列表排序
+            for key, value in holidays[str(year)].items():
+                if isinstance(value, list):
+                    holidays[str(year)][key] = sorted(value)
+            
             # 缓存 24 小时
             cache.set(cache_key, holidays, 86400)
         else:
-            holidays = {}
+            # 回退到JSON文件
+            file_path = os.path.join(HOLIDAYS_DATA_DIR, f'holidays_{year}.json')
+            
+            if os.path.exists(file_path):
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    holidays = json.load(f)
+                # 缓存 24 小时
+                cache.set(cache_key, holidays, 86400)
+            else:
+                holidays = {}
     
     return holidays
 
