@@ -411,7 +411,7 @@ def oauth_login_callback_qq(request):
             logger.info(f"[QQ Callback] User {user.id} logged in via QQ (OAuth flow), redirecting to: {next_url}")
             return HttpResponseRedirect(next_url)
         else:
-            # 普通登录流程：生成JWT token并跳转到 Ralendar 主页
+            # 普通登录流程：生成JWT token并返回自动处理页面
             # 注意：不应该跳转到 oauth/authorize，因为这不是 OAuth 授权流程
             
             # 生成JWT token（前端需要token来验证登录状态）
@@ -420,21 +420,74 @@ def oauth_login_callback_qq(request):
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
             
-            # 将token通过URL参数传递给前端（前端会保存到localStorage）
+            # 将token通过URL参数传递给前端页面，页面中的JavaScript会自动保存到localStorage
             from urllib.parse import urlencode
-            redirect_url = f"{request.scheme}://{request.get_host()}/"
+            home_url = f"{request.scheme}://{request.get_host()}/"
             token_params = {
                 'access': access_token,
                 'refresh': refresh_token,
                 'login_success': 'true'
             }
-            redirect_url_with_token = f"{redirect_url}?{urlencode(token_params)}"
+            redirect_url = f"{home_url}?{urlencode(token_params)}"
             
-            logger.info(f"[QQ Callback] Normal login, redirecting to Ralendar home with JWT token")
+            logger.info(f"[QQ Callback] Normal login, returning auto-handle page with JWT token")
             
-            # 使用 redirect() 而不是 HttpResponseRedirect，确保 session 正确保存
-            # 参考 AcWing 登录的实现方式
-            return redirect(redirect_url_with_token)
+            # 返回一个HTML页面，页面中的JavaScript会自动处理token并跳转
+            return HttpResponse(
+                f'''
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>QQ登录成功 - 正在保存登录状态</title>
+                    <meta http-equiv="refresh" content="1;url={redirect_url}">
+                </head>
+                <body style="font-family: Arial, sans-serif; padding: 30px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0;">
+                    <div style="background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); max-width: 500px;">
+                        <h1 style="color: #28a745; font-size: 28px; margin-bottom: 20px;">✅ QQ登录成功！</h1>
+                        <p style="font-size: 16px; color: #606266; margin-bottom: 20px;">正在保存登录状态，请稍候...</p>
+                    </div>
+                    <script>
+                        // 自动处理token保存和跳转
+                        (function() {{
+                            try {{
+                                // 从URL参数中获取token
+                                const urlParams = new URLSearchParams(window.location.search);
+                                const accessToken = urlParams.get('access');
+                                const refreshToken = urlParams.get('refresh');
+                                const loginSuccess = urlParams.get('login_success');
+                                
+                                if (loginSuccess === 'true' && accessToken && refreshToken) {{
+                                    // 保存token到localStorage
+                                    localStorage.setItem('access_token', accessToken);
+                                    localStorage.setItem('refresh_token', refreshToken);
+                                    console.log('[QQ Login] Tokens saved to localStorage');
+                                    
+                                    // 跳转到主页（清除URL参数）
+                                    setTimeout(() => {{
+                                        window.location.href = '{home_url}';
+                                    }}, 500);
+                                }} else {{
+                                    // 如果没有token参数，直接跳转
+                                    console.warn('[QQ Login] No token found in URL params');
+                                    setTimeout(() => {{
+                                        window.location.href = '{home_url}';
+                                    }}, 1000);
+                                }}
+                            }} catch (error) {{
+                                console.error('[QQ Login] Error saving tokens:', error);
+                                // 出错也跳转到主页
+                                setTimeout(() => {{
+                                    window.location.href = '{home_url}';
+                                }}, 1000);
+                            }}
+                        }})();
+                    </script>
+                </body>
+                </html>
+                ''',
+                content_type='text/html; charset=utf-8'
+            )
         
     except Exception as e:
         logger.error(f"[OAuth Login] QQ login error: {str(e)}")
