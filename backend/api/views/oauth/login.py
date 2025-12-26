@@ -199,7 +199,10 @@ def oauth_login_callback_acwing(request):
             )
         
         django_login(request, user)
-        logger.info(f"[OAuth Login] User {user.id} logged in via AcWing, redirecting to {next_url}")
+        
+        # 确保 session 被保存（重要：跨域重定向可能导致 session 丢失）
+        request.session.save()
+        logger.info(f"[OAuth Login] User {user.id} logged in via AcWing, session saved, redirecting to {next_url}")
         return redirect(next_url)
         
     except Exception as e:
@@ -365,7 +368,10 @@ def oauth_login_callback_qq(request):
             )
         
         django_login(request, user)
-        logger.info(f"[QQ Callback] User {user.id} logged in via QQ, is_oauth_flow: {is_oauth_flow}, next_url: {next_url}")
+        
+        # 确保 session 被保存（重要：跨域重定向可能导致 session 丢失）
+        request.session.save()
+        logger.info(f"[QQ Callback] User {user.id} logged in via QQ, session saved, is_oauth_flow: {is_oauth_flow}, next_url: {next_url}")
         
         if is_oauth_flow:
             # OAuth 授权流程：需要返回授权页面
@@ -410,8 +416,10 @@ def oauth_login_callback_qq(request):
             redirect_url = f"{request.scheme}://{request.get_host()}/"
             logger.info(f"[QQ Callback] Normal login, redirecting to Ralendar home: {redirect_url}")
             
-            # 直接重定向到主页，不显示中间页面
-            return HttpResponseRedirect(redirect_url)
+            # 使用 redirect() 而不是 HttpResponseRedirect，确保 session 正确保存
+            # 参考 AcWing 登录的实现方式
+            from django.shortcuts import redirect
+            return redirect(redirect_url)
         
     except Exception as e:
         logger.error(f"[OAuth Login] QQ login error: {str(e)}")
