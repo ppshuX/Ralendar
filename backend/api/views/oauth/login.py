@@ -95,11 +95,19 @@ def oauth_web_login(request):
         encoded_redirect_uri = urllib.parse.quote(REDIRECT_URI, safe='')
         encoded_state = urllib.parse.quote(state_param, safe='')
         
-        auth_url = (
-            f"https://graph.qq.com/oauth2.0/authorize"
-            f"?response_type=code&client_id={QQ_APPID}&redirect_uri={encoded_redirect_uri}"
-            f"&state={encoded_state}&unionid=1"
-        )
+        # 构建 URL 参数（使用字典方式，更安全）
+        auth_params = {
+            'response_type': 'code',
+            'client_id': QQ_APPID,
+            'redirect_uri': REDIRECT_URI,  # 使用原始 URI，让 urllib.parse.urlencode 处理编码
+            'state': state_param,
+            'unionid': '1'
+        }
+        
+        # 使用 urlencode 确保所有参数正确编码
+        from urllib.parse import urlencode
+        query_string = urlencode(auth_params, safe='')
+        auth_url = f"https://graph.qq.com/oauth2.0/authorize?{query_string}"
         
         # 验证 URL 格式
         if not auth_url.startswith('https://graph.qq.com/oauth2.0/authorize'):
@@ -110,11 +118,17 @@ def oauth_web_login(request):
             logger.error(f"[OAuth Login] Missing client_id in URL: {auth_url}")
             return HttpResponse('QQ登录配置错误：缺少 client_id', status=500)
         
-        logger.info(f"[OAuth Login] Redirecting to QQ auth (length: {len(auth_url)}): {auth_url[:100]}...")
+        # 验证 URL 长度（QQ API 可能有长度限制）
+        if len(auth_url) > 2000:
+            logger.warning(f"[OAuth Login] QQ auth URL is very long ({len(auth_url)} chars), may cause issues")
+        
+        logger.info(f"[OAuth Login] Redirecting to QQ auth (length: {len(auth_url)}): {auth_url[:150]}...")
         logger.info(f"[OAuth Login] Full QQ auth URL: {auth_url}")
         
-        # 使用 HttpResponseRedirect 确保重定向执行
-        return HttpResponseRedirect(auth_url)
+        # 使用 HttpResponseRedirect 确保重定向执行，并设置正确的状态码
+        response = HttpResponseRedirect(auth_url)
+        response['Location'] = auth_url  # 显式设置 Location header
+        return response
     
     else:
         return HttpResponse(f'不支持的登录方式: {provider}', status=400)
