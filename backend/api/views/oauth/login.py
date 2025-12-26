@@ -346,26 +346,71 @@ def oauth_login_callback_qq(request):
         nickname = userinfo_data.get('nickname', 'QQ用户')
         photo_url = userinfo_data.get('figureurl_qq_2', '')
         
-        qq_user = QQUser.objects.filter(openid=openid).first()
+        # 查找或创建用户（优先使用 UnionID，与 /api/auth/qq/callback/ 保持一致）
+        qq_user = None
         
-        if qq_user:
-            user = qq_user.user
+        if unionid:
+            # 如果有 UnionID，优先通过 UnionID 查找（跨应用识别，更可靠）
+            qq_user = QQUser.objects.filter(unionid=unionid).first()
+            
+            if qq_user:
+                # 找到已有用户，更新 openid 和 token（因为不同应用的 openid 可能不同）
+                qq_user.openid = openid
+                qq_user.photo_url = photo_url
+                qq_user.nickname = nickname
+                qq_user.save()
+                user = qq_user.user
+                logger.info(f"[QQ Callback] Found existing user by UnionID: {user.username} (unionid: {unionid})")
+            else:
+                # 通过 UnionID 没找到，尝试通过 openid 查找（可能是旧数据）
+                qq_user = QQUser.objects.filter(openid=openid).first()
+                
+                if qq_user:
+                    # 找到已有用户，补充 UnionID
+                    qq_user.unionid = unionid
+                    qq_user.photo_url = photo_url
+                    qq_user.nickname = nickname
+                    qq_user.save()
+                    user = qq_user.user
+                    logger.info(f"[QQ Callback] Found existing user by openid, updated with UnionID: {user.username}")
         else:
-            base_username = nickname
+            # 没有 unionid，回退到 openid 查找（向后兼容）
+            qq_user = QQUser.objects.filter(openid=openid).first()
+            
+            if qq_user:
+                user = qq_user.user
+                # 更新用户信息
+                qq_user.photo_url = photo_url
+                qq_user.nickname = nickname
+                qq_user.save()
+                logger.info(f"[QQ Callback] Found existing user by openid: {user.username}")
+        
+        if not qq_user:
+            # 新用户，创建账号
+            import re
+            safe_nickname = re.sub(r'[^\w\u4e00-\u9fff]', '_', nickname)[:30]
+            if not safe_nickname:
+                safe_nickname = f"QQ用户_{openid[:8]}"
+            
+            base_username = safe_nickname
             username = base_username
             counter = 1
             while User.objects.filter(username=username).exists():
                 username = f"{base_username}_{counter}"
                 counter += 1
+                if counter > 1000:
+                    username = f"QQ用户_{openid[:8]}_{counter}"
+                    break
             
             user = User.objects.create_user(username=username, password=None)
             QQUser.objects.create(
                 user=user,
                 openid=openid,
-                unionid=unionid,
+                unionid=unionid or None,
                 nickname=nickname,
                 photo_url=photo_url
             )
+            logger.info(f"[QQ Callback] Created new user: {username} (unionid: {unionid or 'None'})")
         
         django_login(request, user)
         
