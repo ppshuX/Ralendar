@@ -420,19 +420,13 @@ def oauth_login_callback_qq(request):
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
             
-            # 将token通过URL参数传递给前端页面，页面中的JavaScript会自动保存到localStorage
-            from urllib.parse import urlencode
+            # 直接在主HTML中嵌入token值（更安全，不会出现在浏览器历史记录中）
             home_url = f"{request.scheme}://{request.get_host()}/"
-            token_params = {
-                'access': access_token,
-                'refresh': refresh_token,
-                'login_success': 'true'
-            }
-            redirect_url = f"{home_url}?{urlencode(token_params)}"
             
             logger.info(f"[QQ Callback] Normal login, returning auto-handle page with JWT token")
             
             # 返回一个HTML页面，页面中的JavaScript会自动处理token并跳转
+            # 注意：token直接嵌入在HTML中，不会出现在URL中，更安全
             return HttpResponse(
                 f'''
                 <!DOCTYPE html>
@@ -440,7 +434,6 @@ def oauth_login_callback_qq(request):
                 <head>
                     <meta charset="UTF-8">
                     <title>QQ登录成功 - 正在保存登录状态</title>
-                    <meta http-equiv="refresh" content="1;url={redirect_url}">
                 </head>
                 <body style="font-family: Arial, sans-serif; padding: 30px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0;">
                     <div style="background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); max-width: 500px;">
@@ -451,34 +444,32 @@ def oauth_login_callback_qq(request):
                         // 自动处理token保存和跳转
                         (function() {{
                             try {{
-                                // 从URL参数中获取token
-                                const urlParams = new URLSearchParams(window.location.search);
-                                const accessToken = urlParams.get('access');
-                                const refreshToken = urlParams.get('refresh');
-                                const loginSuccess = urlParams.get('login_success');
+                                // 从HTML中嵌入的token值获取（更安全，不会出现在URL中）
+                                const accessToken = {repr(access_token)};
+                                const refreshToken = {repr(refresh_token)};
                                 
-                                if (loginSuccess === 'true' && accessToken && refreshToken) {{
+                                if (accessToken && refreshToken) {{
                                     // 保存token到localStorage
                                     localStorage.setItem('access_token', accessToken);
                                     localStorage.setItem('refresh_token', refreshToken);
-                                    console.log('[QQ Login] Tokens saved to localStorage');
+                                    console.log('[QQ Login] Tokens saved to localStorage successfully');
                                     
-                                    // 跳转到主页（清除URL参数）
+                                    // 跳转到主页
                                     setTimeout(() => {{
-                                        window.location.href = '{home_url}';
+                                        window.location.href = {repr(home_url)};
                                     }}, 500);
                                 }} else {{
-                                    // 如果没有token参数，直接跳转
-                                    console.warn('[QQ Login] No token found in URL params');
+                                    // 如果没有token，直接跳转
+                                    console.warn('[QQ Login] No token found');
                                     setTimeout(() => {{
-                                        window.location.href = '{home_url}';
+                                        window.location.href = {repr(home_url)};
                                     }}, 1000);
                                 }}
                             }} catch (error) {{
                                 console.error('[QQ Login] Error saving tokens:', error);
                                 // 出错也跳转到主页
                                 setTimeout(() => {{
-                                    window.location.href = '{home_url}';
+                                    window.location.href = {repr(home_url)};
                                 }}, 1000);
                             }}
                         }})();
