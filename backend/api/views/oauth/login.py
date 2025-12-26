@@ -405,58 +405,13 @@ def oauth_login_callback_qq(request):
             logger.info(f"[QQ Callback] User {user.id} logged in via QQ (OAuth flow), redirecting to: {next_url}")
             return HttpResponseRedirect(next_url)
         else:
-            # 普通登录流程：跳转到 Ralendar 主页或之前访问的页面
+            # 普通登录流程：直接跳转到 Ralendar 主页
             # 注意：不应该跳转到 oauth/authorize，因为这不是 OAuth 授权流程
-            referer = request.META.get('HTTP_REFERER', '')
+            redirect_url = f"{request.scheme}://{request.get_host()}/"
+            logger.info(f"[QQ Callback] Normal login, redirecting to Ralendar home: {redirect_url}")
             
-            # 如果 referer 是 Ralendar 的页面（不是 oauth/authorize），使用它
-            if referer:
-                from urllib.parse import urlparse
-                parsed = urlparse(referer)
-                # 排除 oauth/authorize 页面
-                if 'oauth/authorize' not in parsed.path:
-                    redirect_url = referer
-                    logger.info(f"[QQ Callback] Normal login, redirecting to referer: {redirect_url}")
-                else:
-                    # referer 是授权页面，但这不是 OAuth 流程，跳转到主页
-                    redirect_url = f"{request.scheme}://{request.get_host()}/"
-                    logger.info(f"[QQ Callback] Normal login, referer is oauth page, redirecting to home: {redirect_url}")
-            else:
-                # 没有 referer，跳转到主页
-                redirect_url = f"{request.scheme}://{request.get_host()}/"
-                logger.info(f"[QQ Callback] Normal login, no referer, redirecting to home: {redirect_url}")
-            
-            # 显示提示页面，自动重定向
-            return HttpResponse(
-                f'''
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <title>QQ登录成功</title>
-                    <meta http-equiv="refresh" content="2;url={redirect_url}">
-                </head>
-                <body style="font-family: Arial, sans-serif; padding: 30px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0;">
-                    <div style="background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); max-width: 500px;">
-                        <h1 style="color: #28a745; font-size: 28px; margin-bottom: 20px;">✅ QQ登录成功！</h1>
-                        <p style="font-size: 16px; color: #606266; margin-bottom: 20px;">您已成功登录，正在跳转...</p>
-                        <p style="font-size: 14px; color: #909399;">
-                            如果没有自动跳转，请
-                            <a href="{redirect_url}" style="color: #667eea; text-decoration: none;">点击这里</a>
-                            继续。
-                        </p>
-                    </div>
-                    <script>
-                        // 备用：如果 meta refresh 不工作，使用 JavaScript 重定向
-                        setTimeout(() => {{
-                            window.location.href = '{redirect_url}';
-                        }}, 2000);
-                    </script>
-                </body>
-                </html>
-                ''',
-                content_type='text/html; charset=utf-8'
-            )
+            # 直接重定向到主页，不显示中间页面
+            return HttpResponseRedirect(redirect_url)
         
     except Exception as e:
         logger.error(f"[OAuth Login] QQ login error: {str(e)}")
