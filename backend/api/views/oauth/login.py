@@ -411,15 +411,30 @@ def oauth_login_callback_qq(request):
             logger.info(f"[QQ Callback] User {user.id} logged in via QQ (OAuth flow), redirecting to: {next_url}")
             return HttpResponseRedirect(next_url)
         else:
-            # 普通登录流程：直接跳转到 Ralendar 主页
+            # 普通登录流程：生成JWT token并跳转到 Ralendar 主页
             # 注意：不应该跳转到 oauth/authorize，因为这不是 OAuth 授权流程
+            
+            # 生成JWT token（前端需要token来验证登录状态）
+            from rest_framework_simplejwt.tokens import RefreshToken
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+            
+            # 将token通过URL参数传递给前端（前端会保存到localStorage）
+            from urllib.parse import urlencode
             redirect_url = f"{request.scheme}://{request.get_host()}/"
-            logger.info(f"[QQ Callback] Normal login, redirecting to Ralendar home: {redirect_url}")
+            token_params = {
+                'access': access_token,
+                'refresh': refresh_token,
+                'login_success': 'true'
+            }
+            redirect_url_with_token = f"{redirect_url}?{urlencode(token_params)}"
+            
+            logger.info(f"[QQ Callback] Normal login, redirecting to Ralendar home with JWT token")
             
             # 使用 redirect() 而不是 HttpResponseRedirect，确保 session 正确保存
             # 参考 AcWing 登录的实现方式
-            from django.shortcuts import redirect
-            return redirect(redirect_url)
+            return redirect(redirect_url_with_token)
         
     except Exception as e:
         logger.error(f"[OAuth Login] QQ login error: {str(e)}")
