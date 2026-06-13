@@ -193,15 +193,6 @@ def check_holiday(request):
         '12-25': {'name': '圣诞节', 'emoji': '🎅'}
     }
     
-    traditional_festivals_dict = {
-        '01-28': {'name': '除夕', 'emoji': '🏮'},
-        '01-29': {'name': '春节', 'emoji': '🧨'},
-        '02-12': {'name': '元宵节', 'emoji': '🏮'},
-        '05-31': {'name': '端午节', 'emoji': '🐉'},
-        '10-06': {'name': '中秋节', 'emoji': '🥮'},
-        '10-29': {'name': '重阳节', 'emoji': '🍵'}
-    }
-    
     festivals_list = []
     
     if holiday_info and holiday_info['is_holiday']:
@@ -226,32 +217,46 @@ def check_holiday(request):
                 'type': 'international'
             })
     
-    if month_day in traditional_festivals_dict:
-        festival = traditional_festivals_dict[month_day]
-        if not any(f['name'] == festival['name'] for f in festivals_list):
-            festivals_list.append({
-                'name': festival['name'],
-                'emoji': festival['emoji'],
-                'type': 'traditional'
-            })
-    
-    lunar_str = None
     try:
-        from lunarcalendar import Converter, Solar
-        solar = Solar(target_date.year, target_date.month, target_date.day)
-        lunar = Converter.Solar2Lunar(solar)
+        from lunarcalendar import Converter, Solar, Lunar
         
-        # 月份中文
+        traditional_festival_defs = [
+            (1, 1, '春节', '🧨'),
+            (1, 15, '元宵节', '🏮'),
+            (5, 5, '端午节', '🐉'),
+            (7, 7, '七夕节', '🎋'),
+            (7, 15, '中元节', '🪔'),
+            (8, 15, '中秋节', '🥮'),
+            (9, 9, '重阳节', '🍵'),
+            (12, 30, '除夕', '🏮'),
+        ]
+        
+        for lunar_month, lunar_day, festival_name, emoji in traditional_festival_defs:
+            try:
+                lunar_date = Lunar(target_date.year, lunar_month, lunar_day, isLeapMonth=False)
+                solar_date = Converter.Lunar2Solar(lunar_date)
+                if solar_date.month == target_date.month and solar_date.day == target_date.day:
+                    if not any(f['name'] == festival_name for f in festivals_list):
+                        festivals_list.append({
+                            'name': festival_name,
+                            'emoji': emoji,
+                            'type': 'traditional'
+                        })
+            except Exception:
+                pass
+        
+        lunar_solar = Solar(target_date.year, target_date.month, target_date.day)
+        lunar = Converter.Solar2Lunar(lunar_solar)
+        
         month_cn = ['正', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二']
-        lunar_month = f"{month_cn[lunar.month - 1]}月"
+        lunar_month_str = f"{month_cn[lunar.month - 1]}月"
         
-        # 日期中文
         day_cn = ['初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
                   '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
                   '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十']
-        lunar_day = day_cn[lunar.day - 1]
+        lunar_day_str = day_cn[lunar.day - 1]
         
-        lunar_str = f"{lunar_month}{lunar_day}"
+        lunar_str = f"{lunar_month_str}{lunar_day_str}"
     except Exception as e:
         logger.warning(f"获取农历失败: {e}")
         lunar_str = "加载中..."
@@ -325,23 +330,37 @@ def get_today_holidays(request):
             'type': 'international'
         })
     
-    # 添加传统节日（农历节日，2025年对应的公历日期）
-    traditional_festivals = {
-        '01-28': {'name': '除夕', 'emoji': '🏮'},
-        '01-29': {'name': '春节', 'emoji': '🧨'},
-        '02-12': {'name': '元宵节', 'emoji': '🏮'},
-        '05-31': {'name': '端午节', 'emoji': '🐉'},
-        '10-06': {'name': '中秋节', 'emoji': '🥮'},
-        '10-29': {'name': '重阳节', 'emoji': '🍵'}
-    }
-    
-    if month_day in traditional_festivals:
-        festival = traditional_festivals[month_day]
-        result['traditional_festivals'].append({
-            'name': festival['name'],
-            'emoji': festival['emoji'],
-            'type': 'traditional'
-        })
+    try:
+        from lunarcalendar import Converter, Solar, Lunar
+        
+        traditional_festival_defs = [
+            (1, 1, '春节', '🧨'),
+            (1, 15, '元宵节', '🏮'),
+            (5, 5, '端午节', '🐉'),
+            (7, 7, '七夕节', '🎋'),
+            (7, 15, '中元节', '🪔'),
+            (8, 15, '中秋节', '🥮'),
+            (9, 9, '重阳节', '🍵'),
+            (12, 30, '除夕', '🏮'),
+        ]
+        
+        today_month_day = today.strftime('%m-%d')
+        
+        for lunar_month, lunar_day, festival_name, emoji in traditional_festival_defs:
+            try:
+                lunar_date = Lunar(today.year, lunar_month, lunar_day, isLeapMonth=False)
+                solar_date = Converter.Lunar2Solar(lunar_date)
+                solar_md = f"{solar_date.month:02d}-{solar_date.day:02d}"
+                if solar_md == today_month_day:
+                    result['traditional_festivals'].append({
+                        'name': festival_name,
+                        'emoji': emoji,
+                        'type': 'traditional'
+                    })
+            except Exception:
+                pass
+    except Exception as e:
+        logger.warning(f"获取农历节日失败: {e}")
     
     return Response(result)
 

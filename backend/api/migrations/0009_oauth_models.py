@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('code', models.CharField(db_index=True, max_length=100, unique=True, help_text='授权码')),
-                ('redirect_uri', models.URLField(help_text='回调地址')),
+                ('redirect_uri', models.CharField(max_length=500, help_text='回调地址')),
                 ('scope', models.CharField(max_length=200, help_text='权限范围')),
                 ('expires_at', models.DateTimeField(db_index=True, help_text='过期时间')),
                 ('used', models.BooleanField(db_index=True, default=False, help_text='是否已使用')),

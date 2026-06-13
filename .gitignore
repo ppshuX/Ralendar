@@ -1,13 +1,13 @@
 # ==================== 前端（Web） ====================
-# Vue3 源码（只在本地开发，不提交 Git）
-web_frontend/
+# Vue3 源码
+web_frontend/node_modules/
 
 # Web 部署目录（构建产物提交 Git，服务器 git pull 获取）
 # web/  ← 不忽略，需要提交
 
 # ==================== 前端（AcWing） ====================
-# Vue3 源码（只在本地开发，不提交 Git）
-acapp_frontend/
+# Vue3 源码
+acapp_frontend/node_modules/
 
 # AcWing 构建项目（可选方案，本地保留）
 acapp_build/
@@ -38,14 +38,11 @@ backend/venv/
 backend/env/
 
 # ==================== Android（adapp） ====================
-# Android 源码（只在本地，服务器不需要）
-adapp/*
-# 但保留 README.md 说明文档
-!adapp/README.md
-# 保留产品报告和作业要求检查报告
-!adapp/产品报告/
-!adapp/产品报告/**
-!adapp/作业要求检查报告.md
+# Android 构建产物
+adapp/.gradle/
+adapp/app/build/
+adapp/build/
+adapp/local.properties
 
 # Android 签名文件（敏感信息，不要提交）
 adapp/*.keystore

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:padding="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/calendarDayText"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:textSize="14sp"
+            android:textColor="#303133" />
+
+        <TextView
+            android:id="@+id/calendarDayFestivalLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="8sp"
+            android:textColor="#9C27B0"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/calendarDayDot"
+        android:layout_width="4dp"
+        android:layout_height="4dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:background="@color/colorPrimary"
+        android:visibility="gone" />
+
+</FrameLayout>

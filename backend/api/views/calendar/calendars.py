@@ -113,12 +113,14 @@ class PublicCalendarViewSet(viewsets.ReadOnlyModelViewSet):
             f"X-WR-CALNAME:{calendar.name}",
         ]
         
+        from datetime import timedelta
         for event in events:
+            end_time = event.end_time if event.end_time else event.start_time + timedelta(hours=1)
             ics_lines.extend([
                 "BEGIN:VEVENT",
                 f"UID:event-{event.id}@kotlincalendar.com",
                 f"DTSTART:{event.start_time.strftime('%Y%m%dT%H%M%S')}",
-                f"DTEND:{event.end_time.strftime('%Y%m%dT%H%M%S')}",
+                f"DTEND:{end_time.strftime('%Y%m%dT%H%M%S')}",
                 f"SUMMARY:{event.title}",
                 f"DESCRIPTION:{event.description}",
                 f"LOCATION:{event.location}",
