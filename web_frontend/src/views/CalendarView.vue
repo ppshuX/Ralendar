@@ -1,12 +1,5 @@
 <template>
   <div class="calendar-page">
-    <NavBar 
-      @login="handleLogin"
-      @register="handleRegister"
-      @logout="handleLogout"
-      @subscribe="handleSubscribe"
-    />
-    
     <ContentField>
       <!-- 天气横条：始终显示 -->
       <WeatherBar />
@@ -93,7 +86,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import FullCalendar from '@fullcalendar/vue3'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
-import NavBar from '@/components/NavBar.vue'
 import WeekView from '@/components/calendar/WeekView.vue'
 import ContentField from '../components/ContentField.vue'
 import WeatherBar from '../components/calendar/WeatherBar.vue'
@@ -712,14 +704,6 @@ onMounted(async () => {
     await loadEvents()
   }
 })
-
-function handleLogin() {}
-
-function handleRegister() {}
-
-function handleLogout() {}
-
-function handleSubscribe() {}
 
 // 处理AI创建的日程
 const handleAICreate = async (eventData) => {
